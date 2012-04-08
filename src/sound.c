@@ -66,6 +66,7 @@ pa_simple *pulse_s;
 
 #ifdef GEKKO
 #include <asndlib.h>
+int started_sound_asnd;
 #endif
 
 enum e_soundtype sound_type;
@@ -172,6 +173,10 @@ int sound_init() {
 }
 
 #ifdef GEKKO
+int voice;
+void callback(voice)
+{}
+
 int sound_init_asnd() {
 	
 	ASND_Init();
@@ -181,7 +186,7 @@ int sound_init_asnd() {
 	ordenador.channels=1;
 	ordenador.freq=48000;
 	ordenador.buffer_len=4096;
-
+	started_sound_asnd = 0;
 	return 0;
 
 }
@@ -489,9 +494,20 @@ void sound_play() {
 #endif
 #ifdef GEKKO
 	case SOUND_ASND: // ASND
-		retval=ASND_SetVoice(1,VOICE_MONO_8BIT,48000,0,ordenador.current_buffer,ordenador.buffer_len,
-		ordenador.volume, ordenador.volume, NULL);
-		while (ASND_StatusVoice(1) == SND_WORKING){};
+		if (!started_sound_asnd) {
+		ASND_SetVoice(1,VOICE_MONO_8BIT,48000,0,sound[0],ordenador.buffer_len,
+		ordenador.volume, ordenador.volume, callback);
+		started_sound_asnd = 1;
+		}
+		
+		while (!ASND_TestVoiceBufferReady(1)){};
+		if (!ASND_TestPointer (1, sound[0])) 
+			{ASND_AddVoice(1,sound[0],ordenador.buffer_len);
+			ordenador.current_buffer = sound[0]; }
+		else 
+			{ASND_AddVoice(1,sound[1],ordenador.buffer_len);
+			ordenador.current_buffer = sound[1]; }
+	
 		return;
 	break;
 #endif
