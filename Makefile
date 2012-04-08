@@ -25,7 +25,7 @@ INCLUDES	:=
 # options for code generation
 #---------------------------------------------------------------------------------
 
-CFLAGS	= -g -O2 -Wall $(MACHDEP) $(INCLUDE) -Wno-pointer-sign  -DDEBUG
+CFLAGS	= -g -O2 -Wall -Wno-unused-but-set-variable $(MACHDEP) $(INCLUDE) -Wno-pointer-sign  -DDEBUG
 CXXFLAGS	=	$(CFLAGS)
 
 LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
@@ -33,7 +33,7 @@ LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
-LIBS	:=	 -lSDL_mixer -lsmpeg -lvorbisidec -lSDL_image -lpng -ljpeg -lz -lSDL -lSDL_gfx -lfreetype -lfat -lwiiuse -lbte -logc -lm -lwiikeyboard 
+LIBS	:=	 -lasnd -lSDL_mixer -lsmpeg -lvorbisidec -lSDL_image -lpng -ljpeg -lz -lSDL -lSDL_gfx -lfreetype -lfat -lwiiuse -lbte -logc -lm -lwiikeyboard 
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
@@ -114,15 +114,15 @@ dist: $(BUILD)
 	mkdir -p $@/apps/fbzx-wii
 	mkdir -p $@/fbzx-wii/fbzx
 	mkdir -p $@/fbzx-wii/spectrum-roms
-	mkdir -p $@/fbzx-wii/applications
+	mkdir -p $@/fbzx-wii/tapes
+	mkdir -p $@/fbzx-wii/snapshots
+	mkdir -p $@/fbzx-wii/microdrives
 	mkdir -p $@/fbzx-wii/pixmaps
-	mkdir -p $@/fbzx-wii/doc/fbzx
+	mkdir -p $@/apps/fbzx-wii/doc
 	cp fbzx.dol $@/apps/fbzx-wii/boot.dol
 	cp spectrum-roms/* $@/fbzx-wii/spectrum-roms
 	cp keymap.bmp $@/fbzx-wii/fbzx
-	cp fbzx.desktop $@/fbzx-wii/applications
-	cp fbzx.svg $@/fbzx-wii/pixmaps
-	cp AMSTRAD CAPABILITIES COPYING FAQ README README.TZX VERSIONS $@/fbzx-wii/doc/fbzx/
+	cp AMSTRAD CAPABILITIES COPYING FAQ README README.TZX VERSIONS $@/apps/fbzx-wii/doc
 	cd $@ && tar -czf ../fbzx-wii-bin.tar.gz *
 
 #---------------------------------------------------------------------------------

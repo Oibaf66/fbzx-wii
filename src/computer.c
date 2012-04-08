@@ -33,7 +33,11 @@
 
 #ifdef DEBUG
 extern FILE *fdebug;
-#define printf(...) fprintf(fdebug,__VA_ARGS__); fflush (fdebug)
+#define printf(...) fprintf(fdebug,__VA_ARGS__)
+#else
+ #ifdef GEKKO
+ #define printf(...)
+ #endif
 #endif
 
 /* Returns the bus value when reading a port without a periferial */
@@ -581,12 +585,12 @@ inline void show_screen (int tstados) {
 				}
 					
 				if (ordenador.osd_time)
-					print_string (ordenador.screenbuffer,ordenador.osd_text, -1,460, 12, 0,ordenador.screen_width);
+					print_string (ordenador.screenbuffer,ordenador.osd_text, -1,450, 12, 0,ordenador.screen_width);
 				else {
 					if (ordenador.zaurus_mini==0)
-						print_string (ordenador.screenbuffer,"                                      ",-1, 460, 12, 0,ordenador.screen_width);
+						print_string (ordenador.screenbuffer,"                                      ",-1, 450, 12, 0,ordenador.screen_width);
 					else
-						print_string (ordenador.screenbuffer,"                            ",-1, 460, 12, 0,ordenador.screen_width);
+						print_string (ordenador.screenbuffer,"                            ",-1, 450, 12, 0,ordenador.screen_width);
 				}
 			}
 				

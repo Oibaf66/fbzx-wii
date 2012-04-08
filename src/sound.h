@@ -20,7 +20,7 @@
 #ifndef SOUND_H
 #define SOUND_H
 
-enum e_soundtype {SOUND_NO, SOUND_OSS, SOUND_ALSA, SOUND_PULSEAUDIO, SOUND_AUTOMATIC};
+enum e_soundtype {SOUND_NO, SOUND_OSS, SOUND_ALSA, SOUND_PULSEAUDIO, SOUND_AUTOMATIC, SOUND_ASND};
 
 extern enum e_soundtype sound_type;
 
@@ -33,7 +33,8 @@ extern volatile unsigned char *sdl_sound_buffer;
 int sound_init_oss();
 int sound_init_alsa();
 int sound_init_pulse();
+int sound_init_asnd();
 
-void sdlcallback(void *userdata, Uint8 *stream, int len);
+//void sdlcallback(void *userdata, Uint8 *stream, int len);
 
 #endif

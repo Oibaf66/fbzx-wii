@@ -33,7 +33,11 @@ char tabla[1024];
 
 #ifdef DEBUG
 extern FILE *fdebug;
-#define printf(...) fprintf(fdebug,__VA_ARGS__); fflush (fdebug)
+#define printf(...) fprintf(fdebug,__VA_ARGS__)
+#else
+ #ifdef GEKKO
+ #define printf(...)
+ #endif
 #endif
 
 /*#include <SDL/SDL.h>
@@ -58,6 +62,10 @@ snd_pcm_t * _soundDevice;
 #ifdef D_SOUND_PULSE
 #include <pulse/simple.h>
 pa_simple *pulse_s;
+#endif
+
+#ifdef GEKKO
+#include <asndlib.h>
 #endif
 
 enum e_soundtype sound_type;
@@ -112,6 +120,19 @@ int sound_init() {
 			}
 		break;
 #endif
+#ifdef GEKKO
+		case SOUND_ASND:
+			printf("Trying ASND sound\n");
+			if(0==sound_init_asnd()) {
+				sound_type=SOUND_ASND;
+				return 0;
+			} else {
+				printf("Failed\n");
+				return -1;
+			}
+		break;
+#endif
+
 		default:
 		break;
 		}
@@ -140,8 +161,31 @@ int sound_init() {
 	}
 #endif
 
+#ifdef GEKKO
+	printf("Trying ASND sound\n");
+	if(0==sound_init_asnd()) {
+		sound_type=SOUND_ASND;
+		return 0;
+	}
+#endif
 	return -1;
 }
+
+#ifdef GEKKO
+int sound_init_asnd() {
+	
+	ASND_Init();
+	ASND_Pause(0);
+	ordenador.sign=0;
+	ordenador.format=0;
+	ordenador.channels=1;
+	ordenador.freq=48000;
+	ordenador.buffer_len=4096;
+
+	return 0;
+
+}
+#endif
 
 #ifdef D_SOUND_PULSE
 int sound_init_pulse() {
@@ -443,6 +487,15 @@ void sound_play() {
 		return;
 	break;
 #endif
+#ifdef GEKKO
+	case SOUND_ASND: // ASND
+		retval=ASND_SetVoice(1,VOICE_MONO_8BIT,48000,0,ordenador.current_buffer,ordenador.buffer_len,
+		ordenador.volume, ordenador.volume, NULL);
+		while (ASND_StatusVoice(1) == SND_WORKING){};
+		return;
+	break;
+#endif
+
 	default:
 	break;
 	}
@@ -470,6 +523,12 @@ void sound_close() {
 		pa_simple_free(pulse_s);
 	break;
 #endif
+#ifdef GEKKO
+	case SOUND_ASND:
+		ASND_End();
+	break;
+#endif
+
 	default:
 	break;
 	}

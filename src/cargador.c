@@ -24,6 +24,15 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef DEBUG
+extern FILE *fdebug;
+#define printf(...) fprintf(fdebug,__VA_ARGS__)
+#else
+ #ifdef GEKKO
+ #define printf(...)
+ #endif
+#endif
+
 void uncompress_z80(FILE *fichero,int length,unsigned char *memo) {
 
 	unsigned char byte_loaded,EDfound,counter;
@@ -87,7 +96,9 @@ int save_z80(char *filename) {
   fprintf(fichero,"%c%c%c%c%c%c",procesador.Rm.br.A,procesador.Rm.br.F,procesador.Rm.br.C,procesador.Rm.br.B,procesador.Rm.br.L,procesador.Rm.br.H); // AF, BC and HL
 
   if(ordenador.mode128k==0) // 48K
-    fprintf(fichero,"%c%c",(byte)(procesador.PC&0x0FF),(byte)((procesador.PC>>8)&0xFF)); // PC
+	fprintf(fichero,"%c%c",(byte)(procesador.PC&0x0FF),(byte)((procesador.PC>>8)&0xFF)); // PC
+	//Endian?
+	//fprintf(fichero,"%c%c",(byte)(procesador.PC&0x0FF),(byte)((procesador.PC<<8)&0xFF)); // PC
   else
     fprintf(fichero,"%c%c",0,0); // 128K
 

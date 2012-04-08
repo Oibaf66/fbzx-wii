@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <malloc.h>
 #include "characters.h"
 #include "menus.h"
 #include <string.h>
@@ -42,7 +43,11 @@
 
 #ifdef DEBUG
 FILE *fdebug;
-#define printf(...) fprintf(fdebug,__VA_ARGS__); fflush (fdebug)
+#define printf(...) fprintf(fdebug,__VA_ARGS__)
+#else
+ #ifdef GEKKO
+ #define printf(...)
+ #endif
 #endif
 
 char debug_var=1;
@@ -293,7 +298,9 @@ void init_screen(int resx,int resy,int depth,int fullscreen,int dblbuffer,int hw
 	
 	value=0;
 	for(bucle2=0;bucle2<NUM_SNDBUF;bucle2++) {
-		sound[bucle2]=(unsigned char *)malloc(ordenador.buffer_len*ordenador.increment+8);
+		//sound[bucle2]=(unsigned char *)malloc(ordenador.buffer_len*ordenador.increment+8);
+		//ASND Required alligned memory with padding
+		sound[bucle2]=(unsigned char *)memalign(32,ordenador.buffer_len*ordenador.increment+32);
 		for(bucle=0;bucle<ordenador.buffer_len*ordenador.increment+4;bucle++)
 			sound[bucle2][bucle]=value;
 			value+=4; 
@@ -515,12 +522,9 @@ int main(int argc,char *argv[]) {
 	#endif
 	
 	#ifdef GEKKO
-	fullscreen=1;
 	dblbuffer=1;
 	hwsurface=1;
 	setenv("HOME", "/fbzx-wii", 1);
-	
-	printf("\x1b[2;0H");
 
 	//initialize libfat library
 	if (!fatInitDefault())
@@ -531,8 +535,7 @@ int main(int argc,char *argv[]) {
 	}
 	else
 		printf("SD FAT subsytem initialized\n\n");
-		
-	//SDL_Delay(3000);	
+			
 	
 	#endif
 
@@ -678,6 +681,10 @@ int main(int argc,char *argv[]) {
 		strcat(path_snaps,"/");
 	strcpy(path_taps,path_snaps);
 	strcpy(path_mdrs,path_snaps);
+	strcat(path_snaps,"snapshots");
+	strcat(path_taps,"tapes");
+	strcat(path_mdrs,"microdrives");
+	
 	ordenador.current_tap[0]=0;
 
 	// assign random values to the memory before start execution
@@ -796,7 +803,12 @@ int main(int argc,char *argv[]) {
 			ordenador.interr=0;
 		}
 	}
-
+	
 	save_config(&ordenador);
+	
+	#ifdef GEKKO
+	fatUnmount(0);
+	#endif
+	
 	return 0;
 }

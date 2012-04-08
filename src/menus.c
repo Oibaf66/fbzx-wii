@@ -90,7 +90,7 @@ void settings_menu() {
 	do {
 		clean_screen();
 
-		print_string(fbuffer,"Current settings",-1,5,15,0,ancho);
+		print_string(fbuffer,"Current settings",-1,20,15,0,ancho);
 		switch(ordenador.mode128k) {
 		case 0:
 			if(ordenador.issue==2)
@@ -207,8 +207,8 @@ void settings_menu() {
 		print_string(fbuffer,"V:",30,400,12,0,ancho);
 		print_string(fbuffer,"TV Set mode",78,400,15,0,ancho);
 
-		print_string(fbuffer,"ESC:",168,460,12,0,ancho);
-		print_string(fbuffer,"return emulator",232,460,15,0,ancho);
+		print_string(fbuffer,"ESC:",168,450,12,0,ancho);
+		print_string(fbuffer,"return emulator",232,450,15,0,ancho);
 
 		switch(wait_key()) {
 		case SDLK_ESCAPE:
@@ -305,8 +305,8 @@ void help_menu() {
 
 	clean_screen();
 
-	print_string(fbuffer,"FBZX (2.7.0)",-1,10,15,0,ancho);
-	print_string(fbuffer,"Available keys",-1,40,14,0,ancho);
+	print_string(fbuffer,"FBZX (2.7.0)",-1,20,15,0,ancho);
+	print_string(fbuffer,"Available keys",-1,50,14,0,ancho);
 	print_string(fbuffer,"Shift:Caps Shift    Ctrl:Symbol Shift",-1,95,11,0,ancho);
 
 	print_string(fbuffer,"F1:",14,160,12,0,ancho);
@@ -470,13 +470,13 @@ void tools_menu() {
 	do {
 		clean_screen();
 
-		print_string(fbuffer,"Tools",-1,10,15,0,ancho);
+		print_string(fbuffer,"Tools",-1,20,15,0,ancho);
 
-		print_string(fbuffer,"1:",14,50,12,0,ancho);
-		print_string(fbuffer,"show keyboard template",62,50,15,0,ancho);
+		print_string(fbuffer,"1:",14,60,12,0,ancho);
+		print_string(fbuffer,"show keyboard template",62,60,15,0,ancho);
 
-		print_string(fbuffer,"2:",14,90,12,0,ancho);
-		print_string(fbuffer,"insert POKEs",62,90,15,0,ancho);
+		print_string(fbuffer,"2:",14,100,12,0,ancho);
+		print_string(fbuffer,"insert POKEs",62,100,15,0,ancho);
 
 		print_string(fbuffer,"ESC:",14,250,12,0,ancho);
 		print_string(fbuffer,"return emulator",78,250,15,0,ancho);
@@ -518,7 +518,7 @@ void snapshots_menu() {
 
 	clean_screen();
 
-	print_string(fbuffer,"SNAPSHOTS",-1,10,15,0,ancho);
+	print_string(fbuffer,"SNAPSHOTS",-1,30,15,0,ancho);
 
 	print_string(fbuffer,"1:",14,100,12,0,ancho);
 	print_string(fbuffer,"load a Z80/SNA snapshot",62,100,15,0,ancho);
@@ -582,29 +582,29 @@ void taps_menu() {
 	do {
 		clean_screen();
 
-		print_string(fbuffer,"TAP/TZX files",-1,10,15,0,ancho);
+		print_string(fbuffer,"TAP/TZX files",-1,20,15,0,ancho);
 
-		print_string(fbuffer,"1:",14,50,12,0,ancho);
-		print_string(fbuffer,"select a TAP/TZX file",62,50,15,0,ancho);
+		print_string(fbuffer,"1:",14,60,12,0,ancho);
+		print_string(fbuffer,"select a TAP/TZX file",62,60,15,0,ancho);
 
 
-		print_string(fbuffer,"2:",14,90,12,0,ancho);
-		print_string(fbuffer,"rewind TAP/TZX file",62,90,15,0,ancho);
+		print_string(fbuffer,"2:",14,100,12,0,ancho);
+		print_string(fbuffer,"rewind TAP/TZX file",62,100,15,0,ancho);
 
-		print_string(fbuffer,"3:",14,130,12,0,ancho);
-		print_string(fbuffer,"fast/normal speed",62,130,15,0,ancho);
+		print_string(fbuffer,"3:",14,140,12,0,ancho);
+		print_string(fbuffer,"fast/normal speed",62,140,15,0,ancho);
 
-		print_string(fbuffer,"4:",14,170,12,0,ancho);
-		print_string(fbuffer,"write protection",62,170,15,0,ancho);
+		print_string(fbuffer,"4:",14,180,12,0,ancho);
+		print_string(fbuffer,"write protection",62,180,15,0,ancho);
 		
-		print_string(fbuffer,"5:",14,210,12,0,ancho);
-		print_string(fbuffer,"create TAP file",62,210,15,0,ancho);
+		print_string(fbuffer,"5:",14,220,12,0,ancho);
+		print_string(fbuffer,"create TAP file",62,220,15,0,ancho);
 				
-		print_string(fbuffer,"ESC:",14,250,12,0,ancho);
-		print_string(fbuffer,"return emulator",78,250,15,0,ancho);
+		print_string(fbuffer,"ESC:",14,260,12,0,ancho);
+		print_string(fbuffer,"return emulator",78,260,15,0,ancho);
 
-		print_string(fbuffer,"Current TAP/TZX file is:",-1,300,12,0,ancho);
-		print_string(fbuffer,ordenador.current_tap,-1,320,12,0,ancho);
+		print_string(fbuffer,"Current TAP/TZX file is:",-1,310,12,0,ancho);
+		print_string(fbuffer,ordenador.current_tap,-1,330,12,0,ancho);
 
 		print_copy(fbuffer,ancho);
 
@@ -745,7 +745,7 @@ void create_tapfile() {
 	print_string(videomem,path_taps,0,152,12,0,ancho);
 
 
-	retorno=ask_filename(nombre2,84,"tap");
+	retorno=ask_filename(nombre2,84,"tap",path_taps);
 
 	clean_screen();
 
@@ -801,19 +801,19 @@ void microdrive_menu() {
 	do {
 			clean_screen();
 
-		print_string(fbuffer,"MICRODRIVE files",-1,10,15,0,ancho);
+		print_string(fbuffer,"MICRODRIVE files",-1,20,15,0,ancho);
 
-		print_string(fbuffer,"1:",14,50,12,0,ancho);
-		print_string(fbuffer,"select a MDR file",62,50,15,0,ancho);
+		print_string(fbuffer,"1:",14,60,12,0,ancho);
+		print_string(fbuffer,"select a MDR file",62,60,15,0,ancho);
 
-		print_string(fbuffer,"2:",14,90,12,0,ancho);
-		print_string(fbuffer,"create a MDR file",62,90,15,0,ancho);
+		print_string(fbuffer,"2:",14,100,12,0,ancho);
+		print_string(fbuffer,"create a MDR file",62,100,15,0,ancho);
 
-		print_string(fbuffer,"3:",14,130,12,0,ancho);
-		print_string(fbuffer,"write protection",62,130,15,0,ancho);
+		print_string(fbuffer,"3:",14,140,12,0,ancho);
+		print_string(fbuffer,"write protection",62,140,15,0,ancho);
 				
-		print_string(fbuffer,"ESC:",14,170,12,0,ancho);
-		print_string(fbuffer,"return emulator",78,170,15,0,ancho);
+		print_string(fbuffer,"ESC:",14,180,12,0,ancho);
+		print_string(fbuffer,"return emulator",78,180,15,0,ancho);
 
 		print_string(fbuffer,"Current MDR file is:",-1,300,12,0,ancho);
 		print_string(fbuffer,ordenador.mdr_current_mdr,-1,320,12,0,ancho);
@@ -928,7 +928,7 @@ void create_mdrfile() {
 	print_string(videomem,"MDR file will be saved in:",-1,132,12,0,ancho);
 	print_string(videomem,path_mdrs,0,152,12,0,ancho);
 
-	retorno=ask_filename(nombre2,84,"mdr");
+	retorno=ask_filename(nombre2,84,"mdr",path_mdrs);
 
 	clean_screen();
 
@@ -991,9 +991,9 @@ void create_scrfile() {
 	print_string(videomem,"(up to 30 characters)",-1,52,14,0,ancho);
 
 	print_string(videomem,"SCR file will be saved in:",-1,132,12,0,ancho);
-	print_string(videomem,path_mdrs,0,152,12,0,ancho);
+	print_string(videomem,path_snaps,0,152,12,0,ancho);
 
-	retorno=ask_filename(nombre2,84,"scr");
+	retorno=ask_filename(nombre2,84,"scr",path_snaps);
 
 	clean_screen();
 
@@ -1038,7 +1038,7 @@ void create_scrfile() {
 }
 
 
-int ask_filename(char *nombre_final,int y_coord,char *extension) {
+int ask_filename(char *nombre_final,int y_coord,char *extension, char *path) {
 
 	int longitud,retorno;
 	unsigned char nombre[37],nombre2[38];
@@ -1335,11 +1335,11 @@ int ask_filename(char *nombre_final,int y_coord,char *extension) {
 
 	nombre[longitud]=0; // erase cursor
 
-	longitud=strlen(path_snaps);
-	if((path_snaps[longitud-1]!='/')&&(longitud>1))
-		sprintf(nombre_final,"%s/%s.%s",path_snaps,nombre,extension); // name
+	longitud=strlen(path);
+	if((path[longitud-1]!='/')&&(longitud>1))
+		sprintf(nombre_final,"%s/%s.%s",path,nombre,extension); // name
 	else
-		sprintf(nombre_final,"%s%s.%s",path_snaps,nombre,extension);
+		sprintf(nombre_final,"%s%s.%s",path,nombre,extension);
 
 	return (retorno);
 }
@@ -1462,7 +1462,7 @@ void save_z80file() {
 	print_string(videomem,path_snaps,0,152,12,0,ancho);
 
 
-	retorno=ask_filename(nombre2,84,"z80");
+	retorno=ask_filename(nombre2,84,"z80", path_snaps);
 
 	clean_screen();
 
@@ -1827,7 +1827,7 @@ void keyboard_menu() {
 		for (bucle1=0;bucle1<344;bucle1++)
 			for(bucle2=0;bucle2<640;bucle2++) {
 				retval=fscanf(fichero,"%c",&valor);
-				paint_one_pixel(colors+valor,buffer);
+				paint_one_pixel((unsigned char *)(colors+valor),buffer);
 				buffer+=ordenador.bpp;
 			}
 	} else {
@@ -1836,7 +1836,7 @@ void keyboard_menu() {
 			buffer2=buffer;
 			for(bucle2=0;bucle2<640;bucle2++) {
 				retval=fscanf(fichero,"%c",&valor);
-				paint_one_pixel(colors+valor,buffer);
+				paint_one_pixel((unsigned char *)(colors+valor),buffer);
 				buffer+=(480*ordenador.bpp);
 			}
 			buffer=buffer2-ordenador.bpp;
