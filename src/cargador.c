@@ -97,8 +97,6 @@ int save_z80(char *filename) {
 
   if(ordenador.mode128k==0) // 48K
 	fprintf(fichero,"%c%c",(byte)(procesador.PC&0x0FF),(byte)((procesador.PC>>8)&0xFF)); // PC
-	//Endian?
-	//fprintf(fichero,"%c%c",(byte)(procesador.PC&0x0FF),(byte)((procesador.PC<<8)&0xFF)); // PC
   else
     fprintf(fichero,"%c%c",0,0); // 128K
 
@@ -161,7 +159,7 @@ int save_z80(char *filename) {
 
 int load_z80(char *filename) {
 
-	struct z80snapshot snap;
+	static struct z80snapshot snap;
 	unsigned char tempo[30],tempo2[56],memo[49152],type,compressed,page,byte_read[3];
 	FILE *fichero;
 	int longitud=0,longitud2,bucle,retval;
@@ -427,10 +425,16 @@ int load_sna(char *filename) {
 	unsigned char tempo2[98308];
 	unsigned char type=0;
 	FILE *fichero;
-	struct z80snapshot snap;
+	static struct z80snapshot snap;
 	unsigned char v1,v2;
 	int addr,loop;
 
+	//Some inits
+	for(loop=0;loop<16;loop++)
+		snap.ay_regs[loop]=0;
+	snap.ay_latch=0;
+	snap.issue=3;
+	snap.joystick=0;
 	
 	printf("Loading SNA file\n");
 	
@@ -568,7 +572,7 @@ void load_snap(struct z80snapshot *snap) {
   procesador.Rm.br.E=snap->E;
   procesador.Rm.br.H=snap->H;
   procesador.Rm.br.L=snap->L;
-  printf("A:%d F:%d B:%d C:%d D:%d E:%d H:%d L:%d\n",snap->A,snap->F,snap->B,snap->C,snap->D,snap->E,snap->H,snap->L);
+  printf("A:%x F:%x B:%x C:%x D:%x E:%x H:%x L:%x\n",snap->A,snap->F,snap->B,snap->C,snap->D,snap->E,snap->H,snap->L);
   procesador.Ra.br.A=snap->AA;
   procesador.Ra.br.F=snap->FF;
   procesador.Ra.br.B=snap->BB;
@@ -577,16 +581,16 @@ void load_snap(struct z80snapshot *snap) {
   procesador.Ra.br.E=snap->EE;
   procesador.Ra.br.H=snap->HH;
   procesador.Ra.br.L=snap->LL;
-  printf("A:%d F:%d B:%d C:%d D:%d E:%d H:%d L:%d\n",snap->AA,snap->FF,snap->BB,snap->CC,snap->DD,snap->EE,snap->HH,snap->LL);
+  printf("A:%x F:%x B:%x C:%x D:%x E:%x H:%x L:%x\n",snap->AA,snap->FF,snap->BB,snap->CC,snap->DD,snap->EE,snap->HH,snap->LL);
   procesador.Rm.wr.IX=snap->IX;
   procesador.Rm.wr.IY=snap->IY;
   procesador.Rm.wr.SP=snap->SP;
   procesador.PC=snap->PC;
-  printf("IX:%d IY:%d SP:%d PC:%d\n",snap->IX,snap->IY,snap->SP,snap->PC);
+  printf("IX:%x IY:%x SP:%x PC:%x\n",snap->IX,snap->IY,snap->SP,snap->PC);
   procesador.I=snap->I;
   procesador.R=snap->R;
   procesador.R2=snap->R;
-  printf("I:%d R:%d\n",snap->I,snap->R);
+  printf("I:%x R:%x\n",snap->I,snap->R);
 
   if(snap->IFF1) {
     procesador.IFF1=1;
@@ -598,8 +602,9 @@ void load_snap(struct z80snapshot *snap) {
   } else {
     procesador.IFF2=0;
   }
-
+	printf("IFF1:%x IFF2:%x\n",snap->IFF1,snap->IFF1);
   procesador.IM=snap->Imode;
+  printf("IM:%x\n",snap->Imode);
   Z80free_Out(0xFFFE,((snap->border&0x07)|0x10));
 
   switch(snap->type) {

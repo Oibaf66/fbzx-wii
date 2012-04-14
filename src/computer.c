@@ -123,6 +123,7 @@ void computer_init () {
 	ordenador.ay_envel_way = 0;
 	
 	ordenador.tape_loop_counter = 0;
+	ordenador.kbd_buffer_pointer = 0;
 }
 
 void computer_set_palete() {
@@ -696,7 +697,30 @@ inline void read_keyboard (SDL_Event *pevento2) {
 	SDL_Event evento,evento2,*pevento;
 	Sint16 valor;
 	Uint8 eje;
-
+	static int countdown;
+	
+	
+	if (ordenador.kbd_buffer_pointer) 
+	{	
+		if (countdown) 
+		countdown--; 
+		else 
+		{
+			if (ordenador.kbd_buffer_pointer != 1)
+			{
+			SDL_PushEvent(&ordenador.keyboard_buffer[ordenador.kbd_buffer_pointer-2]);
+			ordenador.kbd_buffer_pointer--; 
+			countdown=5;
+			}
+			else 
+			{
+			ordenador.kbd_buffer_pointer = 0;
+			    if ((ordenador.tape_fast_load == 0) || (ordenador.tape_file_type==TAP_TZX))
+					ordenador.pause = 0;
+			}
+		}	
+	}		
+							
 	if (pevento2==NULL) {
 		pevento=&evento;
 		if (!SDL_PollEvent (&evento))
@@ -868,7 +892,43 @@ inline void read_keyboard (SDL_Event *pevento2) {
 			break;		
 
 		case SDLK_F9:
-			SDL_Fullscreen_Switch();
+			//SDL_Fullscreen_Switch();
+			//Emulate load ""
+			
+			ordenador.keyboard_buffer[9].key.keysym.sym=SDLK_j;
+			ordenador.keyboard_buffer[9].type=SDL_KEYDOWN;		
+			
+			ordenador.keyboard_buffer[8].key.keysym.sym=SDLK_j;
+			ordenador.keyboard_buffer[8].type=SDL_KEYUP;
+					
+			ordenador.keyboard_buffer[7].key.keysym.sym=SDLK_RCTRL;
+			ordenador.keyboard_buffer[7].type=SDL_KEYDOWN;
+					
+			ordenador.keyboard_buffer[6].key.keysym.sym=SDLK_p;
+			ordenador.keyboard_buffer[6].type=SDL_KEYDOWN;
+					
+			ordenador.keyboard_buffer[5].key.keysym.sym=SDLK_p;
+			ordenador.keyboard_buffer[5].type=SDL_KEYUP;			
+			
+			ordenador.keyboard_buffer[4].key.keysym.sym=SDLK_p;
+			ordenador.keyboard_buffer[4].type=SDL_KEYDOWN;			
+			
+			ordenador.keyboard_buffer[3].key.keysym.sym=SDLK_p;
+			ordenador.keyboard_buffer[3].type=SDL_KEYUP;
+						
+			ordenador.keyboard_buffer[2].key.keysym.sym=SDLK_RCTRL;
+			ordenador.keyboard_buffer[2].type=SDL_KEYUP;
+			
+			ordenador.keyboard_buffer[1].key.keysym.sym=SDLK_RETURN;
+			ordenador.keyboard_buffer[1].type=SDL_KEYDOWN;			
+			
+			ordenador.keyboard_buffer[0].key.keysym.sym=SDLK_RETURN;
+			ordenador.keyboard_buffer[0].type=SDL_KEYUP;
+			
+	
+			ordenador.kbd_buffer_pointer=11;
+			countdown=5;
+			
 			break;
 
 		case SDLK_F10:	// Reset emulator
@@ -932,7 +992,7 @@ inline void read_keyboard (SDL_Event *pevento2) {
 		break;
 		
 		case 3:	// sinclair 2
-			temporal_io = SDLK_7;
+			temporal_io = SDLK_9;
 		break;
 		}
 	break;
@@ -968,11 +1028,11 @@ inline void read_keyboard (SDL_Event *pevento2) {
 		break;
 		
 		case 2:	// sinclair 1
-			temporal_io = SDLK_1;
+			temporal_io = SDLK_2;
 		break;
 				
 		case 3:	// sinclair 2
-			temporal_io = SDLK_9;
+			temporal_io = SDLK_7;
 		break;
 		
 		}
@@ -989,11 +1049,11 @@ inline void read_keyboard (SDL_Event *pevento2) {
 		break;
 		
 		case 2:	// sinclair 1
-			temporal_io = SDLK_2;
+			temporal_io = SDLK_1;
 		break;
 		
 		case 3:	// sinclair 2
-			temporal_io = SDLK_0;
+			temporal_io = SDLK_6;
 		break;		
 		}
 	break;
@@ -1018,7 +1078,7 @@ inline void read_keyboard (SDL_Event *pevento2) {
 		break;
 		
 		case 3:	// sinclair 2
-			temporal_io = SDLK_6;
+			temporal_io = SDLK_0;
 		break;		
 		}
 	break;

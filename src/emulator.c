@@ -430,7 +430,7 @@ void load_config(struct computer *object) {
 			continue;
 		}
 		if (!strncmp(line,"mode=",5)) {
-			printf("Cambio a modo %c\n",line[5]-'0');
+			printf("Cambio a modo %c\n",line[5]);
 			mode128k=line[5]-'0';
 			continue;
 		}
@@ -636,7 +636,7 @@ int main(int argc,char *argv[]) {
 			argumento++;
 		} else if(0==strncmp(argv[argumento],"-jump",5)) {
 			jump_frames=(int)(argv[argumento][5]);
-			jump_frames-=48;
+			jump_frames-=48;//???
 			argumento++;
 			printf ("Jump %d\n",jump_frames);
 		} else {

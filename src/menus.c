@@ -284,10 +284,13 @@ void settings_menu() {
 			if(ordenador.turbo){
 				ordenador.tst_sample=3500000/ordenador.freq;
 				ordenador.turbo = 0;
+				jump_frames=0;
 			} else {
-				ordenador.tst_sample=100000000/ordenador.freq;
+				ordenador.tst_sample=12000000/ordenador.freq; //5,0 MHz max emulation speed for wii
 				ordenador.turbo = 1;
+				jump_frames=3;
 			}
+		break;	
 		}
 	} while(fin);
 
@@ -334,7 +337,7 @@ void help_menu() {
 	print_string(fbuffer,"tools",382,280,15,0,ancho);
 
 	print_string(fbuffer,"F9:",14,320,12,0,ancho);
-	print_string(fbuffer,"Toggle fullscreen",62,320,15,0,ancho);
+	print_string(fbuffer,"load",62,320,15,0,ancho);
 
 	print_string(fbuffer,"F10:",336,320,12,0,ancho);
 	print_string(fbuffer,"reset spectrum",398,320,15,0,ancho);

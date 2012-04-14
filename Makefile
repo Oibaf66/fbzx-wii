@@ -117,12 +117,14 @@ dist: $(BUILD)
 	mkdir -p $@/fbzx-wii/tapes
 	mkdir -p $@/fbzx-wii/snapshots
 	mkdir -p $@/fbzx-wii/microdrives
-	mkdir -p $@/fbzx-wii/pixmaps
 	mkdir -p $@/apps/fbzx-wii/doc
 	cp fbzx.dol $@/apps/fbzx-wii/boot.dol
 	cp spectrum-roms/* $@/fbzx-wii/spectrum-roms
 	cp keymap.bmp $@/fbzx-wii/fbzx
 	cp AMSTRAD CAPABILITIES COPYING FAQ README README.TZX VERSIONS $@/apps/fbzx-wii/doc
+	touch $@/fbzx-wii/tapes/dummy
+	touch $@/fbzx-wii/snapshots/dummy
+	touch $@/fbzx-wii/microdrives/dummy
 	cd $@ && tar -czf ../fbzx-wii-bin.tar.gz *
 
 #---------------------------------------------------------------------------------

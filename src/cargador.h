@@ -29,7 +29,7 @@ struct z80snapshot {
   byte border; // border color
   byte pager; // content of pagination register in 128K mode
   unsigned char page[12][16384];
-  unsigned int found_pages; // bit=1: page exists. bit=0: page don't exists.
+  //unsigned int found_pages; // bit=1: page exists. bit=0: page don't exists.
   unsigned char ay_regs[16];
   unsigned char ay_latch;
   unsigned char joystick;
