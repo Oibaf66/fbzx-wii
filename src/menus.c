@@ -286,7 +286,7 @@ void settings_menu() {
 				ordenador.turbo = 0;
 				jump_frames=0;
 			} else {
-				ordenador.tst_sample=12000000/ordenador.freq; //5,0 MHz max emulation speed for wii
+				ordenador.tst_sample=12000000/ordenador.freq; //5,0 MHz max emulation speed for wii at full frames
 				ordenador.turbo = 1;
 				jump_frames=3;
 			}
@@ -308,7 +308,7 @@ void help_menu() {
 
 	clean_screen();
 
-	print_string(fbuffer,"FBZX (2.7.0)",-1,20,15,0,ancho);
+	print_string(fbuffer,"FBZX Wii (1.0)",-1,20,15,0,ancho);
 	print_string(fbuffer,"Available keys",-1,50,14,0,ancho);
 	print_string(fbuffer,"Shift:Caps Shift    Ctrl:Symbol Shift",-1,95,11,0,ancho);
 
@@ -351,7 +351,7 @@ void help_menu() {
 	print_string(fbuffer,"ESC:",184,400,12,0,ancho);
 	print_string(fbuffer,"exit emulator",248,400,15,0,ancho);
 
-	print_copy(fbuffer,ancho);
+	//print_copy(fbuffer,ancho);
 
 	fin=1;
 	do {
@@ -484,7 +484,7 @@ void tools_menu() {
 		print_string(fbuffer,"ESC:",14,250,12,0,ancho);
 		print_string(fbuffer,"return emulator",78,250,15,0,ancho);
 
-		print_copy(fbuffer,ancho);
+		//print_copy(fbuffer,ancho);
 
 		switch(wait_key()) {
 		case SDLK_ESCAPE: // to exit the help
@@ -539,7 +539,7 @@ void snapshots_menu() {
 
 	print_string(fbuffer,"ESC: \001\017return to emulator",-1,400,12,0,ancho);
 
-	print_copy(fbuffer,ancho);
+	//print_copy(fbuffer,ancho);
 
 	fin=1;
 	do {
@@ -609,7 +609,7 @@ void taps_menu() {
 		print_string(fbuffer,"Current TAP/TZX file is:",-1,310,12,0,ancho);
 		print_string(fbuffer,ordenador.current_tap,-1,330,12,0,ancho);
 
-		print_copy(fbuffer,ancho);
+		//print_copy(fbuffer,ancho);
 
 		if(ordenador.tape_fast_load)
 			print_string(fbuffer,"Fast load enabled	",10,420,14,0,ancho);
@@ -748,7 +748,7 @@ void create_tapfile() {
 	print_string(videomem,path_taps,0,152,12,0,ancho);
 
 
-	retorno=ask_filename(nombre2,84,"tap",path_taps);
+	retorno=ask_filename(nombre2,84,"tap",path_taps,NULL);
 
 	clean_screen();
 
@@ -821,7 +821,7 @@ void microdrive_menu() {
 		print_string(fbuffer,"Current MDR file is:",-1,300,12,0,ancho);
 		print_string(fbuffer,ordenador.mdr_current_mdr,-1,320,12,0,ancho);
 
-		print_copy(fbuffer,ancho);
+		//print_copy(fbuffer,ancho);
 		
 		if(!ordenador.mdr_cartridge[137922])
 			print_string(fbuffer,"Write enabled",-1,420,14,0,ancho);
@@ -931,7 +931,7 @@ void create_mdrfile() {
 	print_string(videomem,"MDR file will be saved in:",-1,132,12,0,ancho);
 	print_string(videomem,path_mdrs,0,152,12,0,ancho);
 
-	retorno=ask_filename(nombre2,84,"mdr",path_mdrs);
+	retorno=ask_filename(nombre2,84,"mdr",path_mdrs, NULL);
 
 	clean_screen();
 
@@ -984,6 +984,7 @@ void create_scrfile() {
 	int ancho,retorno,retval;
 	unsigned char nombre2[1024];
 	FILE *fichero;
+	char *name;
 
 	videomem=screen->pixels;
 	ancho=screen->w;
@@ -996,7 +997,15 @@ void create_scrfile() {
 	print_string(videomem,"SCR file will be saved in:",-1,132,12,0,ancho);
 	print_string(videomem,path_snaps,0,152,12,0,ancho);
 
-	retorno=ask_filename(nombre2,84,"scr",path_snaps);
+	if (strlen(ordenador.current_tap))
+		{
+		name=strrchr(ordenador.current_tap,'/');
+		if (name) name++; else name = ordenador.current_tap;
+		}
+	else
+	 name=NULL;
+	
+	retorno=ask_filename(nombre2,84,"scr",path_snaps, name);
 
 	clean_screen();
 
@@ -1041,10 +1050,11 @@ void create_scrfile() {
 }
 
 
-int ask_filename(char *nombre_final,int y_coord,char *extension, char *path) {
+int ask_filename(char *nombre_final,int y_coord,char *extension, char *path, char *name) {
 
 	int longitud,retorno;
 	unsigned char nombre[37],nombre2[38];
+	char *ptr;
 
 	unsigned char *videomem;
 	int ancho;
@@ -1052,10 +1062,29 @@ int ask_filename(char *nombre_final,int y_coord,char *extension, char *path) {
 	videomem=screen->pixels;
 	ancho=screen->w;
 
-	nombre[0]=127;
-	nombre[1]=0;
-	longitud=0;
 	retorno=0;
+	
+	if (!name||(strlen(name)>36)) 
+		{
+		nombre[0]=127;
+		nombre[1]=0;
+		}
+	else
+		{
+		strcpy(nombre,name);
+		ptr = strrchr (nombre, '.');
+		if (ptr) //remove the extension 
+			{
+			*ptr = 127;
+			*(ptr+1) = 0;
+			}
+		else
+		nombre[strlen(nombre)-1]=127;
+		nombre[strlen(nombre)]=0;
+		}
+	
+	longitud=strlen(nombre)-1;
+	
 
 	do {
 		sprintf (nombre2, " %s.%s ", nombre,extension);
@@ -1452,6 +1481,7 @@ void save_z80file() {
 	unsigned char *videomem;
 	int ancho,retorno;
 	unsigned char nombre2[1024];
+	char *name;
 
 	videomem=screen->pixels;
 	ancho=screen->w;
@@ -1464,8 +1494,15 @@ void save_z80file() {
 	print_string(videomem,"Snapshot will be saved in:",-1,132,12,0,ancho);
 	print_string(videomem,path_snaps,0,152,12,0,ancho);
 
-
-	retorno=ask_filename(nombre2,84,"z80", path_snaps);
+	if (strlen(ordenador.current_tap))
+		{
+		name=strrchr(ordenador.current_tap,'/');
+		if (name) name++; else name = ordenador.current_tap;
+		}
+	else
+	 name=NULL;
+	 
+	retorno=ask_filename(nombre2,84,"z80", path_snaps, name);
 
 	clean_screen();
 
@@ -1845,7 +1882,7 @@ void keyboard_menu() {
 			buffer=buffer2-ordenador.bpp;
 		}
 	}
-	print_copy(screen->pixels,screen->w);
+	//print_copy(screen->pixels,screen->w);
 	wait_key();
 	clean_screen();
 }

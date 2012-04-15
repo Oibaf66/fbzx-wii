@@ -193,8 +193,11 @@ struct computer {
 	unsigned char other_ret; // 0=no change; 1=memory returns RET (201)
 
 	unsigned char turbo;
-	SDL_Event keyboard_buffer[10];
 	unsigned int kbd_buffer_pointer;
+	unsigned char *key;
+	SDL_Joystick *joystick_sdl[2];
+	int joy_axis_x_state[2];
+	int joy_axis_y_state[2];
 };
 
 void computer_init();

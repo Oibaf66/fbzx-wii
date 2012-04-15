@@ -219,7 +219,7 @@ void load_rom(char type) {
 
 void init_screen(int resx,int resy,int depth,int fullscreen,int dblbuffer,int hwsurface) {
 
-	int retorno,bucle,bucle2,valores,ret2;
+	int retorno,bucle,bucle2,valores,ret2,joystick_number;
 	unsigned char value;
 
 	//if (sound_type!=3)
@@ -239,8 +239,11 @@ void init_screen(int resx,int resy,int depth,int fullscreen,int dblbuffer,int hw
 		ordenador.use_js=1;
 		if(SDL_NumJoysticks()>0){
 			// Open joystick
-			for (bucle=0;bucle<SDL_NumJoysticks();bucle++) {
-	  			if (NULL==SDL_JoystickOpen(bucle)) {
+			joystick_number = SDL_NumJoysticks();
+			if (joystick_number>2) joystick_number = 2; //Open max 2 joysticks
+			for (bucle=0;bucle<joystick_number;bucle++) {
+			ordenador.joystick_sdl [bucle] = SDL_JoystickOpen(bucle);
+	  			if (NULL==ordenador.joystick_sdl [bucle]) {
 	  				printf("Can't open joystick %d\n",bucle);
 	  			}
   			}
@@ -704,11 +707,11 @@ int main(int argc,char *argv[]) {
 	SDL_EventState(SDL_MOUSEMOTION,SDL_IGNORE);
 	SDL_EventState(SDL_MOUSEBUTTONDOWN,SDL_IGNORE);
 	SDL_EventState(SDL_MOUSEBUTTONUP,SDL_IGNORE);
-	SDL_EventState(SDL_JOYAXISMOTION,SDL_ENABLE);
-	SDL_EventState(SDL_JOYBALLMOTION,SDL_ENABLE);
-	SDL_EventState(SDL_JOYHATMOTION,SDL_ENABLE);
-	SDL_EventState(SDL_JOYBUTTONDOWN,SDL_ENABLE);
-	SDL_EventState(SDL_JOYBUTTONUP,SDL_ENABLE);
+	SDL_EventState(SDL_JOYAXISMOTION,SDL_IGNORE);
+	SDL_EventState(SDL_JOYBALLMOTION,SDL_IGNORE);
+	SDL_EventState(SDL_JOYHATMOTION,SDL_IGNORE);
+	SDL_EventState(SDL_JOYBUTTONDOWN,SDL_IGNORE);
+	SDL_EventState(SDL_JOYBUTTONUP,SDL_IGNORE);
 	SDL_EventState(SDL_QUIT,SDL_ENABLE);
 	SDL_EventState(SDL_SYSWMEVENT,SDL_IGNORE);
 	SDL_EventState(SDL_VIDEORESIZE,SDL_IGNORE);
@@ -798,7 +801,7 @@ int main(int argc,char *argv[]) {
 			ordenador.mdr_paged = 2;
 
 		if(ordenador.interr==1) {
-			read_keyboard (NULL);	// read the physical keyboard
+			read_keyboard ();	// read the physical keyboard
 			Z80free_INT(&procesador,bus_empty());
 			ordenador.interr=0;
 		}

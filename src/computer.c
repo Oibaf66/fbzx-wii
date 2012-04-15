@@ -124,6 +124,7 @@ void computer_init () {
 	
 	ordenador.tape_loop_counter = 0;
 	ordenador.kbd_buffer_pointer = 0;
+	ordenador.key = SDL_GetKeyState(NULL);
 }
 
 void computer_set_palete() {
@@ -691,14 +692,19 @@ inline void paint_one_pixel(unsigned char *colour,unsigned char *address) {
 
 // Read the keyboard and stores the flags
 
-inline void read_keyboard (SDL_Event *pevento2) {
+inline void read_keyboard () {
 
 	unsigned int temporal_io;
-	SDL_Event evento,evento2,*pevento;
-	Sint16 valor;
-	Uint8 eje;
+	SDL_Event evento,*pevento;
 	static int countdown;
+	enum joystate_x {JOY_CENTER_X, JOY_LEFT, JOY_RIGHT};
+	enum joystate_y {JOY_CENTER_Y, JOY_UP, JOY_DOWN};
+	int joy_axis_x,joy_axis_y, joy_fire;
 	
+	ordenador.k8 = ordenador.k9 = ordenador.k10 = ordenador.k11 =
+		ordenador.k12 = ordenador.k13 = ordenador.k14 =
+		ordenador.k15 = 0;
+		ordenador.jk = 0;
 	
 	if (ordenador.kbd_buffer_pointer) 
 	{	
@@ -706,99 +712,64 @@ inline void read_keyboard (SDL_Event *pevento2) {
 		countdown--; 
 		else 
 		{
-			if (ordenador.kbd_buffer_pointer != 1)
-			{
-			SDL_PushEvent(&ordenador.keyboard_buffer[ordenador.kbd_buffer_pointer-2]);
-			ordenador.kbd_buffer_pointer--; 
-			countdown=5;
-			}
-			else 
-			{
-			ordenador.kbd_buffer_pointer = 0;
-			    if ((ordenador.tape_fast_load == 0) || (ordenador.tape_file_type==TAP_TZX))
+			switch (ordenador.kbd_buffer_pointer)
+				{
+					case 6: 			//Edit
+					ordenador.k8|=1;
+					ordenador.k11|=1;
+					break;
+					case 5: 			//Load
+					ordenador.k14|= 8;
+					break;
+					case 4: //"
+					ordenador.k15|= 2; 
+					ordenador.k13|= 1;
+					break;
+					case 3:				//"
+					ordenador.k15|= 2;
+					ordenador.k13|= 1;
+					break;
+					case 2:				// Return
+					ordenador.k14|= 1;
+					break;
+					case 1:
+					if ((ordenador.tape_fast_load == 0) || (ordenador.tape_file_type==TAP_TZX))
 					ordenador.pause = 0;
-			}
+					break;
+				}
+			ordenador.kbd_buffer_pointer--; 
+			countdown=5;		
 		}	
-	}		
-							
-	if (pevento2==NULL) {
-		pevento=&evento;
-		if (!SDL_PollEvent (&evento))
-			return;
-	} else {
-		pevento=pevento2;
 	}
+							
+		pevento=&evento;
+		SDL_PollEvent (&evento);
+
 
 	if (pevento->type==SDL_QUIT) {
 		salir = 0;
 		return;
 	}
-
-	if (pevento->type==SDL_JOYBUTTONDOWN) {
-		pevento->type=SDL_KEYDOWN;
-		pevento->key.keysym.sym=SDLK_MENU; // emulate pressing the MENU key
-	}
 	
-	if (pevento->type==SDL_JOYBUTTONUP) {
-		pevento->type=SDL_KEYUP;
-		pevento->key.keysym.sym=SDLK_MENU; // emulate depressing the MENU key
-	}
+	SDL_JoystickUpdate();
+	joy_axis_x = SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 0);
+	joy_axis_y = SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 1);
+	joy_fire = SDL_JoystickGetButton(ordenador.joystick_sdl[0], 0); //Wii button A
 	
-	if (pevento->type==SDL_JOYAXISMOTION) {
-		eje=pevento->jaxis.axis;
-		valor=pevento->jaxis.value;
-
-		evento2.type=SDL_KEYUP;
-		if ((valor<16384)&&(valor>-16384)) { // JoyStick centered
-			pevento->type=SDL_KEYUP;
-			if (eje==1) {
-				evento2.key.keysym.sym=SDLK_DOWN;
-				pevento->key.keysym.sym=SDLK_UP; // pull up both keys
-				read_keyboard(&evento2);
-			}
-			if (eje==0) {
-				evento2.key.keysym.sym=SDLK_LEFT;
-				pevento->key.keysym.sym=SDLK_RIGHT;
-				read_keyboard(&evento2);
-			}
-		} else { // JoyStick moved
-			if (eje==0) {
-				if (valor>=0) {
-					evento2.key.keysym.sym=SDLK_LEFT; // pull up LEFT
-					read_keyboard(&evento2);
-					pevento->key.keysym.sym=SDLK_RIGHT; // and press RIGHT
-				} else {
-					evento2.key.keysym.sym=SDLK_RIGHT; // pull up RIGHT
-					read_keyboard(&evento2);
-					pevento->key.keysym.sym=SDLK_LEFT; // and press LEFT
-				}
-			}
-			if (eje==1) {
-				if (valor<0) {
-					evento2.key.keysym.sym=SDLK_DOWN; // pull up DOWN
-					pevento->key.keysym.sym=SDLK_UP; // and press UP
-					read_keyboard(&evento2);
-				} else {
-					evento2.key.keysym.sym=SDLK_UP; // pull up UP
-					pevento->key.keysym.sym=SDLK_DOWN; // and press DOWN
-					read_keyboard(&evento2);
-				}
-			}
-			pevento->type=SDL_KEYDOWN;
-		}
-	}
-
-	if ((pevento->type != SDL_KEYDOWN) && (pevento->type != SDL_KEYUP))
-		return;
-
-	ordenador.k8 = ordenador.k9 = ordenador.k10 = ordenador.k11 =
-		ordenador.k12 = ordenador.k13 = ordenador.k14 =
-		ordenador.k15 = 0;
-		ordenador.jk = 0;
+	if (SDL_JoystickGetButton(ordenador.joystick_sdl[0], 6)) help_menu ();
+	
+	if (joy_axis_x > 16384) ordenador.joy_axis_x_state[0] = JOY_RIGHT; 
+	else if (joy_axis_x < -16384) ordenador.joy_axis_x_state[0] = JOY_LEFT;
+	else ordenador.joy_axis_x_state[0] = JOY_CENTER_X;
+	
+	if (joy_axis_y > 16384) ordenador.joy_axis_y_state[0] = JOY_DOWN; 
+	else if (joy_axis_y < -16384) ordenador.joy_axis_y_state[0] = JOY_UP;
+	else ordenador.joy_axis_y_state[0] = JOY_CENTER_Y;
 
 	temporal_io = (unsigned int) pevento->key.keysym.sym;
 
-	if ((pevento->type==SDL_KEYUP)&&(temporal_io==SDLK_TAB)) {
+	/*
+	if ((pevento->type==SDL_KEYDOWN)&&(temporal_io==SDLK_TAB)) {
 		if (ordenador.tab_extended==0) {
 			ordenador.tab_extended=1;
 			strcpy(ordenador.osd_text,"Function Key mode on");
@@ -811,10 +782,7 @@ inline void read_keyboard (SDL_Event *pevento2) {
 		}
 	}
 	
-	if ((pevento->type==SDL_KEYDOWN)&&(ordenador.tab_extended==1))
-		return;
-	
-	if ((pevento->type==SDL_KEYUP)&&(ordenador.tab_extended==1)) {
+	if ((pevento->type==SDL_KEYDOWN)&&(ordenador.tab_extended==1)) {
 		ordenador.tab_extended=0;
 		ordenador.osd_time=0;
 		switch(temporal_io) {
@@ -856,9 +824,8 @@ inline void read_keyboard (SDL_Event *pevento2) {
 		break;
 		}
 	}
-	
-
-	if (pevento->type == SDL_KEYUP)
+	*/
+	if (pevento->type == SDL_KEYDOWN)
 		switch (temporal_io) {
 		case SDLK_ESCAPE:	// to exit from the emulator
 			if (ordenador.esc_again==0) {
@@ -892,43 +859,10 @@ inline void read_keyboard (SDL_Event *pevento2) {
 			break;		
 
 		case SDLK_F9:
-			//SDL_Fullscreen_Switch();
 			//Emulate load ""
-			
-			ordenador.keyboard_buffer[9].key.keysym.sym=SDLK_j;
-			ordenador.keyboard_buffer[9].type=SDL_KEYDOWN;		
-			
-			ordenador.keyboard_buffer[8].key.keysym.sym=SDLK_j;
-			ordenador.keyboard_buffer[8].type=SDL_KEYUP;
-					
-			ordenador.keyboard_buffer[7].key.keysym.sym=SDLK_RCTRL;
-			ordenador.keyboard_buffer[7].type=SDL_KEYDOWN;
-					
-			ordenador.keyboard_buffer[6].key.keysym.sym=SDLK_p;
-			ordenador.keyboard_buffer[6].type=SDL_KEYDOWN;
-					
-			ordenador.keyboard_buffer[5].key.keysym.sym=SDLK_p;
-			ordenador.keyboard_buffer[5].type=SDL_KEYUP;			
-			
-			ordenador.keyboard_buffer[4].key.keysym.sym=SDLK_p;
-			ordenador.keyboard_buffer[4].type=SDL_KEYDOWN;			
-			
-			ordenador.keyboard_buffer[3].key.keysym.sym=SDLK_p;
-			ordenador.keyboard_buffer[3].type=SDL_KEYUP;
-						
-			ordenador.keyboard_buffer[2].key.keysym.sym=SDLK_RCTRL;
-			ordenador.keyboard_buffer[2].type=SDL_KEYUP;
-			
-			ordenador.keyboard_buffer[1].key.keysym.sym=SDLK_RETURN;
-			ordenador.keyboard_buffer[1].type=SDL_KEYDOWN;			
-			
-			ordenador.keyboard_buffer[0].key.keysym.sym=SDLK_RETURN;
-			ordenador.keyboard_buffer[0].type=SDL_KEYUP;
-			
 	
-			ordenador.kbd_buffer_pointer=11;
+			ordenador.kbd_buffer_pointer=6;
 			countdown=5;
-			
 			break;
 
 		case SDLK_F10:	// Reset emulator
@@ -973,316 +907,108 @@ inline void read_keyboard (SDL_Event *pevento2) {
 		}
 	}
 		
-		
-	// test for joystick
-		
-	switch (temporal_io) {
-	case SDLK_UP:
-		switch (ordenador.joystick) {
+	switch (ordenador.joystick) {
 		case 0:	// cursor
-			temporal_io = SDLK_7;
-		break;
-		
-		case 1:
-			ordenador.jk = 8;
+			if (ordenador.joy_axis_y_state[0] == JOY_UP) ordenador.k12|= 8;
+			if (ordenador.joy_axis_y_state[0] == JOY_DOWN) ordenador.k12|= 16;
+			if (ordenador.joy_axis_x_state[0] == JOY_RIGHT)ordenador.k12|= 4;
+			if (ordenador.joy_axis_x_state[0] == JOY_LEFT) ordenador.k11|= 16;
+			if (joy_fire) ordenador.k12|= 1;
+		break; 
+			
+		case 1: //Kempston
+			if (ordenador.joy_axis_y_state[0] == JOY_UP) ordenador.jk|= 8;
+			if (ordenador.joy_axis_y_state[0] == JOY_DOWN) ordenador.jk|= 4;
+			if (ordenador.joy_axis_x_state[0] == JOY_RIGHT) ordenador.jk|= 1;
+			if (ordenador.joy_axis_x_state[0] == JOY_LEFT) ordenador.jk|= 2;
+			if (joy_fire) ordenador.jk = 16;
 		break;
 		
 		case 2:	// sinclair 1
-			temporal_io = SDLK_4;
+			if (ordenador.joy_axis_y_state[0] == JOY_UP) ordenador.k11|= 8;
+			if (ordenador.joy_axis_y_state[0] == JOY_DOWN)ordenador.k11|= 4;
+			if (ordenador.joy_axis_x_state[0] == JOY_RIGHT)ordenador.k11|= 2;
+			if (ordenador.joy_axis_x_state[0] == JOY_LEFT) ordenador.k11|= 1;
+			if (joy_fire) ordenador.k11|= 16;	
 		break;
 		
 		case 3:	// sinclair 2
-			temporal_io = SDLK_9;
+			if (ordenador.joy_axis_y_state[0] == JOY_UP) ordenador.k12|= 2;
+			if (ordenador.joy_axis_y_state[0] == JOY_DOWN)ordenador.k12|= 4;
+			if (ordenador.joy_axis_x_state[0] == JOY_RIGHT)ordenador.k12|= 8;
+			if (ordenador.joy_axis_x_state[0] == JOY_LEFT) ordenador.k12|= 16;
+			if (joy_fire) ordenador.k12|= 1;
 		break;
 		}
-	break;
-	
-	case SDLK_DOWN:
-		switch (ordenador.joystick) {
-		case 0:	// cursor
-			temporal_io = SDLK_6;
-		break;
-		
-		case 1:
-			ordenador.jk = 4;
-		break;
-		
-		case 2:	// sinclair 1
-			temporal_io = SDLK_3;
-		break;
-		
-		case 3:	// sinclair 2
-			temporal_io = SDLK_8;
-		break;		
-		}
-	break;
-		
-	case SDLK_RIGHT:
-		switch (ordenador.joystick) {
-		case 0:	// cursor
-			temporal_io = SDLK_8;
-		break;
-		
-		case 1:
-			ordenador.jk = 1;
-		break;
-		
-		case 2:	// sinclair 1
-			temporal_io = SDLK_2;
-		break;
-				
-		case 3:	// sinclair 2
-			temporal_io = SDLK_7;
-		break;
-		
-		}
-	break;
-	
-	case SDLK_LEFT:
-		switch (ordenador.joystick) {
-		case 0:	// cursor
-			temporal_io = SDLK_5;
-		break;
-		
-		case 1:
-			ordenador.jk = 2;
-		break;
-		
-		case 2:	// sinclair 1
-			temporal_io = SDLK_1;
-		break;
-		
-		case 3:	// sinclair 2
-			temporal_io = SDLK_6;
-		break;		
-		}
-	break;
-	
-	case SDLK_RALT:
-	case SDLK_RMETA:
-	case SDLK_LMETA:
-	case SDLK_RSUPER:
-	case SDLK_LSUPER:
-	case SDLK_MENU:
-		switch (ordenador.joystick) {
-		case 0:	// cursor
-			temporal_io = SDLK_0;
-		break;
-		
-		case 1:
-			ordenador.jk = 16;
-		break;
-		
-		case 2:	// sinclair 1
-			temporal_io = SDLK_5;
-		break;
-		
-		case 3:	// sinclair 2
-			temporal_io = SDLK_0;
-		break;		
-		}
-	break;
-	}
+					
+	if (ordenador.key[SDLK_SPACE]) ordenador.k15|=1;
+	if (ordenador.key[SDLK_RCTRL]) ordenador.k15|=2;
+	if (ordenador.key[SDLK_LCTRL]) ordenador.k15|=2;
+	if (ordenador.key[SDLK_m]) ordenador.k15|=4;
+	if (ordenador.key[SDLK_n]) ordenador.k15|=8;
+	if (ordenador.key[SDLK_b]) ordenador.k15|=16;
+	if (ordenador.key[SDLK_PERIOD]) ordenador.k15|=6;
+	if (ordenador.key[SDLK_COMMA]) ordenador.k15|=10;					
+					
+	if (ordenador.key[SDLK_RETURN]) ordenador.k14|=1;
+	if (ordenador.key[SDLK_l]) ordenador.k14|=2;
+	if (ordenador.key[SDLK_k]) ordenador.k14|=4;
+	if (ordenador.key[SDLK_j]) ordenador.k14|=8;
+	if (ordenador.key[SDLK_h]) ordenador.k14|=16;					
+					
+	if (ordenador.key[SDLK_p]) ordenador.k13|=1;
+	if (ordenador.key[SDLK_o]) ordenador.k13|=2;
+	if (ordenador.key[SDLK_i]) ordenador.k13|=4;
+	if (ordenador.key[SDLK_u]) ordenador.k13|=8;
+	if (ordenador.key[SDLK_y]) ordenador.k13|=16;					
 
-	switch (temporal_io) {
+	if (ordenador.key[SDLK_0]) ordenador.k12|=1;
+	if (ordenador.key[SDLK_9]) ordenador.k12|=2;
+	if (ordenador.key[SDLK_8]) ordenador.k12|=4;
+	if (ordenador.key[SDLK_7]) ordenador.k12|=8;
+	if (ordenador.key[SDLK_6]) ordenador.k12|=16;
+	if (ordenador.key[SDLK_BACKSPACE]) {ordenador.k12|=1; ordenador.k8 |=1;}	
+					
+	if (ordenador.key[SDLK_1]) ordenador.k11|=1;
+	if (ordenador.key[SDLK_2]) ordenador.k11|=2;
+	if (ordenador.key[SDLK_3]) ordenador.k11|=4;
+	if (ordenador.key[SDLK_4]) ordenador.k11|=8;
+	if (ordenador.key[SDLK_5]) ordenador.k11|=16;					
 
-	case SDLK_SPACE:
-		ordenador.k15 = 1;
-	break;
-	
-	case SDLK_RCTRL:
-	case SDLK_LCTRL:
-		ordenador.k15 = 2;
-	break;
-	
-	case SDLK_m:
-		ordenador.k15 = 4;
-	break;
-	
-	case SDLK_n:
-		ordenador.k15 = 8;
-	break;
-	
-	case SDLK_b:
-		ordenador.k15 = 16;
-	break;
-	
-	case SDLK_RETURN:
-		ordenador.k14 = 1;
-	break;
-	
-	case SDLK_l:
-		ordenador.k14 = 2;
-	break;
-	
-	case SDLK_k:
-		ordenador.k14 = 4;
-	break;
-	
-	case SDLK_j:
-		ordenador.k14 = 8;
-	break;
-	
-	case SDLK_h:
-		ordenador.k14 = 16;
-	break;
-	
-	case SDLK_p:
-		ordenador.k13 = 1;
-	break;
-	
-	case SDLK_o:
-		ordenador.k13 = 2;
-	break;
-	
-	case SDLK_i:
-		ordenador.k13 = 4;
-	break;
-	
-	case SDLK_u:
-		ordenador.k13 = 8;
-	break;
-	
-	case SDLK_y:
-		ordenador.k13 = 16;
-	break;
-	
-	case SDLK_0:
-		ordenador.k12 = 1;
-	break;
-	
-	case SDLK_9:
-		ordenador.k12 = 2;
-	break;
-	
-	case SDLK_8:
-		ordenador.k12 = 4;
-	break;
-	
-	case SDLK_7:
-		ordenador.k12 = 8;
-	break;
-	
-	case SDLK_6:
-		ordenador.k12 = 16;
-	break;
-	
-	case SDLK_1:
-		ordenador.k11 = 1;
-	break;
-	
-	case SDLK_2:
-		ordenador.k11 = 2;
-	break;
-	
-	case SDLK_3:
-		ordenador.k11 = 4;
-	break;
-	
-	case SDLK_4:
-		ordenador.k11 = 8;
-	break;
-	
-	case SDLK_5:
-		ordenador.k11 = 16;
-	break;
-	
-	case SDLK_q:
-		ordenador.k10 = 1;
-	break;
-	
-	case SDLK_w:
-		ordenador.k10 = 2;
-	break;
-	
-	case SDLK_e:
-		ordenador.k10 = 4;
-	break;
-	
-	case SDLK_r:
-		ordenador.k10 = 8;
-	break;
-	
-	case SDLK_t:
-		ordenador.k10 = 16;
-	break;
-	
-	case SDLK_a:
-		ordenador.k9 = 1;
-	break;
-	
-	case SDLK_s:
-		ordenador.k9 = 2;
-	break;
-	
-	case SDLK_d:
-		ordenador.k9 = 4;
-	break;
-	
-	case SDLK_f:
-		ordenador.k9 = 8;
-	break;
-	
-	case SDLK_g:
-		ordenador.k9 = 16;
-	break;
-	
-	case SDLK_RSHIFT:
-	case SDLK_LSHIFT:
-		ordenador.k8 = 1;
-	break;
-	
-	case SDLK_z:
-		ordenador.k8 = 2;
-	break;
-	
-	case SDLK_x:
-		ordenador.k8 = 4;
-	break;
-	
-	case SDLK_c:
-		ordenador.k8 = 8;
-	break;
-	
-	case SDLK_v:
-		ordenador.k8 = 16;
-	break;
-	
-	case SDLK_BACKSPACE:
-		ordenador.k12 = 1;
-		ordenador.k8 = 1;
-	break;
-	case SDLK_PERIOD:
-		ordenador.k15 = 6;
-	break;
-	case SDLK_COMMA:
-		ordenador.k15 = 10;
-	break;
-	
-	}
+	if (ordenador.key[SDLK_q]) ordenador.k10|=1;
+	if (ordenador.key[SDLK_w]) ordenador.k10|=2;
+	if (ordenador.key[SDLK_e]) ordenador.k10|=4;
+	if (ordenador.key[SDLK_r]) ordenador.k10|=8;
+	if (ordenador.key[SDLK_t]) ordenador.k10|=16;
+					
+	if (ordenador.key[SDLK_a]) ordenador.k9 |=1;
+	if (ordenador.key[SDLK_s]) ordenador.k9 |=2;
+	if (ordenador.key[SDLK_d]) ordenador.k9 |=4;
+	if (ordenador.key[SDLK_f]) ordenador.k9 |=8;
+	if (ordenador.key[SDLK_g]) ordenador.k9 |=16;					
+					
+	if (ordenador.key[SDLK_RSHIFT]) ordenador.k8 |=1;
+	if (ordenador.key[SDLK_LSHIFT]) ordenador.k8 |=1;
+	if (ordenador.key[SDLK_z]) ordenador.k8 |=2;
+	if (ordenador.key[SDLK_x]) ordenador.k8 |=4;
+	if (ordenador.key[SDLK_c]) ordenador.k8 |=8;
+	if (ordenador.key[SDLK_v]) ordenador.k8 |=16;
 
-	if (pevento->type == SDL_KEYUP) {
-		ordenador.s8 |= ordenador.k8;
-		ordenador.s9 |= ordenador.k9;
-		ordenador.s10 |= ordenador.k10;
-		ordenador.s11 |= ordenador.k11;
-		ordenador.s12 |= ordenador.k12;
-		ordenador.s13 |= ordenador.k13;
-		ordenador.s14 |= ordenador.k14;
-		ordenador.s15 |= ordenador.k15;
-		ordenador.js &= (ordenador.jk ^ 255);
-	} else {
-		ordenador.s8 &= (ordenador.k8 ^ 255);
-		ordenador.s9 &= (ordenador.k9 ^ 255);
-		ordenador.s10 &= (ordenador.k10 ^ 255);
-		ordenador.s11 &= (ordenador.k11 ^ 255);
-		ordenador.s12 &= (ordenador.k12 ^ 255);
-		ordenador.s13 &= (ordenador.k13 ^ 255);
-		ordenador.s14 &= (ordenador.k14 ^ 255);
-		ordenador.s15 &= (ordenador.k15 ^ 255);
-		ordenador.js |= ordenador.jk;
-	}
-
+	if (ordenador.key[SDLK_UP]) {ordenador.k12 |=8;ordenador.k8|=1;}
+	if (ordenador.key[SDLK_DOWN]) {ordenador.k12 |=16;ordenador.k8|=1;}
+	if (ordenador.key[SDLK_LEFT]) {ordenador.k11 |=16;ordenador.k8|=1;}
+	if (ordenador.key[SDLK_RIGHT]) {ordenador.k12 |=4;ordenador.k8|=1;}				
+	
+		ordenador.s8 = (ordenador.s8 & 0xE0) | (ordenador.k8 ^ 0x1F);
+		ordenador.s9 = (ordenador.s9 & 0xE0) | (ordenador.k9 ^ 0x1F);
+		ordenador.s10 = (ordenador.s10 & 0xE0)| (ordenador.k10 ^ 0x1F);
+		ordenador.s11 = (ordenador.s11 & 0xE0)| (ordenador.k11 ^ 0x1F);
+		ordenador.s12 = (ordenador.s12 & 0xE0)| (ordenador.k12 ^ 0x1F);
+		ordenador.s13 = (ordenador.s13 & 0xE0)| (ordenador.k13 ^ 0x1F);
+		ordenador.s14 = (ordenador.s14 & 0xE0)| (ordenador.k14 ^ 0x1F);
+		ordenador.s15 = (ordenador.s15 & 0xE0)| (ordenador.k15 ^ 0x1F);
+		ordenador.js = ordenador.jk;
+	
 	return;
 }
 
