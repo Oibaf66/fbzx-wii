@@ -121,6 +121,7 @@ dist: $(BUILD)
 	cp fbzx.dol $@/apps/fbzx-wii/boot.dol
 	cp spectrum-roms/* $@/fbzx-wii/spectrum-roms
 	cp keymap.bmp $@/fbzx-wii/fbzx
+	cp ZXSpectrum48k.png $@/fbzx-wii/fbzx
 	cp AMSTRAD CAPABILITIES COPYING FAQ README README.TZX VERSIONS $@/apps/fbzx-wii/doc
 	touch $@/fbzx-wii/tapes/dummy
 	touch $@/fbzx-wii/snapshots/dummy

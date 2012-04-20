@@ -118,7 +118,7 @@ int save_z80(char *filename) {
   value=procesador.IM;
   if(ordenador.issue==2)
     value|=4;
-  switch (ordenador.joystick) {
+  switch (ordenador.joystick[0]) { //Only one Joystick in Z80 file
   case 1:
   	value|=64;
   	break;
@@ -562,7 +562,7 @@ void load_snap(struct z80snapshot *snap) {
     break;
   }
   
-  ordenador.joystick=snap->joystick;
+  ordenador.joystick[0]=snap->joystick; //Only one Joystick in Z80 file
 
   procesador.Rm.br.A=snap->A;
   procesador.Rm.br.F=snap->F;

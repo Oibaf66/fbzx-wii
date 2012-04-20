@@ -80,7 +80,8 @@ void computer_init () {
 	ordenador.port254 = 0;
 	ordenador.issue = 3;
 	ordenador.mode128k = 0;
-	ordenador.joystick = 0;
+	ordenador.joystick[0] = 2; //Sinclair 1
+	ordenador.joystick[1] = 3; //Sinclair 2
 
 	ordenador.tape_readed = 0;
 	ordenador.pause = 1;	// tape stop
@@ -699,12 +700,20 @@ inline void read_keyboard () {
 	static int countdown;
 	enum joystate_x {JOY_CENTER_X, JOY_LEFT, JOY_RIGHT};
 	enum joystate_y {JOY_CENTER_Y, JOY_UP, JOY_DOWN};
-	int joy_axis_x,joy_axis_y, joy_fire;
+	int joy_axis_x[2],joy_axis_y[2], loop;
 	
 	ordenador.k8 = ordenador.k9 = ordenador.k10 = ordenador.k11 =
 		ordenador.k12 = ordenador.k13 = ordenador.k14 =
 		ordenador.k15 = 0;
 		ordenador.jk = 0;
+	
+	pevento=&evento;
+	SDL_PollEvent (&evento);
+
+	if (pevento->type==SDL_QUIT) {
+		salir = 0;
+		return;
+	}
 	
 	if (ordenador.kbd_buffer_pointer) 
 	{	
@@ -741,31 +750,24 @@ inline void read_keyboard () {
 			countdown=5;		
 		}	
 	}
-							
-		pevento=&evento;
-		SDL_PollEvent (&evento);
-
-
-	if (pevento->type==SDL_QUIT) {
-		salir = 0;
-		return;
-	}
 	
 	SDL_JoystickUpdate();
-	joy_axis_x = SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 0);
-	joy_axis_y = SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 1);
-	joy_fire = SDL_JoystickGetButton(ordenador.joystick_sdl[0], 0); //Wii button A
+	for(loop=0;loop<ordenador.joystick_number;loop++) 
+	{
+	joy_axis_x[loop] = SDL_JoystickGetAxis(ordenador.joystick_sdl[loop], 0);
+	joy_axis_y[loop] = SDL_JoystickGetAxis(ordenador.joystick_sdl[loop], 1);
+	ordenador.joy_fire[loop] = SDL_JoystickGetButton(ordenador.joystick_sdl[loop], 0); //Wii button A
 	
-	if (SDL_JoystickGetButton(ordenador.joystick_sdl[0], 6)) help_menu ();
+	if (SDL_JoystickGetButton(ordenador.joystick_sdl[loop], 6)) help_menu (); //Wii button Home
 	
-	if (joy_axis_x > 16384) ordenador.joy_axis_x_state[0] = JOY_RIGHT; 
-	else if (joy_axis_x < -16384) ordenador.joy_axis_x_state[0] = JOY_LEFT;
-	else ordenador.joy_axis_x_state[0] = JOY_CENTER_X;
+	if (joy_axis_x[loop] > 16384) ordenador.joy_axis_x_state[loop] = JOY_RIGHT; 
+	else if (joy_axis_x[loop] < -16384) ordenador.joy_axis_x_state[loop] = JOY_LEFT;
+	else ordenador.joy_axis_x_state[loop] = JOY_CENTER_X;
 	
-	if (joy_axis_y > 16384) ordenador.joy_axis_y_state[0] = JOY_DOWN; 
-	else if (joy_axis_y < -16384) ordenador.joy_axis_y_state[0] = JOY_UP;
-	else ordenador.joy_axis_y_state[0] = JOY_CENTER_Y;
-
+	if (joy_axis_y[loop] > 16384) ordenador.joy_axis_y_state[loop] = JOY_DOWN; 
+	else if (joy_axis_y[loop] < -16384) ordenador.joy_axis_y_state[loop] = JOY_UP;
+	else ordenador.joy_axis_y_state[loop] = JOY_CENTER_Y;
+	}
 	temporal_io = (unsigned int) pevento->key.keysym.sym;
 
 	/*
@@ -906,38 +908,39 @@ inline void read_keyboard () {
 		break;
 		}
 	}
-		
-	switch (ordenador.joystick) {
+	for(loop=0;loop<ordenador.joystick_number;loop++)
+	{
+	 switch (ordenador.joystick[loop]) {
 		case 0:	// cursor
-			if (ordenador.joy_axis_y_state[0] == JOY_UP) ordenador.k12|= 8;
-			if (ordenador.joy_axis_y_state[0] == JOY_DOWN) ordenador.k12|= 16;
-			if (ordenador.joy_axis_x_state[0] == JOY_RIGHT)ordenador.k12|= 4;
-			if (ordenador.joy_axis_x_state[0] == JOY_LEFT) ordenador.k11|= 16;
-			if (joy_fire) ordenador.k12|= 1;
+			if (ordenador.joy_axis_y_state[loop] == JOY_UP) ordenador.k12|= 8;
+			if (ordenador.joy_axis_y_state[loop] == JOY_DOWN) ordenador.k12|= 16;
+			if (ordenador.joy_axis_x_state[loop] == JOY_RIGHT)ordenador.k12|= 4;
+			if (ordenador.joy_axis_x_state[loop] == JOY_LEFT) ordenador.k11|= 16;
+			if (ordenador.joy_fire[loop]) ordenador.k12|= 1;
 		break; 
 			
 		case 1: //Kempston
-			if (ordenador.joy_axis_y_state[0] == JOY_UP) ordenador.jk|= 8;
-			if (ordenador.joy_axis_y_state[0] == JOY_DOWN) ordenador.jk|= 4;
-			if (ordenador.joy_axis_x_state[0] == JOY_RIGHT) ordenador.jk|= 1;
-			if (ordenador.joy_axis_x_state[0] == JOY_LEFT) ordenador.jk|= 2;
-			if (joy_fire) ordenador.jk = 16;
+			if (ordenador.joy_axis_y_state[loop] == JOY_UP) ordenador.jk|= 8;
+			if (ordenador.joy_axis_y_state[loop] == JOY_DOWN) ordenador.jk|= 4;
+			if (ordenador.joy_axis_x_state[loop] == JOY_RIGHT) ordenador.jk|= 1;
+			if (ordenador.joy_axis_x_state[loop] == JOY_LEFT) ordenador.jk|= 2;
+			if (ordenador.joy_fire[loop]) ordenador.jk |= 16;
 		break;
 		
 		case 2:	// sinclair 1
-			if (ordenador.joy_axis_y_state[0] == JOY_UP) ordenador.k11|= 8;
-			if (ordenador.joy_axis_y_state[0] == JOY_DOWN)ordenador.k11|= 4;
-			if (ordenador.joy_axis_x_state[0] == JOY_RIGHT)ordenador.k11|= 2;
-			if (ordenador.joy_axis_x_state[0] == JOY_LEFT) ordenador.k11|= 1;
-			if (joy_fire) ordenador.k11|= 16;	
+			if (ordenador.joy_axis_y_state[loop] == JOY_UP) ordenador.k11|= 8;
+			if (ordenador.joy_axis_y_state[loop] == JOY_DOWN)ordenador.k11|= 4;
+			if (ordenador.joy_axis_x_state[loop] == JOY_RIGHT)ordenador.k11|= 2;
+			if (ordenador.joy_axis_x_state[loop] == JOY_LEFT) ordenador.k11|= 1;
+			if (ordenador.joy_fire[loop]) ordenador.k11|= 16;	
 		break;
 		
 		case 3:	// sinclair 2
-			if (ordenador.joy_axis_y_state[0] == JOY_UP) ordenador.k12|= 2;
-			if (ordenador.joy_axis_y_state[0] == JOY_DOWN)ordenador.k12|= 4;
-			if (ordenador.joy_axis_x_state[0] == JOY_RIGHT)ordenador.k12|= 8;
-			if (ordenador.joy_axis_x_state[0] == JOY_LEFT) ordenador.k12|= 16;
-			if (joy_fire) ordenador.k12|= 1;
+			if (ordenador.joy_axis_y_state[loop] == JOY_UP) ordenador.k12|= 2;
+			if (ordenador.joy_axis_y_state[loop] == JOY_DOWN)ordenador.k12|= 4;
+			if (ordenador.joy_axis_x_state[loop] == JOY_RIGHT)ordenador.k12|= 8;
+			if (ordenador.joy_axis_x_state[loop] == JOY_LEFT) ordenador.k12|= 16;
+			if (ordenador.joy_fire[loop]) ordenador.k12|= 1;
 		break;
 		}
 					
@@ -1320,7 +1323,7 @@ byte Z80free_In (register word Port) {
 
 	// Joystick
 	if (!(temporal_io & 0x0020)) {
-		if (ordenador.joystick == 1) {
+		if ((ordenador.joystick[0] == 1)||(ordenador.joystick[1] == 1)) {
 			return (ordenador.js);
 		} else {
 			return 0; // if Kempston is not selected, emulate it, but always 0

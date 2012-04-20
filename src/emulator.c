@@ -32,6 +32,7 @@
 #include <string.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_thread.h>
+#include<SDL/SDL_image.h>
 #include "sound.h"
 #include "tape.h"
 #include "microdrive.h"
@@ -63,6 +64,28 @@ char path_mdrs[2049];
 unsigned int colors[80];
 unsigned int jump_frames,curr_frames;
 char *filenames[5];
+
+int load_zxspectrum_picture()
+{
+SDL_Surface *image;
+SDL_Rect dest;
+
+image=IMG_Load("/fbzx-wii/fbzx/ZXSpectrum48k.png");
+
+if (image == NULL) {printf("Impossible to load image\n"); return 0;}
+
+SDL_BlitSurface(image, NULL, ordenador.screen, NULL);
+
+if (ordenador.mustlock) {
+				SDL_UnlockSurface (ordenador.screen);
+				SDL_Flip (ordenador.screen);
+				SDL_LockSurface (ordenador.screen);
+			} else {
+				SDL_Flip (ordenador.screen);
+			}
+
+return 1;
+} 
 
 void SDL_Fullscreen_Switch()
 {
@@ -219,7 +242,7 @@ void load_rom(char type) {
 
 void init_screen(int resx,int resy,int depth,int fullscreen,int dblbuffer,int hwsurface) {
 
-	int retorno,bucle,bucle2,valores,ret2,joystick_number;
+	int retorno,bucle,bucle2,valores,ret2;
 	unsigned char value;
 
 	//if (sound_type!=3)
@@ -239,9 +262,10 @@ void init_screen(int resx,int resy,int depth,int fullscreen,int dblbuffer,int hw
 		ordenador.use_js=1;
 		if(SDL_NumJoysticks()>0){
 			// Open joystick
-			joystick_number = SDL_NumJoysticks();
-			if (joystick_number>2) joystick_number = 2; //Open max 2 joysticks
-			for (bucle=0;bucle<joystick_number;bucle++) {
+			ordenador.joystick_number = SDL_NumJoysticks();
+			if (ordenador.joystick_number>2) ordenador.joystick_number = 2; //Open max 2 joysticks
+			printf("Try to open %d joysticks \n", ordenador.joystick_number);
+			for (bucle=0;bucle<ordenador.joystick_number;bucle++) {
 			ordenador.joystick_sdl [bucle] = SDL_JoystickOpen(bucle);
 	  			if (NULL==ordenador.joystick_sdl [bucle]) {
 	  				printf("Can't open joystick %d\n",bucle);
@@ -382,7 +406,8 @@ void save_config(struct computer *object) {
 	}
 	fprintf(fconfig,"mode=%c%c",48+object->mode128k,10);
 	fprintf(fconfig,"issue=%c%c",48+object->issue,10);
-	fprintf(fconfig,"joystick=%c%c",48+object->joystick,10);
+	fprintf(fconfig,"joystick1=%c%c",48+object->joystick[0],10);
+	fprintf(fconfig,"joystick2=%c%c",48+object->joystick[1],10);
 	fprintf(fconfig,"ay_sound=%c%c",48+object->ay_emul,10);
 	fprintf(fconfig,"interface1=%c%c",48+object->mdr_active,10);
 	fprintf(fconfig,"doublescan=%c%c",48+object->dblscan,10);
@@ -397,7 +422,7 @@ void load_config(struct computer *object) {
 	char line[1024],carac,done;
 	int length,pos;
 	FILE *fconfig;
-	unsigned char volume=255,mode128k=255,issue=255,joystick=255,ay_emul=255,mdr_active=255,dblscan=255,bw=255;
+	unsigned char volume=255,mode128k=255,issue=255,joystick1=255,joystick2=255,ay_emul=255,mdr_active=255,dblscan=255,bw=255;
 	
 	strcpy(config_path,getenv("HOME"));
 	length=strlen(config_path);
@@ -441,8 +466,12 @@ void load_config(struct computer *object) {
 			issue=line[6]-'0';
 			continue;
 		}
-		if (!strncmp(line,"joystick=",9)) {
-			joystick=line[9]-'0';
+		if (!strncmp(line,"joystick1=",9)) {
+			joystick1=line[9]-'0';
+			continue;
+		}
+		if (!strncmp(line,"joystick2=",9)) {
+			joystick2=line[9]-'0';
 			continue;
 		}
 		if (!strncmp(line,"ay_sound=",9)) {
@@ -473,8 +502,11 @@ void load_config(struct computer *object) {
 	if (issue<4) {
 		object->issue=issue;
 	}
-	if (joystick<4) {
-		object->joystick=joystick;
+	if (joystick1<4) {
+		object->joystick[0]=joystick1;
+	}
+	if (joystick2<4) {
+		object->joystick[1]=joystick2;
 	}
 	if (ay_emul<2) {
 		object->ay_emul=ay_emul;
@@ -689,6 +721,8 @@ int main(int argc,char *argv[]) {
 	strcat(path_mdrs,"microdrives");
 	
 	ordenador.current_tap[0]=0;
+	
+	if (load_zxspectrum_picture()) sleep(5);
 
 	// assign random values to the memory before start execution
 

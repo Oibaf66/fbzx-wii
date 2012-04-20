@@ -125,7 +125,7 @@ struct computer {
 	unsigned char bus_value;
 	unsigned char issue; // 2= 48K issue 2, 3= 48K issue 3
 	unsigned char mode128k; // 0=48K, 1=128K, 2=+2, 3=+3
-	unsigned char joystick; // 0=cursor, 1=kempston, 2=sinclair1, 3=sinclair2
+	unsigned char joystick[2]; // 0=cursor, 1=kempston, 2=sinclair1, 3=sinclair2
 	unsigned char port254;
 
 
@@ -195,9 +195,11 @@ struct computer {
 	unsigned char turbo;
 	unsigned int kbd_buffer_pointer;
 	unsigned char *key;
+	unsigned char joystick_number;
 	SDL_Joystick *joystick_sdl[2];
-	int joy_axis_x_state[2];
-	int joy_axis_y_state[2];
+	unsigned char joy_axis_x_state[2];
+	unsigned char joy_axis_y_state[2];
+	unsigned char joy_fire[2];
 };
 
 void computer_init();

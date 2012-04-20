@@ -114,7 +114,7 @@ void settings_menu() {
   
 		print_string(fbuffer,texto,-1,45,14,0,ancho);
 
-		switch(ordenador.joystick) {
+		switch(ordenador.joystick[0]) {
 		case 0:
 			sprintf(texto,"Joystick emulation: Cursor");
 			break;
@@ -253,16 +253,16 @@ void settings_menu() {
 			ResetComputer();
 		break;
 		case SDLK_7:
-			ordenador.joystick=0;
+			ordenador.joystick[0]=0;
 		break;
 		case SDLK_8:
-			ordenador.joystick=1;
+			ordenador.joystick[0]=1;
 		break;
 		case SDLK_9:
-			ordenador.joystick=2;
+			ordenador.joystick[0]=2;
 		break;
 		case SDLK_0:
-			ordenador.joystick=3;
+			ordenador.joystick[0]=3;
 		break;
 		case SDLK_i:
 			if(ordenador.mode128k!=3) {
