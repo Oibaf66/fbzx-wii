@@ -80,8 +80,8 @@ void computer_init () {
 	ordenador.port254 = 0;
 	ordenador.issue = 3;
 	ordenador.mode128k = 0;
-	ordenador.joystick[0] = 2; //Sinclair 1
-	ordenador.joystick[1] = 3; //Sinclair 2
+	ordenador.joystick[0] = 1; //Kemposton
+	ordenador.joystick[1] = 0; // Cursor
 
 	ordenador.tape_readed = 0;
 	ordenador.pause = 1;	// tape stop
@@ -943,7 +943,8 @@ inline void read_keyboard () {
 			if (ordenador.joy_fire[loop]) ordenador.k12|= 1;
 		break;
 		}
-					
+	}	
+			
 	if (ordenador.key[SDLK_SPACE]) ordenador.k15|=1;
 	if (ordenador.key[SDLK_RCTRL]) ordenador.k15|=2;
 	if (ordenador.key[SDLK_LCTRL]) ordenador.k15|=2;

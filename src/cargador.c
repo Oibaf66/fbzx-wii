@@ -434,7 +434,7 @@ int load_sna(char *filename) {
 		snap.ay_regs[loop]=0;
 	snap.ay_latch=0;
 	snap.issue=3;
-	snap.joystick=0;
+	snap.joystick=1; //kempston
 	
 	printf("Loading SNA file\n");
 	

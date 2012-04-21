@@ -68,7 +68,6 @@ char *filenames[5];
 int load_zxspectrum_picture()
 {
 SDL_Surface *image;
-SDL_Rect dest;
 
 image=IMG_Load("/fbzx-wii/fbzx/ZXSpectrum48k.png");
 
@@ -707,6 +706,9 @@ int main(int argc,char *argv[]) {
 
 	ordenador.screenbuffer=ordenador.screen->pixels;
 	ordenador.screen_width=ordenador.screen->w;
+	
+	//Load the splash screen
+	if (load_zxspectrum_picture()) sleep(3);
 
 	// assign initial values for PATH variables
 
@@ -721,8 +723,6 @@ int main(int argc,char *argv[]) {
 	strcat(path_mdrs,"microdrives");
 	
 	ordenador.current_tap[0]=0;
-	
-	if (load_zxspectrum_picture()) sleep(5);
 
 	// assign random values to the memory before start execution
 

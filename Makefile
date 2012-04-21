@@ -128,6 +128,14 @@ dist: $(BUILD)
 	touch $@/fbzx-wii/microdrives/dummy
 	cd $@ && tar -czf ../fbzx-wii-bin.tar.gz *
 
+distsource:
+	cd .. && cp -r fbzx-wii fbzx-wii-v
+	cd ../fbzx-wii-v && find . -name ".svn" | xargs rm -rf
+	cd .. && tar -czf fbzx-wii-v.tar.gz fbzx-wii-v
+	cd .. && rm -fr fbzx-wii-v
+	
+	
+
 #---------------------------------------------------------------------------------
 run:
 	wiiload $(TARGET).dol
