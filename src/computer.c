@@ -82,6 +82,8 @@ void computer_init () {
 	ordenador.mode128k = 0;
 	ordenador.joystick[0] = 1; //Kemposton
 	ordenador.joystick[1] = 0; // Cursor
+	ordenador.rumble[0] = 0;
+	ordenador.rumble[1] = 0;
 
 	ordenador.tape_readed = 0;
 	ordenador.pause = 1;	// tape stop
@@ -697,7 +699,6 @@ inline void read_keyboard () {
 
 	unsigned int temporal_io;
 	SDL_Event evento,*pevento;
-	static int countdown;
 	enum joystate_x {JOY_CENTER_X, JOY_LEFT, JOY_RIGHT};
 	enum joystate_y {JOY_CENTER_Y, JOY_UP, JOY_DOWN};
 	int joy_axis_x[2],joy_axis_y[2], loop;
@@ -758,7 +759,7 @@ inline void read_keyboard () {
 	joy_axis_y[loop] = SDL_JoystickGetAxis(ordenador.joystick_sdl[loop], 1);
 	ordenador.joy_fire[loop] = SDL_JoystickGetButton(ordenador.joystick_sdl[loop], 0); //Wii button A
 	
-	if (SDL_JoystickGetButton(ordenador.joystick_sdl[loop], 6)) help_menu (); //Wii button Home
+	if (SDL_JoystickGetButton(ordenador.joystick_sdl[loop], 6)) main_menu(); //Wii button Home
 	
 	if (joy_axis_x[loop] > 16384) ordenador.joy_axis_x_state[loop] = JOY_RIGHT; 
 	else if (joy_axis_x[loop] < -16384) ordenador.joy_axis_x_state[loop] = JOY_LEFT;
@@ -946,8 +947,7 @@ inline void read_keyboard () {
 	}	
 			
 	if (ordenador.key[SDLK_SPACE]) ordenador.k15|=1;
-	if (ordenador.key[SDLK_RCTRL]) ordenador.k15|=2;
-	if (ordenador.key[SDLK_LCTRL]) ordenador.k15|=2;
+	if (ordenador.key[SDLK_RCTRL]||ordenador.key[SDLK_LCTRL]) ordenador.k15|=2; //Symbol shift
 	if (ordenador.key[SDLK_m]) ordenador.k15|=4;
 	if (ordenador.key[SDLK_n]) ordenador.k15|=8;
 	if (ordenador.key[SDLK_b]) ordenador.k15|=16;
@@ -991,8 +991,7 @@ inline void read_keyboard () {
 	if (ordenador.key[SDLK_f]) ordenador.k9 |=8;
 	if (ordenador.key[SDLK_g]) ordenador.k9 |=16;					
 					
-	if (ordenador.key[SDLK_RSHIFT]) ordenador.k8 |=1;
-	if (ordenador.key[SDLK_LSHIFT]) ordenador.k8 |=1;
+	if (ordenador.key[SDLK_RSHIFT]||ordenador.key[SDLK_LSHIFT]) ordenador.k8 |=1; //Caps shift
 	if (ordenador.key[SDLK_z]) ordenador.k8 |=2;
 	if (ordenador.key[SDLK_x]) ordenador.k8 |=4;
 	if (ordenador.key[SDLK_c]) ordenador.k8 |=8;
@@ -1001,8 +1000,10 @@ inline void read_keyboard () {
 	if (ordenador.key[SDLK_UP]) {ordenador.k12 |=8;ordenador.k8|=1;}
 	if (ordenador.key[SDLK_DOWN]) {ordenador.k12 |=16;ordenador.k8|=1;}
 	if (ordenador.key[SDLK_LEFT]) {ordenador.k11 |=16;ordenador.k8|=1;}
-	if (ordenador.key[SDLK_RIGHT]) {ordenador.k12 |=4;ordenador.k8|=1;}				
+	if (ordenador.key[SDLK_RIGHT]) {ordenador.k12 |=4;ordenador.k8|=1;}
 	
+	if (ordenador.key[SDLK_TAB]) {ordenador.k15|=2;ordenador.k8|=1;} //Extended mode
+
 		ordenador.s8 = (ordenador.s8 & 0xE0) | (ordenador.k8 ^ 0x1F);
 		ordenador.s9 = (ordenador.s9 & 0xE0) | (ordenador.k9 ^ 0x1F);
 		ordenador.s10 = (ordenador.s10 & 0xE0)| (ordenador.k10 ^ 0x1F);

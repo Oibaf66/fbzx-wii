@@ -31,6 +31,8 @@ enum tapmodes {TAP_GUIDE, TAP_DATA, TAP_PAUSE, TAP_TRASH, TAP_STOP, TAP_PAUSE2, 
 	TZX_SEQ_PULSES, TAP_FINAL_BIT, TAP_PAUSE3};
 enum taptypes {TAP_TAP, TAP_TZX};
 
+int countdown;
+
 struct computer {
 
 	unsigned int temporal_io;
@@ -200,6 +202,7 @@ struct computer {
 	unsigned char joy_axis_x_state[2];
 	unsigned char joy_axis_y_state[2];
 	unsigned char joy_fire[2];
+	unsigned char rumble[2];
 };
 
 void computer_init();

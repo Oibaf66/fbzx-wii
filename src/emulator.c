@@ -64,10 +64,10 @@ char path_mdrs[2049];
 unsigned int colors[80];
 unsigned int jump_frames,curr_frames;
 char *filenames[5];
+static SDL_Surface *image;
 
 int load_zxspectrum_picture()
 {
-SDL_Surface *image;
 
 image=IMG_Load("/fbzx-wii/fbzx/ZXSpectrum48k.png");
 
@@ -707,8 +707,12 @@ int main(int argc,char *argv[]) {
 	ordenador.screenbuffer=ordenador.screen->pixels;
 	ordenador.screen_width=ordenador.screen->w;
 	
+	//Init SDL Menu
+	
+	menu_init(ordenador.screen);
+	
 	//Load the splash screen
-	if (load_zxspectrum_picture()) sleep(3);
+	if (load_zxspectrum_picture()) {sleep(1); SDL_FreeSurface (image);}
 
 	// assign initial values for PATH variables
 
@@ -775,7 +779,7 @@ int main(int argc,char *argv[]) {
 	load_main_game(gamefile);
 	printf("Modo: %d\n",ordenador.mode128k);
 
-	sprintf(ordenador.osd_text,"Press F1 for help");
+	sprintf(ordenador.osd_text,"Press Home for menu");
 	ordenador.osd_time=200;
 
 	printf("BPP: %d\n",ordenador.bpp);
@@ -841,7 +845,7 @@ int main(int argc,char *argv[]) {
 		}
 	}
 	
-	save_config(&ordenador);
+	//save_config(&ordenador);
 	
 	#ifdef GEKKO
 	fatUnmount(0);

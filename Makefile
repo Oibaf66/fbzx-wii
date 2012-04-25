@@ -33,7 +33,7 @@ LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
-LIBS	:=	 -lasnd -lSDL_mixer -lsmpeg -lvorbisidec -lSDL_image -lpng -ljpeg -lz -lSDL -lSDL_gfx -lfreetype -lfat -lwiiuse -lbte -logc -lm -lwiikeyboard 
+LIBS	:=	 -lasnd -lSDL_mixer -lsmpeg -lvorbisidec -lSDL_image -lpng -ljpeg -lz -lSDL_ttf -lSDL -lSDL_gfx -lfreetype -lfat -lwiiuse -lbte -logc -lm -lwiikeyboard 
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
@@ -122,6 +122,7 @@ dist: $(BUILD)
 	cp spectrum-roms/* $@/fbzx-wii/spectrum-roms
 	cp keymap.bmp $@/fbzx-wii/fbzx
 	cp ZXSpectrum48k.png $@/fbzx-wii/fbzx
+	cp FreeMono.ttf $@/fbzx-wii/fbzx
 	cp AMSTRAD CAPABILITIES COPYING FAQ README README.TZX VERSIONS $@/apps/fbzx-wii/doc
 	touch $@/fbzx-wii/tapes/dummy
 	touch $@/fbzx-wii/snapshots/dummy
