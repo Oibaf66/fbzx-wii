@@ -1,13 +1,14 @@
-/*
+/* 
+ * Copyright (C) 2012 Fabio Olimpieri
  * Copyright 2003-2009 (C) Raster Software Vigo (Sergio Costas)
- * This file is part of FBZX
+ * This file is part of FBZX Wii
  *
- * FBZX is free software; you can redistribute it and/or modify
+ * FBZX Wii is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
- * FBZX is distributed in the hope that it will be useful,
+ * FBZX Wii is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -195,13 +196,15 @@ struct computer {
 	unsigned char other_ret; // 0=no change; 1=memory returns RET (201)
 
 	unsigned char turbo;
+	unsigned int keyboard_buffer[2][10];
 	unsigned int kbd_buffer_pointer;
 	unsigned char *key;
 	unsigned char joystick_number;
 	SDL_Joystick *joystick_sdl[2];
 	unsigned char joy_axis_x_state[2];
 	unsigned char joy_axis_y_state[2];
-	unsigned char joy_fire[2];
+	//unsigned char joy_fire[2];
+	unsigned int joybuttonkey[2][18];
 	unsigned char rumble[2];
 };
 

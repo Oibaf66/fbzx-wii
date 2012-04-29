@@ -1,17 +1,39 @@
- /*
-  * UAE - The Un*x Amiga Emulator
-  *
-  * Interface to the Tcl/Tk GUI
-  *
-  * Copyright 1996 Bernd Schmidt
-  */
+/*********************************************************************
+ *
+ * Copyright (C) 2012,  Fabio Olimpieri
+ *
+ * Filename:      menu_sdl.c
+ * Author:        Fabio Olimpieri <fabio.olimpieri@tin.it>
+ * Description:   a SDL Gui
+ * This file is part of FBZX Wii
+ *
+ * FBZX Wii is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * FBZX Wii is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ *
+ ********************************************************************/
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include "menu_sdl.h"
 #include "emulator.h"
-//#include "VirtualKeyboard.h" per ora
+#include "VirtualKeyboard.h"
+#include "tape.h"
+//#include "menus.h"
+#include "emulator.h"
+#include "cargador.h"
 
 #define ID_BUTTON_OFFSET 0
 #define ID_AXIS_OFFSET 32
@@ -71,7 +93,7 @@ static const  char *input_messages[] = {
 		/*01*/		"^|Cursor|Kempston|Sinclair1|Sinclair2",
 		/*02*/		"  ",
 		/*03*/		"Bind key to Wiimote",
-		/*04*/		"^|1|2|-",
+		/*04*/		"^|A|B|1|2|-",
 		/*05*/		"  ",
 		/*06*/		"Bind key to Nunchuk",
 		/*07*/		"^|Z|C",
@@ -221,7 +243,19 @@ static void manage_tape(int which)
 		break;
 	case 1: //Emulate load ""
 		ordenador.kbd_buffer_pointer=6;
-		countdown=5;
+		countdown=7;
+		ordenador.keyboard_buffer[0][6]= SDLK_1;		//Edit
+		ordenador.keyboard_buffer[1][6]= SDLK_LSHIFT;
+		ordenador.keyboard_buffer[0][5]= SDLK_j;		//Load
+		ordenador.keyboard_buffer[1][5]= 0;
+		ordenador.keyboard_buffer[0][4]= SDLK_p;		//"
+		ordenador.keyboard_buffer[1][4]= SDLK_LCTRL;
+		ordenador.keyboard_buffer[0][3]= SDLK_p;		//"
+		ordenador.keyboard_buffer[1][3]= SDLK_LCTRL;
+		ordenador.keyboard_buffer[0][2]= SDLK_RETURN;	// Return
+		ordenador.keyboard_buffer[1][2]= 0;
+		ordenador.keyboard_buffer[0][1]= SDLK_F6;		//F6
+		ordenador.keyboard_buffer[1][1]= 0;
 		break;
 	case 2: //Play
 		if ((ordenador.tape_fast_load == 0) || (ordenador.tape_file_type==TAP_TZX))
@@ -338,29 +372,29 @@ static void emulation_settings(void)
 	
 }
 
-static void setup_joystick(int joy, const char *key, int sdl_key)
+static void setup_joystick(int joy, unsigned int sdl_key, int joy_key)
 {
-	/*
-	if (!strcmp(key, "None")) 
-	{
-	changed_prefs.joystick_settings[1][joy].eventid[ID_BUTTON_OFFSET + sdl_key][0] = 0;
-	}
-	else
-	insert_keyboard_map(key, "input.1.joystick.%d.button.%d", joy, sdl_key);
-	*/
+	int loop;
+	
+	//Cancel the previous assignement - it is not possible to assign a same sdl_key to 2 joybuttons
+	for (loop=0; loop<18; loop++)
+	 if (ordenador.joybuttonkey[joy][loop] == sdl_key) ordenador.joybuttonkey[joy][loop] =0;
+	
+	ordenador.joybuttonkey[joy][joy_key] = sdl_key;
+	
 }
 
 static void input_options(int joy)
 {
-	const int wiimote_to_sdl[] = {2, 3, 4, 5};
-	const int nunchuk_to_sdl[] = {7, 8};
-	const int classic_to_sdl[] = {9, 10, 11, 12, 13, 14, 15, 16, 17, 18};
-	int sdl_key = 1;
-	const char *key;
+	const unsigned int wiimote_to_sdl[] = {0, 1, 2, 3, 4};
+	const unsigned int nunchuk_to_sdl[] = {7, 8};
+	const unsigned int classic_to_sdl[] = {9, 10, 11, 12, 13, 14, 15, 16, 17};
+	int joy_key = 1;
+	unsigned int sdl_key;
 	unsigned int submenus[5];
 	int opt;
 	
-	//struct virtkey *virtualkey;
+	struct virtkey *virtualkey;
 
 	memset(submenus, 0, sizeof(submenus));
 	
@@ -375,26 +409,27 @@ static void input_options(int joy)
 	ordenador.joystick[joy] = submenus[0];
 	ordenador.rumble[joy] = !submenus[4];
 	
-	/*
-	virtualkey = virtkbd_get_key();
+	if (opt == 0 || opt == 12)
+		return;
+	
+	virtualkey = get_key();
 	if (virtualkey == NULL)
 		return;
-	key = virtualkey->ev_name;
-	*/
+	sdl_key = virtualkey->sdl_code;
 	
 	switch(opt)
 		{
 		case 3: // wiimote 
-			sdl_key = wiimote_to_sdl[submenus[1]]; break;
+			joy_key = wiimote_to_sdl[submenus[1]]; break;
 		case 6: // nunchuk
-			sdl_key = nunchuk_to_sdl[submenus[2]]; break;
+			joy_key = nunchuk_to_sdl[submenus[2]]; break;
 		case 9: // classic
-			sdl_key = classic_to_sdl[submenus[3]]; break;
+			joy_key = classic_to_sdl[submenus[3]]; break;
 		default:
 			break;
 		}
 		
-	setup_joystick(joy, key, sdl_key);
+	setup_joystick(joy, sdl_key, joy_key);
 	
 }
 
@@ -531,28 +566,27 @@ static void set_Port(int which)
 		break;		
 	}	
 }
+*/
 
-static void virtual_keyboard(void)
+void virtual_keyboard(void)
 {
 	int key_code;
 	
-	virtkey_t *key =virtkbd_get_key();  
+	virtkey_t *key =get_key();  
 	if (key) {key_code = key->sdl_code;} else return;
 	
-	SDL_Event event_key;
+	ordenador.kbd_buffer_pointer=1;
+	countdown=7;
+	ordenador.keyboard_buffer[0][1]= key_code;
+	if 	(key->caps_on) ordenador.keyboard_buffer[1][1]= SDLK_LSHIFT; 
+	else if (key->sym_on) ordenador.keyboard_buffer[1][1]= SDLK_LCTRL; 
+	else ordenador.keyboard_buffer[1][1]= 0;
 	
-	event_key.type=SDL_KEYDOWN;
-	event_key.key.keysym.sym=key_code;
-	SDL_PushEvent(&event_key);
-	DEBUG_LOG ("Push Event: keycode %d %s\n", key_code, "SDL_KEYDOWN");
-	
-	event_key.type=SDL_KEYUP;
-	SDL_PushEvent(&event_key);
-	DEBUG_LOG ("Push Event: keycode %d %s\n", key_code, "SDL_KEYUP");
-	
+	printf ("Push Event: keycode %d\n", key_code);
+
 }	
 
-*/
+
 
 static void save_load_snapshot(int which)
 {
@@ -583,7 +617,7 @@ static void save_load_snapshot(int which)
 		{
 			if (which == 0) // Load snapshot file
 			{
-				retorno=load_z80(filename);
+				retorno=load_z80((char *)filename);
 
 				switch(retorno) {
 				case 0: // all right
@@ -605,7 +639,7 @@ static void save_load_snapshot(int which)
 	case 1: // Save snapshot file
 		snprintf(db, 255, "%s/%s.z80", dir, fb);
 		retorno=save_z80(db);
-		msgInfo("State saved",3000,NULL);
+		msgInfo("Snapshot saved",3000,NULL);
 		break;
 	default:
 		break;

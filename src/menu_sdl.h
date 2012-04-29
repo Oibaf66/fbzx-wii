@@ -1,24 +1,33 @@
 /*********************************************************************
+ * Copyright (C) 2012,  Fabio Olimpieri
+ * Copyright (C) 2009,  Simon Kagstrom
  *
- * Copyright (C) 2004, 2008,  Simon Kagstrom
+ * Filename:      menu_sdl.h
+ * 
+ * Description:   Code for menus (originally for Mophun)
  *
- * Filename:      menu.h
- * Author:        Simon Kagstrom <simon.kagstrom@gmail.com>
- * Description:
+ * This file is part of FBZX Wii
  *
- * $Id$
+ * FBZX Wii is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
  *
+ * FBZX Wii is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
  ********************************************************************/
+ 
 #ifndef __MENU_H__
 #define __MENU_H__
 
 #include <SDL/SDL.h>
 #include <SDL/SDL_ttf.h>
-#include <stdint.h>
-
-#if defined(__cplusplus)
-extern "C" {
-#endif
 
 #define KEY_UP         1
 #define KEY_DOWN       2
@@ -55,8 +64,5 @@ int menu_is_inited(void);
 
 int ext_matches(const char *name, const char *ext);
 
-#if defined(__cplusplus)
-}
-#endif
 
 #endif /* !__MENU_H__ */

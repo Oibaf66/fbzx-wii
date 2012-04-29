@@ -1,13 +1,14 @@
-/*
+/* 
+ * Copyright (C) 2012 Fabio Olimpieri
  * Copyright 2003-2009 (C) Raster Software Vigo (Sergio Costas)
- * This file is part of FBZX
+ * This file is part of FBZX Wii
  *
- * FBZX is free software; you can redistribute it and/or modify
+ * FBZX Wii is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
- * FBZX is distributed in the hope that it will be useful,
+ * FBZX Wii is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -40,6 +41,7 @@ extern unsigned int jump_frames,curr_frames;
 void SDL_Fullscreen_Switch(void);
 void load_rom(char);
 void load_main_game(char *nombre);
+void save_config(struct computer *object);
 FILE *myfopen(char *filename,char *mode);
 
 #endif

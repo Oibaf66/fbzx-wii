@@ -1,13 +1,14 @@
-/*
+/* 
+ * Copyright (C) 2012 Fabio Olimpieri
  * Copyright 2003-2009 (C) Raster Software Vigo (Sergio Costas)
- * This file is part of FBZX
+ * This file is part of FBZX Wii
  *
- * FBZX is free software; you can redistribute it and/or modify
+ * FBZX Wii is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
- * FBZX is distributed in the hope that it will be useful,
+ * FBZX Wii is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -30,6 +31,8 @@
 #include <sys/wait.h>
 #include "tape.h"
 #include "microdrive.h"
+#include "Virtualkeyboard.h"
+#include "gui_sdl.h"
 
 #ifdef DEBUG
 extern FILE *fdebug;
@@ -128,6 +131,9 @@ void computer_init () {
 	ordenador.tape_loop_counter = 0;
 	ordenador.kbd_buffer_pointer = 0;
 	ordenador.key = SDL_GetKeyState(NULL);
+	ordenador.joybuttonkey[0][0]=SDLK_LALT; //Fire button to wiimote1 button A
+	ordenador.joybuttonkey[1][0]=SDLK_LALT; //Fire button to wiimote1 button A
+
 }
 
 void computer_set_palete() {
@@ -701,7 +707,8 @@ inline void read_keyboard () {
 	SDL_Event evento,*pevento;
 	enum joystate_x {JOY_CENTER_X, JOY_LEFT, JOY_RIGHT};
 	enum joystate_y {JOY_CENTER_Y, JOY_UP, JOY_DOWN};
-	int joy_axis_x[2],joy_axis_y[2], loop;
+	int joy_axis_x[2],joy_axis_y[2], joy_n, joybutton_n; 
+	static unsigned char joybutton_matrix[2][322];
 	
 	ordenador.k8 = ordenador.k9 = ordenador.k10 = ordenador.k11 =
 		ordenador.k12 = ordenador.k13 = ordenador.k14 =
@@ -716,118 +723,66 @@ inline void read_keyboard () {
 		return;
 	}
 	
-	if (ordenador.kbd_buffer_pointer) 
-	{	
-		if (countdown) 
-		countdown--; 
-		else 
+	
+	SDL_JoystickUpdate();
+	for(joy_n=0;joy_n<ordenador.joystick_number;joy_n++) 
+	{
+	joy_axis_x[joy_n] = SDL_JoystickGetAxis(ordenador.joystick_sdl[joy_n], 0);
+	joy_axis_y[joy_n] = SDL_JoystickGetAxis(ordenador.joystick_sdl[joy_n], 1);
+	//ordenador.joy_fire[joy_n] = SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 0); //Wii button "A"
+	
+	if (SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 6) ||
+	SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 19)) main_menu(); //Wii button "Home"
+	
+	if (SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 5) ||
+	SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 18)) virtual_keyboard(); //Wii  button "+"
+	
+	if (joy_axis_x[joy_n] > 16384) ordenador.joy_axis_x_state[joy_n] = JOY_RIGHT; 
+	else if (joy_axis_x[joy_n] < -16384) ordenador.joy_axis_x_state[joy_n] = JOY_LEFT;
+		else ordenador.joy_axis_x_state[joy_n] = JOY_CENTER_X;
+	
+	if (joy_axis_y[joy_n] > 16384) ordenador.joy_axis_y_state[joy_n] = JOY_DOWN; 
+	else if (joy_axis_y[joy_n] < -16384) ordenador.joy_axis_y_state[joy_n] = JOY_UP;
+		else ordenador.joy_axis_y_state[joy_n] = JOY_CENTER_Y;
+		
+	for(joybutton_n=0;joybutton_n<5;joybutton_n++)
 		{
-			switch (ordenador.kbd_buffer_pointer)
-				{
-					case 6: 			//Edit
-					ordenador.k8|=1;
-					ordenador.k11|=1;
-					break;
-					case 5: 			//Load
-					ordenador.k14|= 8;
-					break;
-					case 4: //"
-					ordenador.k15|= 2; 
-					ordenador.k13|= 1;
-					break;
-					case 3:				//"
-					ordenador.k15|= 2;
-					ordenador.k13|= 1;
-					break;
-					case 2:				// Return
-					ordenador.k14|= 1;
-					break;
-					case 1:
-					if ((ordenador.tape_fast_load == 0) || (ordenador.tape_file_type==TAP_TZX))
-					ordenador.pause = 0;
-					break;
-				}
-			ordenador.kbd_buffer_pointer--; 
-			countdown=5;		
+		joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][joybutton_n])] = 
+		SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], joybutton_n);
+		}
+		
+	for(joybutton_n=7;joybutton_n<18;joybutton_n++)
+		{
+		joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][joybutton_n])] = 
+		SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], joybutton_n);
 		}	
 	}
 	
-	SDL_JoystickUpdate();
-	for(loop=0;loop<ordenador.joystick_number;loop++) 
-	{
-	joy_axis_x[loop] = SDL_JoystickGetAxis(ordenador.joystick_sdl[loop], 0);
-	joy_axis_y[loop] = SDL_JoystickGetAxis(ordenador.joystick_sdl[loop], 1);
-	ordenador.joy_fire[loop] = SDL_JoystickGetButton(ordenador.joystick_sdl[loop], 0); //Wii button A
+	//Keyboard buffer
 	
-	if (SDL_JoystickGetButton(ordenador.joystick_sdl[loop], 6)) main_menu(); //Wii button Home
+	if (countdown)
+		{ 
+		if (countdown <5) 
+			{
+			ordenador.key[(ordenador.keyboard_buffer[0][ordenador.kbd_buffer_pointer+1])]=0;
+			ordenador.key[(ordenador.keyboard_buffer[1][ordenador.kbd_buffer_pointer+1])]=0;
+			ordenador.keyboard_buffer[0][ordenador.kbd_buffer_pointer+1] = 0;
+			ordenador.keyboard_buffer[1][ordenador.kbd_buffer_pointer+1] = 0;
+			}
+		countdown--;
+		}
+		else if (ordenador.kbd_buffer_pointer)
+			{
+			ordenador.key[(ordenador.keyboard_buffer[0][ordenador.kbd_buffer_pointer])]=1;
+			ordenador.key[(ordenador.keyboard_buffer[1][ordenador.kbd_buffer_pointer])]=1;
+		
+			ordenador.kbd_buffer_pointer--; 
+			countdown=7;		
+			}	
+
 	
-	if (joy_axis_x[loop] > 16384) ordenador.joy_axis_x_state[loop] = JOY_RIGHT; 
-	else if (joy_axis_x[loop] < -16384) ordenador.joy_axis_x_state[loop] = JOY_LEFT;
-	else ordenador.joy_axis_x_state[loop] = JOY_CENTER_X;
-	
-	if (joy_axis_y[loop] > 16384) ordenador.joy_axis_y_state[loop] = JOY_DOWN; 
-	else if (joy_axis_y[loop] < -16384) ordenador.joy_axis_y_state[loop] = JOY_UP;
-	else ordenador.joy_axis_y_state[loop] = JOY_CENTER_Y;
-	}
 	temporal_io = (unsigned int) pevento->key.keysym.sym;
 
-	/*
-	if ((pevento->type==SDL_KEYDOWN)&&(temporal_io==SDLK_TAB)) {
-		if (ordenador.tab_extended==0) {
-			ordenador.tab_extended=1;
-			strcpy(ordenador.osd_text,"Function Key mode on");
-			ordenador.osd_time=100;
-			return;
-		} else {
-			ordenador.tab_extended=0;
-			ordenador.osd_time=0;
-			return;
-		}
-	}
-	
-	if ((pevento->type==SDL_KEYDOWN)&&(ordenador.tab_extended==1)) {
-		ordenador.tab_extended=0;
-		ordenador.osd_time=0;
-		switch(temporal_io) {
-		case SDLK_1:
-			temporal_io=SDLK_F1;
-		break;
-		case SDLK_2:
-			temporal_io=SDLK_F2;
-		break;
-		case SDLK_3:
-			temporal_io=SDLK_F3;
-		break;
-		case SDLK_4:
-			temporal_io=SDLK_F4;
-		break;
-		case SDLK_5:
-			temporal_io=SDLK_F5;
-		break;
-		case SDLK_6:
-			temporal_io=SDLK_F6;
-		break;
-		case SDLK_7:
-			temporal_io=SDLK_F7;
-		break;
-		case SDLK_8:
-			temporal_io=SDLK_F8;
-		break;
-		case SDLK_9:
-			temporal_io=SDLK_F9;
-		break;
-		case SDLK_0:
-			temporal_io=SDLK_F10;
-		break;
-		case SDLK_o:
-			temporal_io=SDLK_F11;
-		break;
-		case SDLK_p:
-			temporal_io=SDLK_F12;
-		break;
-		}
-	}
-	*/
 	if (pevento->type == SDL_KEYDOWN)
 		switch (temporal_io) {
 		case SDLK_ESCAPE:	// to exit from the emulator
@@ -863,9 +818,20 @@ inline void read_keyboard () {
 
 		case SDLK_F9:
 			//Emulate load ""
-	
+			ordenador.keyboard_buffer[0][6]= SDLK_1;		//Edit
+			ordenador.keyboard_buffer[1][6]= SDLK_LSHIFT;
+			ordenador.keyboard_buffer[0][5]= SDLK_j;		//Load
+			ordenador.keyboard_buffer[1][5]= 0;
+			ordenador.keyboard_buffer[0][4]= SDLK_p;		//"
+			ordenador.keyboard_buffer[1][4]= SDLK_LCTRL;
+			ordenador.keyboard_buffer[0][3]= SDLK_p;		//"
+			ordenador.keyboard_buffer[1][3]= SDLK_LCTRL;
+			ordenador.keyboard_buffer[0][2]= SDLK_RETURN;	// Return
+			ordenador.keyboard_buffer[1][2]= 0;
+			ordenador.keyboard_buffer[0][1]= SDLK_F6;		//F6
+			ordenador.keyboard_buffer[1][1]= 0;
 			ordenador.kbd_buffer_pointer=6;
-			countdown=5;
+			countdown=7;
 			break;
 
 		case SDLK_F10:	// Reset emulator
@@ -909,93 +875,93 @@ inline void read_keyboard () {
 		break;
 		}
 	}
-	for(loop=0;loop<ordenador.joystick_number;loop++)
+	for(joy_n=0;joy_n<ordenador.joystick_number;joy_n++)
 	{
-	 switch (ordenador.joystick[loop]) {
+	 switch (ordenador.joystick[joy_n]) {
 		case 0:	// cursor
-			if (ordenador.joy_axis_y_state[loop] == JOY_UP) ordenador.k12|= 8;
-			if (ordenador.joy_axis_y_state[loop] == JOY_DOWN) ordenador.k12|= 16;
-			if (ordenador.joy_axis_x_state[loop] == JOY_RIGHT)ordenador.k12|= 4;
-			if (ordenador.joy_axis_x_state[loop] == JOY_LEFT) ordenador.k11|= 16;
-			if (ordenador.joy_fire[loop]) ordenador.k12|= 1;
+			if (ordenador.joy_axis_y_state[joy_n] == JOY_UP) ordenador.k12|= 8;
+			if (ordenador.joy_axis_y_state[joy_n] == JOY_DOWN) ordenador.k12|= 16;
+			if (ordenador.joy_axis_x_state[joy_n] == JOY_RIGHT)ordenador.k12|= 4;
+			if (ordenador.joy_axis_x_state[joy_n] == JOY_LEFT) ordenador.k11|= 16;
+			if (joybutton_matrix[joy_n][SDLK_LALT]) ordenador.k12|= 1; //fire button
 		break; 
 			
 		case 1: //Kempston
-			if (ordenador.joy_axis_y_state[loop] == JOY_UP) ordenador.jk|= 8;
-			if (ordenador.joy_axis_y_state[loop] == JOY_DOWN) ordenador.jk|= 4;
-			if (ordenador.joy_axis_x_state[loop] == JOY_RIGHT) ordenador.jk|= 1;
-			if (ordenador.joy_axis_x_state[loop] == JOY_LEFT) ordenador.jk|= 2;
-			if (ordenador.joy_fire[loop]) ordenador.jk |= 16;
+			if (ordenador.joy_axis_y_state[joy_n] == JOY_UP) ordenador.jk|= 8;
+			if (ordenador.joy_axis_y_state[joy_n] == JOY_DOWN) ordenador.jk|= 4;
+			if (ordenador.joy_axis_x_state[joy_n] == JOY_RIGHT) ordenador.jk|= 1;
+			if (ordenador.joy_axis_x_state[joy_n] == JOY_LEFT) ordenador.jk|= 2;
+			if (joybutton_matrix[joy_n][SDLK_LALT]) ordenador.jk |= 16; //fire button
 		break;
 		
 		case 2:	// sinclair 1
-			if (ordenador.joy_axis_y_state[loop] == JOY_UP) ordenador.k11|= 8;
-			if (ordenador.joy_axis_y_state[loop] == JOY_DOWN)ordenador.k11|= 4;
-			if (ordenador.joy_axis_x_state[loop] == JOY_RIGHT)ordenador.k11|= 2;
-			if (ordenador.joy_axis_x_state[loop] == JOY_LEFT) ordenador.k11|= 1;
-			if (ordenador.joy_fire[loop]) ordenador.k11|= 16;	
+			if (ordenador.joy_axis_y_state[joy_n] == JOY_UP) ordenador.k11|= 8;
+			if (ordenador.joy_axis_y_state[joy_n] == JOY_DOWN)ordenador.k11|= 4;
+			if (ordenador.joy_axis_x_state[joy_n] == JOY_RIGHT)ordenador.k11|= 2;
+			if (ordenador.joy_axis_x_state[joy_n] == JOY_LEFT) ordenador.k11|= 1;
+			if (joybutton_matrix[joy_n][SDLK_LALT]) ordenador.k11|= 16;	//fire button
 		break;
 		
 		case 3:	// sinclair 2
-			if (ordenador.joy_axis_y_state[loop] == JOY_UP) ordenador.k12|= 2;
-			if (ordenador.joy_axis_y_state[loop] == JOY_DOWN)ordenador.k12|= 4;
-			if (ordenador.joy_axis_x_state[loop] == JOY_RIGHT)ordenador.k12|= 8;
-			if (ordenador.joy_axis_x_state[loop] == JOY_LEFT) ordenador.k12|= 16;
-			if (ordenador.joy_fire[loop]) ordenador.k12|= 1;
+			if (ordenador.joy_axis_y_state[joy_n] == JOY_UP) ordenador.k12|= 2;
+			if (ordenador.joy_axis_y_state[joy_n] == JOY_DOWN)ordenador.k12|= 4;
+			if (ordenador.joy_axis_x_state[joy_n] == JOY_RIGHT)ordenador.k12|= 8;
+			if (ordenador.joy_axis_x_state[joy_n] == JOY_LEFT) ordenador.k12|= 16;
+			if (joybutton_matrix[joy_n][SDLK_LALT]) ordenador.k12|= 1; //fire button
 		break;
 		}
 	}	
 			
 	if (ordenador.key[SDLK_SPACE]) ordenador.k15|=1;
 	if (ordenador.key[SDLK_RCTRL]||ordenador.key[SDLK_LCTRL]) ordenador.k15|=2; //Symbol shift
-	if (ordenador.key[SDLK_m]) ordenador.k15|=4;
-	if (ordenador.key[SDLK_n]) ordenador.k15|=8;
-	if (ordenador.key[SDLK_b]) ordenador.k15|=16;
+	if ((ordenador.key[SDLK_m] || joybutton_matrix[0][SDLK_m] || joybutton_matrix[1][SDLK_m])) ordenador.k15|=4;
+	if ((ordenador.key[SDLK_n] || joybutton_matrix[0][SDLK_n] || joybutton_matrix[1][SDLK_n])) ordenador.k15|=8;
+	if ((ordenador.key[SDLK_b] || joybutton_matrix[0][SDLK_b] || joybutton_matrix[1][SDLK_b])) ordenador.k15|=16;
 	if (ordenador.key[SDLK_PERIOD]) ordenador.k15|=6;
 	if (ordenador.key[SDLK_COMMA]) ordenador.k15|=10;					
 					
-	if (ordenador.key[SDLK_RETURN]) ordenador.k14|=1;
-	if (ordenador.key[SDLK_l]) ordenador.k14|=2;
-	if (ordenador.key[SDLK_k]) ordenador.k14|=4;
-	if (ordenador.key[SDLK_j]) ordenador.k14|=8;
-	if (ordenador.key[SDLK_h]) ordenador.k14|=16;					
+	if ((ordenador.key[SDLK_RETURN] || joybutton_matrix[0][SDLK_RETURN] || joybutton_matrix[1][SDLK_RETURN])) ordenador.k14|=1;
+	if ((ordenador.key[SDLK_l] || joybutton_matrix[0][SDLK_l] || joybutton_matrix[1][SDLK_l])) ordenador.k14|=2;
+	if ((ordenador.key[SDLK_k] || joybutton_matrix[0][SDLK_k] || joybutton_matrix[1][SDLK_k])) ordenador.k14|=4;
+	if ((ordenador.key[SDLK_j] || joybutton_matrix[0][SDLK_j] || joybutton_matrix[1][SDLK_j])) ordenador.k14|=8;
+	if ((ordenador.key[SDLK_h] || joybutton_matrix[0][SDLK_h] || joybutton_matrix[1][SDLK_h])) ordenador.k14|=16;					
 					
-	if (ordenador.key[SDLK_p]) ordenador.k13|=1;
-	if (ordenador.key[SDLK_o]) ordenador.k13|=2;
-	if (ordenador.key[SDLK_i]) ordenador.k13|=4;
-	if (ordenador.key[SDLK_u]) ordenador.k13|=8;
-	if (ordenador.key[SDLK_y]) ordenador.k13|=16;					
+	if ((ordenador.key[SDLK_p] || joybutton_matrix[0][SDLK_p] || joybutton_matrix[1][SDLK_p])) ordenador.k13|=1;
+	if ((ordenador.key[SDLK_o] || joybutton_matrix[0][SDLK_o] || joybutton_matrix[1][SDLK_o])) ordenador.k13|=2;
+	if ((ordenador.key[SDLK_i] || joybutton_matrix[0][SDLK_i] || joybutton_matrix[1][SDLK_i])) ordenador.k13|=4;
+	if ((ordenador.key[SDLK_u] || joybutton_matrix[0][SDLK_u] || joybutton_matrix[1][SDLK_u])) ordenador.k13|=8;
+	if ((ordenador.key[SDLK_y] || joybutton_matrix[0][SDLK_y] || joybutton_matrix[1][SDLK_y])) ordenador.k13|=16;					
 
-	if (ordenador.key[SDLK_0]) ordenador.k12|=1;
-	if (ordenador.key[SDLK_9]) ordenador.k12|=2;
-	if (ordenador.key[SDLK_8]) ordenador.k12|=4;
-	if (ordenador.key[SDLK_7]) ordenador.k12|=8;
-	if (ordenador.key[SDLK_6]) ordenador.k12|=16;
-	if (ordenador.key[SDLK_BACKSPACE]) {ordenador.k12|=1; ordenador.k8 |=1;}	
+	if ((ordenador.key[SDLK_0] || joybutton_matrix[0][SDLK_0] || joybutton_matrix[1][SDLK_0])) ordenador.k12|=1;
+	if ((ordenador.key[SDLK_9] || joybutton_matrix[0][SDLK_9] || joybutton_matrix[1][SDLK_9])) ordenador.k12|=2;
+	if ((ordenador.key[SDLK_8] || joybutton_matrix[0][SDLK_8] || joybutton_matrix[1][SDLK_8])) ordenador.k12|=4;
+	if ((ordenador.key[SDLK_7] || joybutton_matrix[0][SDLK_7] || joybutton_matrix[1][SDLK_7])) ordenador.k12|=8;
+	if ((ordenador.key[SDLK_6] || joybutton_matrix[0][SDLK_6] || joybutton_matrix[1][SDLK_6])) ordenador.k12|=16;
+	if ((ordenador.key[SDLK_BACKSPACE] || joybutton_matrix[0][SDLK_BACKSPACE] || joybutton_matrix[1][SDLK_BACKSPACE])) {ordenador.k12|=1; ordenador.k8 |=1;}	
 					
-	if (ordenador.key[SDLK_1]) ordenador.k11|=1;
-	if (ordenador.key[SDLK_2]) ordenador.k11|=2;
-	if (ordenador.key[SDLK_3]) ordenador.k11|=4;
-	if (ordenador.key[SDLK_4]) ordenador.k11|=8;
-	if (ordenador.key[SDLK_5]) ordenador.k11|=16;					
+	if ((ordenador.key[SDLK_1] || joybutton_matrix[0][SDLK_1] || joybutton_matrix[1][SDLK_1])) ordenador.k11|=1;
+	if ((ordenador.key[SDLK_2] || joybutton_matrix[0][SDLK_2] || joybutton_matrix[1][SDLK_2])) ordenador.k11|=2;
+	if ((ordenador.key[SDLK_3] || joybutton_matrix[0][SDLK_3] || joybutton_matrix[1][SDLK_3])) ordenador.k11|=4;
+	if ((ordenador.key[SDLK_4] || joybutton_matrix[0][SDLK_4] || joybutton_matrix[1][SDLK_4])) ordenador.k11|=8;
+	if ((ordenador.key[SDLK_5] || joybutton_matrix[0][SDLK_5] || joybutton_matrix[1][SDLK_5])) ordenador.k11|=16;					
 
-	if (ordenador.key[SDLK_q]) ordenador.k10|=1;
-	if (ordenador.key[SDLK_w]) ordenador.k10|=2;
-	if (ordenador.key[SDLK_e]) ordenador.k10|=4;
-	if (ordenador.key[SDLK_r]) ordenador.k10|=8;
-	if (ordenador.key[SDLK_t]) ordenador.k10|=16;
+	if ((ordenador.key[SDLK_q] || joybutton_matrix[0][SDLK_q] || joybutton_matrix[1][SDLK_q])) ordenador.k10|=1;
+	if ((ordenador.key[SDLK_w] || joybutton_matrix[0][SDLK_w] || joybutton_matrix[1][SDLK_w])) ordenador.k10|=2;
+	if ((ordenador.key[SDLK_e] || joybutton_matrix[0][SDLK_e] || joybutton_matrix[1][SDLK_e])) ordenador.k10|=4;
+	if ((ordenador.key[SDLK_r] || joybutton_matrix[0][SDLK_r] || joybutton_matrix[1][SDLK_r])) ordenador.k10|=8;
+	if ((ordenador.key[SDLK_t] || joybutton_matrix[0][SDLK_t] || joybutton_matrix[1][SDLK_t])) ordenador.k10|=16;
 					
-	if (ordenador.key[SDLK_a]) ordenador.k9 |=1;
-	if (ordenador.key[SDLK_s]) ordenador.k9 |=2;
-	if (ordenador.key[SDLK_d]) ordenador.k9 |=4;
-	if (ordenador.key[SDLK_f]) ordenador.k9 |=8;
-	if (ordenador.key[SDLK_g]) ordenador.k9 |=16;					
+	if ((ordenador.key[SDLK_a] || joybutton_matrix[0][SDLK_a] || joybutton_matrix[1][SDLK_a])) ordenador.k9 |=1;
+	if ((ordenador.key[SDLK_s] || joybutton_matrix[0][SDLK_s] || joybutton_matrix[1][SDLK_s])) ordenador.k9 |=2;
+	if ((ordenador.key[SDLK_d] || joybutton_matrix[0][SDLK_d] || joybutton_matrix[1][SDLK_d])) ordenador.k9 |=4;
+	if ((ordenador.key[SDLK_f] || joybutton_matrix[0][SDLK_f] || joybutton_matrix[1][SDLK_f])) ordenador.k9 |=8;
+	if ((ordenador.key[SDLK_g] || joybutton_matrix[0][SDLK_g] || joybutton_matrix[1][SDLK_g])) ordenador.k9 |=16;					
 					
-	if (ordenador.key[SDLK_RSHIFT]||ordenador.key[SDLK_LSHIFT]) ordenador.k8 |=1; //Caps shift
-	if (ordenador.key[SDLK_z]) ordenador.k8 |=2;
-	if (ordenador.key[SDLK_x]) ordenador.k8 |=4;
-	if (ordenador.key[SDLK_c]) ordenador.k8 |=8;
-	if (ordenador.key[SDLK_v]) ordenador.k8 |=16;
+	if ((ordenador.key[SDLK_RSHIFT]||ordenador.key[SDLK_LSHIFT])) ordenador.k8 |=1; //Caps shift
+	if ((ordenador.key[SDLK_z] || joybutton_matrix[0][SDLK_z] || joybutton_matrix[1][SDLK_z])) ordenador.k8 |=2;
+	if ((ordenador.key[SDLK_x] || joybutton_matrix[0][SDLK_x] || joybutton_matrix[1][SDLK_x])) ordenador.k8 |=4;
+	if ((ordenador.key[SDLK_c] || joybutton_matrix[0][SDLK_c] || joybutton_matrix[1][SDLK_c])) ordenador.k8 |=8;
+	if ((ordenador.key[SDLK_v] || joybutton_matrix[0][SDLK_v] || joybutton_matrix[1][SDLK_v])) ordenador.k8 |=16;
 
 	if (ordenador.key[SDLK_UP]) {ordenador.k12 |=8;ordenador.k8|=1;}
 	if (ordenador.key[SDLK_DOWN]) {ordenador.k12 |=16;ordenador.k8|=1;}

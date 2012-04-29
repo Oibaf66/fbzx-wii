@@ -1,6 +1,10 @@
-/* 
- * Copyright (C) 2012 Fabio Olimpieri
- * Copyright 2003-2009 (C) Raster Software Vigo (Sergio Costas)
+/*********************************************************************
+ *
+ * Copyright (C) 2012,  Fabio Olimpieri
+ *
+ * Filename:      menu_sdl.h
+ * Author:        Fabio Olimpieri <fabio.olimpieri@tin.it>
+ * Description:   a SDL Gui
  * This file is part of FBZX Wii
  *
  * FBZX Wii is free software; you can redistribute it and/or modify
@@ -16,17 +20,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- */
+ *
+ ********************************************************************/
 
-#ifndef H_TAPE
-#define H_TAPE
+void virtual_keyboard(void);
+void main_menu();
 
-inline void tape_read(FILE *, int);
-inline void tape_read_tap(FILE *, int);
-inline void tape_read_tzx(FILE *, int);
-void rewind_tape(FILE *,unsigned char);
-unsigned char file_empty(FILE *);
-void fastload_block (FILE *);
-void save_file(FILE *);
 
-#endif
