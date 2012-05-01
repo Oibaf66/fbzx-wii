@@ -1510,7 +1510,7 @@ void save_z80file() {
 	if(retorno==2) // abort
 		return;
 
-	retorno=save_z80(nombre2);
+	retorno=save_z80(nombre2,0);
 	switch(retorno) {
 	case 0:
 		break;

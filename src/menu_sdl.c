@@ -281,7 +281,7 @@ static const char **get_file_list(const char *base_dir)
 	{
 		char buf[255];
 		const char *exts[] = {".tap", ".TAP", ".tzx", ".TZX", ".z80",".Z80",".sna", ".SNA",
-				".mdr", ".MDR", NULL};
+				".mdr", ".MDR", ".scr", ".SCR", NULL};
 		struct stat st;
 
 		snprintf(buf, 255, "%s/%s", base_dir, de->d_name);
@@ -695,10 +695,10 @@ uint32_t menu_wait_key_press(void)
 				keys |= KEY_ESCAPE;
 			if (SDL_JoystickGetButton(joy, 5) != 0 ||      /* + */
 					SDL_JoystickGetButton(joy, 18) != 0)   /* C+ */
-				keys |= KEY_PAGEUP;
-			if (SDL_JoystickGetButton(joy, 4) != 0 ||      /* + */
-					SDL_JoystickGetButton(joy, 17) != 0)   /* C+ */
 				keys |= KEY_PAGEDOWN;
+			if (SDL_JoystickGetButton(joy, 4) != 0 ||      /* - */
+					SDL_JoystickGetButton(joy, 17) != 0)   /* C- */
+				keys |= KEY_PAGEUP;
 		}
 		joy_keys_changed = keys != joy_keys_last;
 		joy_keys_last = keys;
@@ -878,7 +878,7 @@ static const char *menu_select_file_internal(const char *dir_path,
 		ptr_selected_file= strrchr(selected_file,'/');
 		if (ptr_selected_file) ptr_selected_file++;
 		else ptr_selected_file = selected_file;
-		snprintf(buf,64,"tp%d:%s",which, ptr_selected_file);
+		snprintf(buf,64,"file:%s",ptr_selected_file);
 		opt = menu_select_sized(buf, file_list, NULL, 0, x, y, x2, y2, NULL, NULL, 16);
 	}
 	else opt = menu_select_sized("Select file", file_list, NULL, 0, x, y, x2, y2, NULL, NULL ,16);

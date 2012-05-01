@@ -148,6 +148,7 @@ struct computer {
 	FILE *tap_file;
 	unsigned char tape_fast_load; // 0 normal load; 1 fast load
 	unsigned char current_tap[2049];
+	unsigned char last_selected_file[2049];
 
 	unsigned char tape_current_bit;
 	unsigned int tape_block_level;
@@ -204,7 +205,7 @@ struct computer {
 	unsigned char joy_axis_x_state[2];
 	unsigned char joy_axis_y_state[2];
 	//unsigned char joy_fire[2];
-	unsigned int joybuttonkey[2][18];
+	unsigned int joybuttonkey[2][22];
 	unsigned char rumble[2];
 };
 

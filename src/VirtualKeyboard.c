@@ -50,7 +50,7 @@ static virtkey_t keys[KEY_COLS * KEY_ROWS] = {
   K("Q",113), K("W",119), K("E",101), K("R",114), K("T",116), K("Y",121), K("U",117), K("I",105), K("O",111), K("P",112),
   K("A",97), K("S",115), K("D",100), K("F",102), K("G",103), K("H",104), K("J",106), K("K",107), K("L",108),N("Enter","RETURN",13),
   N("Caps","LSHIFT",304),K("Z",122),K("X",120),K("C",99), K("V",118), K("B",98), K("N",110), K("M",109), N("Sym","LCTRL",306),N("Space","SPACE",32),
-  N("Ext","TAB",9), KNL(), N("Fire","LALT",308),KNL(), K("None",0),KNL(),KNL(), KNL(),KNL(),KNL()};
+  N("Ext","TAB",9), K("None",0),N("Del","BACKSPACE",8),K(",",44),K(".",46),N("Fire","LALT",308), K("UP",273),K("DOWN",274), K("LEFT",276),K("RIGHT",275)};
 
 void VirtualKeyboard_init(SDL_Surface *screen, TTF_Font *font)
 {
@@ -97,7 +97,7 @@ void draw()
 
 			menu_print_font(VirtualKeyboard.screen, r, g, b,
 					x * key_w + border_x, y * key_h + border_y,
-					what, 20);
+					what, 16);
 		}
 	}
 }
@@ -170,7 +170,7 @@ struct virtkey *get_key_internal()
 struct virtkey* get_key()
 {
 	virtkey_t *key;
-	SDL_Rect rect = {32, 32, FULL_DISPLAY_X-64, FULL_DISPLAY_Y-96};
+	SDL_Rect rect = {32, 128, FULL_DISPLAY_X-64, FULL_DISPLAY_Y-272};
 	
 	keys[3 * KEY_COLS + 0 ].is_done = 0; //Caps Shit
 	keys[3 * KEY_COLS + 8 ].is_done = 0; //Sym Shift

@@ -63,6 +63,7 @@ unsigned char *sound[NUM_SNDBUF];
 char path_snaps[2049];
 char path_taps[2049];
 char path_mdrs[2049];
+char path_scr[2049];
 unsigned int colors[80];
 unsigned int jump_frames,curr_frames;
 char *filenames[5];
@@ -724,9 +725,11 @@ int main(int argc,char *argv[]) {
 		strcat(path_snaps,"/");
 	strcpy(path_taps,path_snaps);
 	strcpy(path_mdrs,path_snaps);
+	strcpy(path_scr,path_snaps);
 	strcat(path_snaps,"snapshots");
 	strcat(path_taps,"tapes");
 	strcat(path_mdrs,"microdrives");
+	strcat(path_scr,"scr");
 	
 	ordenador.current_tap[0]=0;
 
@@ -846,8 +849,6 @@ int main(int argc,char *argv[]) {
 			ordenador.interr=0;
 		}
 	}
-	
-	//save_config(&ordenador);
 	
 	#ifdef GEKKO
 	fatUnmount(0);

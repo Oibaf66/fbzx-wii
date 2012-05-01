@@ -74,7 +74,7 @@ static const char *emulation_messages[] = {
 		/*00*/		"Emulated machine",
 		/*01*/		"^|48k_2|48K_3|128k|+2|+2A/+3|128K_Sp",
 		/*02*/		"Volume",
-		/*03*/		"^|0%|25%|50%|75%|100%",
+		/*03*/		"^|0|1|2|3|4|5|6|7|max",
 		/*04*/		"Tap fast speed",
 		/*05*/		"^|on|off",
 		/*06*/		"Turbo mode",
@@ -91,31 +91,28 @@ static const char *emulation_messages[] = {
 static const  char *input_messages[] = {
 		/*00*/		"Joystick type",
 		/*01*/		"^|Cursor|Kempston|Sinclair1|Sinclair2",
-		/*02*/		"  ",
-		/*03*/		"Bind key to Wiimote",
-		/*04*/		"^|A|B|1|2|-",
-		/*05*/		"  ",
-		/*06*/		"Bind key to Nunchuk",
-		/*07*/		"^|Z|C",
-		/*08*/		"  ",
-		/*09*/		"Bind key to Classic",
-		/*10*/		"^|a|b|x|y|L|R|Zl|Zr|-",
-		/*11*/		"  ",
-		/*12*/		"Rumble",
-		/*13*/		"^|On|Off",
+		/*02*/		"Bind key to Wiimote",
+		/*03*/		"^|A|B|1|2|-",
+		/*04*/		"Bind key to Nunchuk",
+		/*05*/		"^|Z|C",
+		/*06*/		"Bind key to Classic",
+		/*07*/		"^|a|b|x|y|L|R|Zl|Zr|-",
+		/*08*/		"Bind key to Pad",
+		/*09*/		"^|UP|DOWN|LEFT|RIGHT",
+		/*10*/		"Rumble",
+		/*11*/		"^|On|Off",
 		NULL,
 };
 
 static const char *microdrive_messages[] = {
-		/*00*/		"Select microdrive",
-		/*01*/		"  ",
-		/*02*/		"Create microdrive file",
-		/*03*/		"  ",
-		/*04*/		"Interface I",
-		/*05*/		"^|on|off",
-		/*06*/		"  ",
-		/*07*/		"Write protection",
-		/*08*/		"^|on|off",
+		/*00*/		"Microdrive",
+		/*01*/		"^|Select|Create|Delete",
+		/*02*/		"  ",
+		/*03*/		"Interface I",
+		/*04*/		"^|on|off",
+		/*05*/		"  ",
+		/*06*/		"Write protection",
+		/*07*/		"^|on|off",
 		NULL
 };
 
@@ -166,7 +163,7 @@ static void insert_tape()
 	if (filename==NULL) // Aborted
 		return; 
 	
-	if (strcmp(filename, "None") == 0) //TO FIX IT
+	if (strstr(filename, "None") != NULL)
 	{
 			ordenador.current_tap[0] = '\0';
 			free((void *)filename);
@@ -189,21 +186,22 @@ static void insert_tape()
 		retorno=-1;
 	else
 		retorno=0;
-
-	strcpy(ordenador.current_tap,filename);
-
-	free((void *)filename);
-
+	
 	switch(retorno) {
 	case 0: // all right
+	strcpy(ordenador.current_tap,filename);
+	strcpy(ordenador.last_selected_file,filename);
 	break;
 	case -1:
 		msgInfo("Error: Can't load that file",3000,NULL);
 		ordenador.current_tap[0]=0;
+		free((void *)filename);
 		return;
 	break;
 	}
-
+	
+	free((void *)filename);
+	
 	retval=fread(char_id,10,1,ordenador.tap_file); // read the (maybe) TZX header
 	if((!strncmp(char_id,"ZXTape!",7)) && (char_id[7]==0x1A)&&(char_id[8]==1)) {
 		ordenador.tape_file_type = TAP_TZX;
@@ -221,14 +219,9 @@ static void delete_tape()
 	if (filename==NULL) // Aborted
 		return; 
 	
-	if (strcmp(filename, "None") == 0)
-	{
-			free((void *)filename);
-			return;
-	}
-	
-	if (ext_matches(filename, ".tap")|ext_matches(filename, ".TAP")|ext_matches(filename, ".tzx")|
-	ext_matches(filename, ".TZX")) unlink(filename);
+	if ((ext_matches(filename, ".tap")|ext_matches(filename, ".TAP")|ext_matches(filename, ".tzx")|
+	ext_matches(filename, ".TZX"))
+	&& (msgYesNo("Delete the file?", 0, FULL_DISPLAY_X /2-138, FULL_DISPLAY_Y /2-48))) unlink(filename);
 	
 	free((void *)filename);
 }
@@ -243,7 +236,7 @@ static void manage_tape(int which)
 		break;
 	case 1: //Emulate load ""
 		ordenador.kbd_buffer_pointer=6;
-		countdown=7;
+		countdown=15;
 		ordenador.keyboard_buffer[0][6]= SDLK_1;		//Edit
 		ordenador.keyboard_buffer[1][6]= SDLK_LSHIFT;
 		ordenador.keyboard_buffer[0][5]= SDLK_j;		//Load
@@ -275,6 +268,7 @@ static void manage_tape(int which)
 		break;
 	case 5: //Create
 		// Create tape 
+		msgInfo("Not yet implemented",3000,NULL);
 		break;	
 	case 6: //Delete
 		delete_tape();
@@ -336,7 +330,7 @@ static void emulation_settings(void)
 	memset(submenus, 0, sizeof(submenus));
 	
 	submenus[0] = get_machine_model();
-	submenus[1] = (unsigned int) (ordenador.volume/16);
+	submenus[1] = (unsigned int) (ordenador.volume/8);
 	submenus[2] = !ordenador.tape_fast_load;
 	submenus[3] = !ordenador.turbo;
 	submenus[4] = !ordenador.dblscan;
@@ -354,7 +348,7 @@ static void emulation_settings(void)
 	if (submenus[0] != submenus_old[0]) ResetComputer(); else 
 	ordenador.ay_emul = !submenus[6];
 	
-	ordenador.volume = submenus[1]*16;
+	ordenador.volume = submenus[1]*8;
 	ordenador.tape_fast_load = !submenus[2];
 	ordenador.turbo = !submenus[3];
 	
@@ -377,7 +371,7 @@ static void setup_joystick(int joy, unsigned int sdl_key, int joy_key)
 	int loop;
 	
 	//Cancel the previous assignement - it is not possible to assign a same sdl_key to 2 joybuttons
-	for (loop=0; loop<18; loop++)
+	for (loop=0; loop<22; loop++)
 	 if (ordenador.joybuttonkey[joy][loop] == sdl_key) ordenador.joybuttonkey[joy][loop] =0;
 	
 	ordenador.joybuttonkey[joy][joy_key] = sdl_key;
@@ -389,9 +383,10 @@ static void input_options(int joy)
 	const unsigned int wiimote_to_sdl[] = {0, 1, 2, 3, 4};
 	const unsigned int nunchuk_to_sdl[] = {7, 8};
 	const unsigned int classic_to_sdl[] = {9, 10, 11, 12, 13, 14, 15, 16, 17};
+	const unsigned int pad_to_sdl[] = {18, 19, 20, 21};
 	int joy_key = 1;
 	unsigned int sdl_key;
-	unsigned int submenus[5];
+	unsigned int submenus[6];
 	int opt;
 	
 	struct virtkey *virtualkey;
@@ -399,7 +394,7 @@ static void input_options(int joy)
 	memset(submenus, 0, sizeof(submenus));
 	
 	submenus[0] = ordenador.joystick[joy];
-	submenus[4] = !ordenador.rumble[joy];
+	submenus[5] = !ordenador.rumble[joy];
 	
 	opt = menu_select_title("Input menu",
 			input_messages, submenus);
@@ -407,9 +402,9 @@ static void input_options(int joy)
 		return;
 	
 	ordenador.joystick[joy] = submenus[0];
-	ordenador.rumble[joy] = !submenus[4];
+	ordenador.rumble[joy] = !submenus[5];
 	
-	if (opt == 0 || opt == 12)
+	if (opt == 0 || opt == 10)
 		return;
 	
 	virtualkey = get_key();
@@ -419,12 +414,14 @@ static void input_options(int joy)
 	
 	switch(opt)
 		{
-		case 3: // wiimote 
+		case 2: // wiimote 
 			joy_key = wiimote_to_sdl[submenus[1]]; break;
-		case 6: // nunchuk
+		case 4: // nunchuk
 			joy_key = nunchuk_to_sdl[submenus[2]]; break;
-		case 9: // classic
+		case 6: // classic
 			joy_key = classic_to_sdl[submenus[3]]; break;
+		case 8: // pad
+			joy_key = pad_to_sdl[submenus[4]]; break;
 		default:
 			break;
 		}
@@ -433,30 +430,86 @@ static void input_options(int joy)
 	
 }
 
+static void select_mdr()
+{
+	int retorno, retval;
+
+	const char *filename = menu_select_file(path_mdrs, ordenador.mdr_current_mdr, 0);
+	
+	if (filename==NULL) // Aborted
+		return; 
+		
+	if (strstr(filename, "None") != NULL)
+	{
+			ordenador.mdr_current_mdr[0] = '\0';
+			free((void *)filename);
+			return;
+	}	
+	
+	if (!(ext_matches(filename, ".mdr")|ext_matches(filename, ".MDR"))) {free((void *)filename); return;}
+	
+	ordenador.mdr_file=fopen(filename,"rb"); // read
+	if(ordenador.mdr_file==NULL)
+		retorno=-1;
+	else {
+		retorno=0;
+		retval=fread(ordenador.mdr_cartridge,137923,1,ordenador.mdr_file); // read the cartridge in memory
+		ordenador.mdr_modified=0; // not modified
+		fclose(ordenador.mdr_file);
+		ordenador.mdr_tapehead=0;
+	}
+
+	strcpy(ordenador.mdr_current_mdr,filename);
+
+	free((void *)filename);
+
+	switch(retorno) {
+	case 0: // all right
+		break;
+	default:
+		ordenador.mdr_current_mdr[0]=0;
+		msgInfo("Error: Can't load that file",3000,NULL);
+	break;
+	}
+}
+
+static void delete_mdr()
+{
+	const char *filename = menu_select_file(path_mdrs, NULL, -1);
+	
+	if (filename==NULL) // Aborted
+		return; 
+	
+	if ((ext_matches(filename, ".mdr")|ext_matches(filename, ".MDR"))
+	&& (msgYesNo("Delete the file?", 0, FULL_DISPLAY_X /2-138, FULL_DISPLAY_Y /2-48))) unlink(filename);
+	
+	free((void *)filename);
+}
+
 static void microdrive()
 {
 	
-	unsigned int submenus[2], submenus_old[2];
+	unsigned int submenus[3], submenus_old[3];
 	int opt,retval ;
 
 	memset(submenus, 0, sizeof(submenus));
 	
-	submenus[0] = !ordenador.mdr_active;
-	submenus[1] = !ordenador.mdr_cartridge[137922];
+	submenus[1] = !ordenador.mdr_active;
+	submenus[2] = !ordenador.mdr_cartridge[137922];
 	
-	submenus_old[0] = submenus[0];
 	submenus_old[1] = submenus[1];
+	submenus_old[2] = submenus[2];
 	
 	opt = menu_select_title("Microdrive menu",
 			microdrive_messages, submenus);
 	if (opt < 0)
 		return;
 	
-	ordenador.mdr_active = !submenus[0];
+	ordenador.mdr_active = !submenus[1];
 	
 	
-	if (submenus[0]!=submenus_old[0]) ResetComputer();
-	if (submenus[1]!=submenus_old[1]) 
+	if (submenus[1]!=submenus_old[1]) ResetComputer();
+	if (submenus[2]!=submenus_old[2]) 
 		{if(ordenador.mdr_cartridge[137922])
 				ordenador.mdr_cartridge[137922]=0;
 			else
@@ -470,13 +523,18 @@ static void microdrive()
 			}			
 		}
 	
-	switch(opt)
+	if (opt==0)
+		switch (submenus[0]) 
 		{
 		case 0: // Select microdrive 
-			//Select microdrive ;
+			select_mdr();
 			break;
-		case 2: // Create microdrive file
+		case 1: // Create microdrive file
 			// Create microdrive file ;
+			msgInfo("Not yet implemented",3000,NULL);
+			break;
+		case 2: // Delete microdrive file
+			delete_mdr();
 			break;
 		default:
 			break;
@@ -506,6 +564,115 @@ void show_keyboard_layout() {
 	menu_wait_key_press();
 }
 	
+static void load_scr()
+{
+	int retorno,loop;
+	unsigned char value;
+	FILE *fichero;
+	unsigned char paleta_tmp[64];
+
+
+	const char *filename = menu_select_file(path_scr, NULL, -1);
+	
+	if (filename==NULL) // Aborted
+		return; 
+	
+	if (!(ext_matches(filename, ".scr")|ext_matches(filename, ".SCR"))) {free((void *)filename); return;}
+	
+	ordenador.osd_text[0]=0;
+	fichero=fopen(filename,"rb");
+	retorno=0;
+	if (!fichero) {
+		retorno=-1;
+	} else {
+		for(loop=0;loop<6912;loop++) {
+			if (1==fread(&value,1,1,fichero)) {
+				*(ordenador.block1 + 0x04000 + loop) = value;
+			} else {
+				retorno=-1;
+				break;
+			}
+		}
+		if (1==fread(paleta_tmp,64,1,fichero)) {
+			memcpy(ordenador.ulaplus_palete,paleta_tmp,64);
+			ordenador.ulaplus=1;
+		} else {
+			ordenador.ulaplus=0;
+		}
+		fclose(fichero);
+	}
+
+	switch(retorno) {
+	case 0: // all right
+		break;
+	case -1:
+		msgInfo("Error: Can't load that file",3000,NULL);
+		break;
+	default:
+		break;	
+	}
+	
+	free((void *)filename);
+	
+}
+
+static void save_scr()
+{
+	const char *dir = path_scr;
+	const char *tape = ordenador.last_selected_file;
+	char *ptr;
+	FILE *fichero;
+	char db[256];
+	char fb[81];
+	int retorno,retval;
+
+	// Name (for saves) - TO CHECK
+	if (tape && strrchr(tape, '/'))
+		strncpy(fb, strrchr(tape, '/') + 1, 80);
+	else
+		strcpy(fb, "unknown");
+		
+	//remove the extension
+	ptr = strrchr (fb, '.');
+		if (ptr) *ptr = 0;
+					
+	// Save SCR file		
+	snprintf(db, 255, "%s/%s.scr", dir, fb);	
+		
+	fichero=fopen(db,"r");
+	
+	if(fichero!=NULL)
+	{	
+		fclose(fichero);
+		if (!msgYesNo("Overwrite the exiting file?", 0, FULL_DISPLAY_X /2-160, FULL_DISPLAY_Y /2-48))
+			return; // file already exists
+	}
+	
+	fichero=fopen(db,"wb"); // create for write
+		
+	if(fichero==NULL)
+		retorno=-1;
+	else {
+		retval=fwrite(ordenador.block1+0x04000,6912,1,fichero); // save screen
+		if (ordenador.ulaplus!=0) {
+			retval=fwrite(ordenador.ulaplus_palete,64,1,fichero); // save ULAPlus palete
+			}
+		fclose(fichero);
+		retorno=0;
+		}
+
+	switch(retorno) {
+	case 0:
+		msgInfo("SCR saved",3000,NULL);
+		break;
+	case -1:
+		msgInfo("Can't create file",3000,NULL);
+	break;
+	default:
+	break;
+	}
+}
+
 static void tools()
 {
 	int opt ;
@@ -521,13 +688,14 @@ static void tools()
 			show_keyboard_layout();
 			break;
 		case 2: // Save SCR
-			// Save SCR ;
+			save_scr();
 			break;
 		case 4: // Load SCR 
-			//Load SCR ;
+			load_scr();
 			break;
 		case 6: // Insert poke
 			// Insert poke ;
+			msgInfo("Not yet implemented",3000,NULL);
 			break;
 		default:
 			break;
@@ -576,7 +744,7 @@ void virtual_keyboard(void)
 	if (key) {key_code = key->sdl_code;} else return;
 	
 	ordenador.kbd_buffer_pointer=1;
-	countdown=7;
+	countdown=15;
 	ordenador.keyboard_buffer[0][1]= key_code;
 	if 	(key->caps_on) ordenador.keyboard_buffer[1][1]= SDLK_LSHIFT; 
 	else if (key->sym_on) ordenador.keyboard_buffer[1][1]= SDLK_LCTRL; 
@@ -586,12 +754,11 @@ void virtual_keyboard(void)
 
 }	
 
-
-
 static void save_load_snapshot(int which)
 {
 	const char *dir = path_snaps;
-	const char *tape = ordenador.current_tap;
+	const char *tape = ordenador.last_selected_file;
+	char *ptr;
 	char db[256];
 	char fb[81];
 	int retorno;
@@ -601,6 +768,10 @@ static void save_load_snapshot(int which)
 		strncpy(fb, strrchr(tape, '/') + 1, 80);
 	else
 		strcpy(fb, "unknown");
+		
+	//remove the extension
+	ptr = strrchr (fb, '.');
+		if (ptr) *ptr = 0;	
 
 	switch(which)
 	{
@@ -621,6 +792,7 @@ static void save_load_snapshot(int which)
 
 				switch(retorno) {
 				case 0: // all right
+				strcpy(ordenador.last_selected_file,filename);
 				break;
 				case -1:
 				msgInfo("Error: Can't load that file",3000,NULL);
@@ -632,21 +804,35 @@ static void save_load_snapshot(int which)
 				}
 			}
 			else // Delete snashot file
-				unlink(filename);
+				if (msgYesNo("Delete the file?", 0, FULL_DISPLAY_X /2-138, FULL_DISPLAY_Y /2-48)) unlink(filename);
 		}	
 		free((void*)filename);
 	} break;
 	case 1: // Save snapshot file
 		snprintf(db, 255, "%s/%s.z80", dir, fb);
-		retorno=save_z80(db);
-		msgInfo("Snapshot saved",3000,NULL);
+		retorno=save_z80(db,0);
+		switch(retorno) 
+			{
+			case 0: //OK
+				msgInfo("Snapshot saved",3000,NULL);
+				break;
+			case -1:
+				if (msgYesNo("Overwrite the exiting file?", 0, FULL_DISPLAY_X /2-160, FULL_DISPLAY_Y /2-48))
+				{
+					save_z80(db,1); //force overwrite
+					msgInfo("Snapshot saved",3000,NULL);
+				}
+				break;
+			case -2:
+				msgInfo("Can't create file",3000,NULL);
+				break;
+			}
 		break;
 	default:
 		break;
 	}
 }
-
-
+	
 static void help(void)
 {
 	menu_select_title("FBZX-WII help",
@@ -708,6 +894,6 @@ void main_menu()
 		default:
 			break;
 		}
-	} while (opt == 5 || opt == 7 || opt == 8 || opt == 9 || opt == 12);
+	} while (opt == 5 || opt == 7 || opt == 8 || opt == 12);
 	
 }

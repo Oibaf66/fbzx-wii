@@ -77,14 +77,14 @@ void uncompress_z80(FILE *fichero,int length,unsigned char *memo) {
 
 }
 
-int save_z80(char *filename) {
+int save_z80(char *filename, int overwrite) {
 
   FILE *fichero;
   unsigned char value,bucle;
   int retval;
 
   fichero=fopen(filename,"r");
-  if(fichero!=NULL) {
+  if((fichero!=NULL)&&(!overwrite)) {
     fclose(fichero);
     return -1; // file already exists
   }

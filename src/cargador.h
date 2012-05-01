@@ -37,7 +37,7 @@ struct z80snapshot {
 
 };
 
-int save_z80(char *);
+int save_z80(char *, int);
 int load_z80(char *);
 int load_sna(char *);
 void load_snap(struct z80snapshot *);

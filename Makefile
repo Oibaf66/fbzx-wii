@@ -117,6 +117,7 @@ dist: $(BUILD)
 	mkdir -p $@/fbzx-wii/tapes
 	mkdir -p $@/fbzx-wii/snapshots
 	mkdir -p $@/fbzx-wii/microdrives
+	mkdir -p $@/fbzx-wii/scr
 	mkdir -p $@/apps/fbzx-wii/doc
 	cp fbzx.dol $@/apps/fbzx-wii/boot.dol
 	cp spectrum-roms/* $@/fbzx-wii/spectrum-roms
@@ -127,6 +128,7 @@ dist: $(BUILD)
 	touch $@/fbzx-wii/tapes/dummy
 	touch $@/fbzx-wii/snapshots/dummy
 	touch $@/fbzx-wii/microdrives/dummy
+	touch $@/fbzx-wii/scr/dummy
 	cd $@ && tar -czf ../fbzx-wii-bin.tar.gz *
 
 distsource:

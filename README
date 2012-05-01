@@ -125,7 +125,7 @@ computers can run FBZX under X without problem.
 The PC keyboard works exactly like the Spectrum keyboard (but only numbers and
 letters). ENTER key is Return, CAPS SHIFT is in both Shift keys, and SYMBOL
 SHIFT is in both Control keys. Delete, ',' and '.' works too. I hope to add
-'extended keys' in a near future.
+'extended keys' in a near future (in FBZX it is TAB button).
 
 Whit ESC you exit FBZX.
 
@@ -152,7 +152,7 @@ and create a new (and empty) one.
 
 F8 allows to shows a picture with the keyboard layout, or insert POKE values
 
-F9 toggles between fullscreen/windowed mode
+F9 toggles between fullscreen/windowed mode (in FBZX Wii it launches LOAD "")
 
 F10 resets the spectrum.
 
@@ -161,7 +161,7 @@ F11 is volume down.
 F12 is volume up.
 
 If your system doesn't have function keys, you can use TAB plus keys 0 to 9
-to emulate them (F11 is TAB and O, and F12 is TAB and P).
+to emulate them (F11 is TAB and O, and F12 is TAB and P)(In FBZX this function has been disabled).
 
 
 HOW DO I CHOOSE A FILE WITH THE TAP/TZX OR Z80/SNA SELECTOR?
