@@ -25,7 +25,7 @@ INCLUDES	:=
 # options for code generation
 #---------------------------------------------------------------------------------
 
-CFLAGS	= -g -O2 -Wall -Wno-unused-but-set-variable $(MACHDEP) $(INCLUDE) -Wno-pointer-sign  -DDEBUG
+CFLAGS	= -g -O3 -Wall -Wno-unused-but-set-variable $(MACHDEP) $(INCLUDE) -Wno-pointer-sign
 CXXFLAGS	=	$(CFLAGS)
 
 LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
@@ -120,11 +120,13 @@ dist: $(BUILD)
 	mkdir -p $@/fbzx-wii/scr
 	mkdir -p $@/apps/fbzx-wii/doc
 	cp fbzx.dol $@/apps/fbzx-wii/boot.dol
+	cp meta.xml $@/apps/fbzx-wii/meta.xml
+	cp icon.png $@/apps/fbzx-wii/icon.png
 	cp spectrum-roms/* $@/fbzx-wii/spectrum-roms
 	cp keymap.bmp $@/fbzx-wii/fbzx
 	cp ZXSpectrum48k.png $@/fbzx-wii/fbzx
 	cp FreeMono.ttf $@/fbzx-wii/fbzx
-	cp AMSTRAD CAPABILITIES COPYING FAQ README README.TZX VERSIONS $@/apps/fbzx-wii/doc
+	cp AMSTRAD CAPABILITIES COPYING FAQ README README.TZX VERSIONS VERSIONS.wii $@/apps/fbzx-wii/doc
 	touch $@/fbzx-wii/tapes/dummy
 	touch $@/fbzx-wii/snapshots/dummy
 	touch $@/fbzx-wii/microdrives/dummy

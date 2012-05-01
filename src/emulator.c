@@ -550,7 +550,7 @@ int main(int argc,char *argv[]) {
 	argumento=0;
 	jump_frames=0;
 	curr_frames=0;
-	ordenador.dblscan=0;
+	ordenador.dblscan=1;
 	ordenador.bw=0;
 	
 	#ifdef DEBUG

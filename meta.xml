@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+  <app version="1">
+    <name>FBZX Wii</name>
+    <coder>Oibaf</coder>
+    <version>1.0</version>
+    <release_date>20120501</release_date>
+    <short_description>ZX Spectrum Emulator</short_description>
+    <long_description>A ZX Spectrum emulator for FrameBuffer written by Sergio Costas, see http://www.rastersoft.com/fbzx.html.
+The port to Wii was done by Fabio Olimpieri.
+
+USAGE
+------
+Put .z80 and .sna files in /fbzx-wii/snapshots or .tap and .tzx files in /fbzx-wii/tapes on your SD card.
+
+Press the home button to access the in-game menu. Press 1 to select an item and 2 to escape.
+
+Press the "+" button to access the virtual keyboard.
+ 
+The in-game menu allows you to insert tapes, load them and configure the display, joysticks etc. 
+
+Snapshots and scr files will be stored on the SD card.
+
+The preferences are saved (joystick type, machine, etc.) from the main in-game menu and they are loaded on start-up. 
+
+If rumble is enabled, the wiimote rumbles each time the fire button is pressed. 
+
+See http://wiibrew.org/wiki/fbzx-wii for more information.
+
+</long_description>
+  </app>
