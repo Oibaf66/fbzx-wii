@@ -514,8 +514,8 @@ inline void show_screen (int tstados) {
 
 	ordenador.tstados_counter += tstados;
 	ordenador.cicles_counter += tstados;
-
-	if (curr_frames!=jump_frames) {
+	
+	if (curr_frames<jump_frames) { //Jump the frame drawing
 		if (ordenador.tstados_counter>=69888) {
 			ordenador.tstados_counter-=69888;
 			ordenador.interr = 1;

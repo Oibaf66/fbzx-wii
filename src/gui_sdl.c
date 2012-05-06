@@ -361,6 +361,7 @@ static void emulation_settings(void)
 			} else {
 				ordenador.tst_sample=3500000/ordenador.freq;
 				jump_frames=0;
+				curr_frames=0;
 			}
 	
 	ordenador.dblscan = !submenus[4];

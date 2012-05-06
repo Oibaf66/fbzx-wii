@@ -696,10 +696,10 @@ uint32_t menu_wait_key_press(void)
 				keys |= KEY_ESCAPE;
 			if (SDL_JoystickGetButton(joy, 5) != 0 ||      /* + */
 					SDL_JoystickGetButton(joy, 18) != 0)   /* C+ */
-				keys |= KEY_PAGEDOWN;
+				keys |= KEY_PAGEUP;
 			if (SDL_JoystickGetButton(joy, 4) != 0 ||      /* - */
 					SDL_JoystickGetButton(joy, 17) != 0)   /* C- */
-				keys |= KEY_PAGEUP;
+				keys |= KEY_PAGEDOWN;
 		
 		joy_bottons_last[nr][0]=SDL_JoystickGetButton(joy, 0) ;   /* A */
 		joy_bottons_last[nr][1]	=SDL_JoystickGetButton(joy, 3) ;  /* 2 */
