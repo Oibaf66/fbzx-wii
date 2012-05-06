@@ -653,6 +653,7 @@ uint32_t menu_wait_key_press(void)
 		SDL_Joystick *joy;
 		static int joy_keys_changed;
 		static int joy_keys_last;
+		static int joy_bottons_last[2][7];
 		SDL_JoystickUpdate();
 		/* Wii-specific, sorry */
 		for (nr = 0; nr < ordenador.joystick_number; nr++) {
@@ -684,14 +685,14 @@ uint32_t menu_wait_key_press(void)
 			else if( axis1 > 15000 )  keys |= KEY_DOWN;	
 				
 			
-			if (SDL_JoystickGetButton(joy, 0) != 0 ||      /* A */
-					SDL_JoystickGetButton(joy, 3) != 0 ||  /* 2 */
-					SDL_JoystickGetButton(joy, 9) != 0 ||  /* CA */
-					SDL_JoystickGetButton(joy, 10) != 0)   /* CB */
+			if ((!SDL_JoystickGetButton(joy, 0) && joy_bottons_last[nr][0]) ||      /* A */
+					(!SDL_JoystickGetButton(joy, 3) && joy_bottons_last[nr][1]) ||  /* 2 */
+					(!SDL_JoystickGetButton(joy, 9) && joy_bottons_last[nr][2]) ||  /* CA */
+					(!SDL_JoystickGetButton(joy, 10) && joy_bottons_last[nr][3]))   /* CB */
 				keys |= KEY_SELECT;
-			if (SDL_JoystickGetButton(joy, 2) != 0 ||      /* 1 */
-					SDL_JoystickGetButton(joy, 11) != 0 || /* CX */
-					SDL_JoystickGetButton(joy, 12) != 0)   /* CY */
+			if ((!SDL_JoystickGetButton(joy, 2) && joy_bottons_last[nr][4]) ||      /* 1 */
+					(!SDL_JoystickGetButton(joy, 11) && joy_bottons_last[nr][5]) || /* CX */
+					(!SDL_JoystickGetButton(joy, 12) && joy_bottons_last[nr][6]))   /* CY */
 				keys |= KEY_ESCAPE;
 			if (SDL_JoystickGetButton(joy, 5) != 0 ||      /* + */
 					SDL_JoystickGetButton(joy, 18) != 0)   /* C+ */
@@ -699,7 +700,16 @@ uint32_t menu_wait_key_press(void)
 			if (SDL_JoystickGetButton(joy, 4) != 0 ||      /* - */
 					SDL_JoystickGetButton(joy, 17) != 0)   /* C- */
 				keys |= KEY_PAGEUP;
+		
+		joy_bottons_last[nr][0]=SDL_JoystickGetButton(joy, 0) ;   /* A */
+		joy_bottons_last[nr][1]	=SDL_JoystickGetButton(joy, 3) ;  /* 2 */
+		joy_bottons_last[nr][2]	=SDL_JoystickGetButton(joy, 9) ;  /* CA */
+		joy_bottons_last[nr][3]	=SDL_JoystickGetButton(joy, 10) ; /* CB */
+		joy_bottons_last[nr][4]	=SDL_JoystickGetButton(joy, 2) ;  /* 1 */
+		joy_bottons_last[nr][5]	=SDL_JoystickGetButton(joy, 11) ; /* CX */
+		joy_bottons_last[nr][6]	=SDL_JoystickGetButton(joy, 12) ; /* CY */
 		}
+		
 		joy_keys_changed = keys != joy_keys_last;
 		joy_keys_last = keys;
 		if (!joy_keys_changed)

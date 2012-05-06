@@ -151,11 +151,7 @@ struct virtkey *get_key_internal()
 		else if (k & KEY_SELECT)
 		{
 			virtkey_t *key = &keys[ VirtualKeyboard.sel_y * KEY_COLS + VirtualKeyboard.sel_x ];
-			/*
-			if (key->sdl_code == 1) // "Done"
-				if (keys[3 * KEY_COLS + 0 ].is_done)  {key->sdl_code = 304;  return key; } //Caps Shit
-				else if (keys[3 * KEY_COLS + 8 ].is_done)  {key->sdl_code = 306;  return key; } //Sym Shit
-			*/
+			
 			if ((key->sdl_code == 304) && !keys[3 * KEY_COLS + 8 ].is_done)
 			keys[3 * KEY_COLS + 0 ].is_done = !keys[3 * KEY_COLS + 0 ].is_done; //Caps Shit
 			else if ((key->sdl_code == 306) && !keys[3 * KEY_COLS + 0 ].is_done) 
