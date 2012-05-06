@@ -1887,8 +1887,6 @@ void keyboard_menu() {
 	wait_key();
 	clean_screen();
 }
-	
-	
 
 void clean_screen() {
 

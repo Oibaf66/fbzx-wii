@@ -27,8 +27,7 @@
 
 typedef struct virtkey
 {
-	const char *name; //It is not necessary in FBZX Wii
-	const char *ev_name; //It is not necessary in FBZX Wii
+	const char *name;
 	int sdl_code;
 	int is_done;
 	int caps_on;

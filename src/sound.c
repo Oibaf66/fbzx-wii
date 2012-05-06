@@ -81,7 +81,6 @@ int sound_init() {
 			ordenador.sign=0;
 			ordenador.format=0;
 			ordenador.channels=1;
-			ordenador.channels = 1;
 			ordenador.freq=48000;
 			ordenador.buffer_len=4800; // will wait 1/10 second
 			return (0);
@@ -183,8 +182,8 @@ int sound_init_asnd() {
 	ASND_Init();
 	ASND_Pause(0);
 	ordenador.sign=0;
-	ordenador.format=0;
-	ordenador.channels=1;
+	ordenador.format=0; //8 bit
+	ordenador.channels=1; //mono
 	ordenador.freq=48000;
 	ordenador.buffer_len=4096;
 	started_sound_asnd = 0;
@@ -497,7 +496,7 @@ void sound_play() {
 	case SOUND_ASND: // ASND
 		if (!started_sound_asnd) {
 		ASND_SetVoice(1,VOICE_MONO_8BIT,48000,0,sound[0],ordenador.buffer_len,
-		ordenador.volume, ordenador.volume, callback);
+		MID_VOLUME, MID_VOLUME, callback);
 		started_sound_asnd = 1;
 		}
 		//Double buffer

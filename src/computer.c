@@ -713,7 +713,7 @@ inline void read_keyboard () {
 	enum joystate_y {JOY_CENTER_Y, JOY_UP, JOY_DOWN};
 	int joy_axis_x[2],joy_axis_y[2], joy_n, joybutton_n; 
 	static unsigned char joybutton_matrix[2][322];
-	unsigned char status_hat;
+	unsigned char status_hat[2];
 	int fire_on[2];
 	fire_on[0]=0;
 	fire_on[1]=0;
@@ -764,11 +764,14 @@ inline void read_keyboard () {
 		SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], joybutton_n);
 		}
 		//JOY HAT
-		status_hat = SDL_JoystickGetHat(ordenador.joystick_sdl[joy_n], 0);
-		joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][18])] = (status_hat & SDL_HAT_UP);
-		joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][19])] = (status_hat & SDL_HAT_DOWN);
-		joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][20])] = (status_hat & SDL_HAT_LEFT);
-		joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][21])] = (status_hat & SDL_HAT_RIGHT);
+		status_hat[joy_n] = SDL_JoystickGetHat(ordenador.joystick_sdl[joy_n], 0);
+		if(!ordenador.joypad_as_joystick[joy_n])
+		{
+			joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][18])] = (status_hat[joy_n] & SDL_HAT_UP);
+			joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][19])] = (status_hat[joy_n] & SDL_HAT_DOWN);
+			joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][20])] = (status_hat[joy_n] & SDL_HAT_LEFT);
+			joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][21])] = (status_hat[joy_n] & SDL_HAT_RIGHT);
+		}
 	}
 	
 	//Keyboard buffer
@@ -790,7 +793,7 @@ inline void read_keyboard () {
 			joybutton_matrix[0][(ordenador.keyboard_buffer[1][ordenador.kbd_buffer_pointer])]=1;
 		
 			ordenador.kbd_buffer_pointer--; 
-			countdown=15;		
+			countdown=8;		
 			}	
 
 	
@@ -844,7 +847,7 @@ inline void read_keyboard () {
 			ordenador.keyboard_buffer[0][1]= SDLK_F6;		//F6
 			ordenador.keyboard_buffer[1][1]= 0;
 			ordenador.kbd_buffer_pointer=6;
-			countdown=15;
+			countdown=8;
 			break;
 
 		case SDLK_F10:	// Reset emulator
@@ -889,7 +892,9 @@ inline void read_keyboard () {
 		}
 	}
 	for(joy_n=0;joy_n<ordenador.joystick_number;joy_n++)
-	{
+	
+	if (!ordenador.joypad_as_joystick[joy_n])
+	{ //No Joypad
 	 switch (ordenador.joystick[joy_n]) {
 		case 0:	// cursor
 			if (ordenador.joy_axis_y_state[joy_n] == JOY_UP) ordenador.k12|= 8;
@@ -923,7 +928,44 @@ inline void read_keyboard () {
 			if (joybutton_matrix[joy_n][SDLK_LALT]) {ordenador.k12|= 1; fire_on[joy_n]=1;}//fire button
 		break;
 		}
-	}	
+	}
+	else
+	{ //Joypad as Joystick
+	 switch (ordenador.joystick[joy_n]) {
+		case 0:	// cursor
+			if (status_hat[joy_n] & SDL_HAT_UP) ordenador.k12|= 8;
+			if (status_hat[joy_n] & SDL_HAT_DOWN) ordenador.k12|= 16;
+			if (status_hat[joy_n] & SDL_HAT_RIGHT) ordenador.k12|= 4;
+			if (status_hat[joy_n] & SDL_HAT_LEFT) ordenador.k11|= 16;
+			if (joybutton_matrix[joy_n][SDLK_LALT]) {ordenador.k12|= 1; fire_on[joy_n]=1;}//fire button
+		break; 
+			
+		case 1: //Kempston
+			if (status_hat[joy_n] & SDL_HAT_UP) ordenador.jk|= 8;
+			if (status_hat[joy_n] & SDL_HAT_DOWN) ordenador.jk|= 4;
+			if (status_hat[joy_n] & SDL_HAT_RIGHT) ordenador.jk|= 1;
+			if (status_hat[joy_n] & SDL_HAT_LEFT) ordenador.jk|= 2;
+			if (joybutton_matrix[joy_n][SDLK_LALT]) {ordenador.jk |= 16; fire_on[joy_n]=1;}//fire button
+		break;
+		
+		case 2:	// sinclair 1
+			if (status_hat[joy_n] & SDL_HAT_UP) ordenador.k11|= 8;
+			if (status_hat[joy_n] & SDL_HAT_DOWN) ordenador.k11|= 4;
+			if (status_hat[joy_n] & SDL_HAT_RIGHT) ordenador.k11|= 2;
+			if (status_hat[joy_n] & SDL_HAT_LEFT) ordenador.k11|= 1;
+			if (joybutton_matrix[joy_n][SDLK_LALT]) {ordenador.k11|= 16;fire_on[joy_n]=1;}	//fire button
+		break;
+		
+		case 3:	// sinclair 2
+			if (status_hat[joy_n] & SDL_HAT_UP) ordenador.k12|= 2;
+			if (status_hat[joy_n] & SDL_HAT_DOWN) ordenador.k12|= 4;
+			if (status_hat[joy_n] & SDL_HAT_RIGHT) ordenador.k12|= 8;
+			if (status_hat[joy_n] & SDL_HAT_LEFT) ordenador.k12|= 16;
+			if (joybutton_matrix[joy_n][SDLK_LALT]) {ordenador.k12|= 1; fire_on[joy_n]=1;}//fire button
+		break;
+		}
+	}
+	
 	
 		#ifdef GEKKO
 		//Wiimote Rumble
@@ -976,7 +1018,9 @@ inline void read_keyboard () {
 	if (ordenador.key[SDLK_n] || joybutton_matrix[0][SDLK_n] || joybutton_matrix[1][SDLK_n]) ordenador.k15|=8;
 	if (ordenador.key[SDLK_b] || joybutton_matrix[0][SDLK_b] || joybutton_matrix[1][SDLK_b]) ordenador.k15|=16;
 	if (ordenador.key[SDLK_PERIOD] || joybutton_matrix[0][SDLK_PERIOD] || joybutton_matrix[1][SDLK_PERIOD]) ordenador.k15|=6;
-	if (ordenador.key[SDLK_COMMA]|| joybutton_matrix[0][SDLK_COMMA] || joybutton_matrix[1][SDLK_COMMA]) ordenador.k15|=10;					
+	if (ordenador.key[SDLK_COMMA]|| joybutton_matrix[0][SDLK_COMMA] || joybutton_matrix[1][SDLK_COMMA]) ordenador.k15|=10;
+	if (ordenador.key[SDLK_SEMICOLON]|| joybutton_matrix[0][SDLK_SEMICOLON] || joybutton_matrix[1][SDLK_SEMICOLON]) {ordenador.k13|=2; ordenador.k15|=2;}
+	if (ordenador.key[SDLK_QUOTEDBL]|| joybutton_matrix[0][SDLK_QUOTEDBL] || joybutton_matrix[1][SDLK_QUOTEDBL]) {ordenador.k13|=1; ordenador.k15|=2;}		
 					
 	if (ordenador.key[SDLK_RETURN] || joybutton_matrix[0][SDLK_RETURN] || joybutton_matrix[1][SDLK_RETURN]) ordenador.k14|=1;
 	if (ordenador.key[SDLK_l] || joybutton_matrix[0][SDLK_l] || joybutton_matrix[1][SDLK_l]) ordenador.k14|=2;
@@ -1384,7 +1428,7 @@ void set_volume (unsigned char volume) {
 	ordenador.volume = vol2;
 
 	for (bucle = 0; bucle < 4; bucle++)	{
-		ordenador.sample0[bucle] = 0;
+		//ordenador.sample0[bucle] = 0;
 		ordenador.sample1[bucle] = 0;
 		ordenador.sample1b[bucle] = 0;
 	}

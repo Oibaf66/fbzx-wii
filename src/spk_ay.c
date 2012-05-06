@@ -288,7 +288,7 @@ inline void play_sound (unsigned int tstados) {
 	while (ordenador.tstados_counter_sound >= ordenador.tst_sample)	{
 
 		ordenador.tstados_counter_sound -= ordenador.tst_sample;
-		if (sound_type!=1)
+		if (sound_type!=1) //!SOUND_OSS
 			for (bucle = 0; bucle < ordenador.increment; bucle++) {
 				sample_v = ordenador.sample1b[bucle];
 				if ((ordenador.sound_bit) && (sample_v)) {

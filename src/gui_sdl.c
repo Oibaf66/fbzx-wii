@@ -50,6 +50,7 @@ extern FILE *fdebug;
 #endif
 
 extern int countdown;
+void clean_screen();
 
 
 static const char *main_menu_messages[] = {
@@ -98,9 +99,11 @@ static const  char *input_messages[] = {
 		/*06*/		"Bind key to Classic",
 		/*07*/		"^|a|b|x|y|L|R|Zl|Zr|-",
 		/*08*/		"Bind key to Pad",
-		/*09*/		"^|UP|DOWN|LEFT|RIGHT",
-		/*10*/		"Rumble",
+		/*09*/		"^|Up|Down|Left|Right",
+		/*10*/		"Use Joypad as Joystick",
 		/*11*/		"^|On|Off",
+		/*12*/		"Rumble",
+		/*13*/		"^|On|Off",
 		NULL,
 };
 
@@ -236,7 +239,7 @@ static void manage_tape(int which)
 		break;
 	case 1: //Emulate load ""
 		ordenador.kbd_buffer_pointer=6;
-		countdown=15;
+		countdown=8;
 		ordenador.keyboard_buffer[0][6]= SDLK_1;		//Edit
 		ordenador.keyboard_buffer[1][6]= SDLK_LSHIFT;
 		ordenador.keyboard_buffer[0][5]= SDLK_j;		//Load
@@ -348,7 +351,7 @@ static void emulation_settings(void)
 	if (submenus[0] != submenus_old[0]) ResetComputer(); else 
 	ordenador.ay_emul = !submenus[6];
 	
-	ordenador.volume = submenus[1]*8;
+	ordenador.volume = submenus[1]*8; //I should use set_volume() ?
 	ordenador.tape_fast_load = !submenus[2];
 	ordenador.turbo = !submenus[3];
 	
@@ -386,7 +389,7 @@ static void input_options(int joy)
 	const unsigned int pad_to_sdl[] = {18, 19, 20, 21};
 	int joy_key = 1;
 	unsigned int sdl_key;
-	unsigned int submenus[6];
+	unsigned int submenus[7];
 	int opt;
 	
 	struct virtkey *virtualkey;
@@ -394,7 +397,8 @@ static void input_options(int joy)
 	memset(submenus, 0, sizeof(submenus));
 	
 	submenus[0] = ordenador.joystick[joy];
-	submenus[5] = !ordenador.rumble[joy];
+	submenus[5] = !ordenador.joypad_as_joystick[joy];
+	submenus[6] = !ordenador.rumble[joy];
 	
 	opt = menu_select_title("Input menu",
 			input_messages, submenus);
@@ -402,15 +406,21 @@ static void input_options(int joy)
 		return;
 	
 	ordenador.joystick[joy] = submenus[0];
-	ordenador.rumble[joy] = !submenus[5];
+	ordenador.joypad_as_joystick[joy] = !submenus[5];
+	ordenador.rumble[joy] = !submenus[6];
 	
-	if (opt == 0 || opt == 10)
+	if (opt == 0 || opt == 10|| opt == 12)
 		return;
 	
 	virtualkey = get_key();
 	if (virtualkey == NULL)
 		return;
 	sdl_key = virtualkey->sdl_code;
+	
+	if (virtualkey->sdl_code==1) //"Done" selected
+		{if (virtualkey->caps_on)  sdl_key = 304; //Caps Shit
+			else if (virtualkey->sym_on)  sdl_key = 306; //Sym Shit
+			else return; } 
 	
 	switch(opt)
 		{
@@ -744,7 +754,7 @@ void virtual_keyboard(void)
 	if (key) {key_code = key->sdl_code;} else return;
 	
 	ordenador.kbd_buffer_pointer=1;
-	countdown=15;
+	countdown=8;
 	ordenador.keyboard_buffer[0][1]= key_code;
 	if 	(key->caps_on) ordenador.keyboard_buffer[1][1]= SDLK_LSHIFT; 
 	else if (key->sym_on) ordenador.keyboard_buffer[1][1]= SDLK_LCTRL; 
@@ -895,5 +905,7 @@ void main_menu()
 			break;
 		}
 	} while (opt == 5 || opt == 7 || opt == 8 || opt == 12);
+	
+	clean_screen();
 	
 }

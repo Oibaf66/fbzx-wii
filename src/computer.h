@@ -97,14 +97,14 @@ struct computer {
 	int tst_sample; // number of tstates per sample
 	int freq; // frequency for reproduction
 	int format; // 0: 8 bits, 1: 16 bits LSB, 2: 16 bits MSB
-	signed char sign; // 0: unsigned; 1: signed
+	signed char sign; // 0: unsigned; -128: signed
 	int channels; // number of channels
 	int buffer_len; // sound buffer length (in samples)
-	int increment; // cuantity to add to jump to the next sample
+	int increment; // quantity to add to jump to the next sample
 	unsigned char volume; // volume
-	unsigned char sample1[4]; // buffer with precalculated sample 1 (for buzzer)
+	unsigned char sample1[4]; // buffer with precalculated sample 1 (for buzzer) -currently not used
 	unsigned char sample1b[4]; // buffer with prec. sample 1 (for AY-3-8912)
-	unsigned char sample0[4]; // buffer with precalculated sample 0
+	//unsigned char sample0[4]; // buffer with precalculated sample 0
 	unsigned char sound_bit;
 	unsigned int tstados_counter_sound;
 	unsigned char *current_buffer;
@@ -204,8 +204,8 @@ struct computer {
 	SDL_Joystick *joystick_sdl[2];
 	unsigned char joy_axis_x_state[2];
 	unsigned char joy_axis_y_state[2];
-	//unsigned char joy_fire[2];
 	unsigned int joybuttonkey[2][22];
+	unsigned char joypad_as_joystick[2];
 	unsigned char rumble[2];
 };
 

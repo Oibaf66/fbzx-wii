@@ -32,25 +32,25 @@
 
 
 #define K(name, sdl_code) \
-  { name, "SDLK_"name, sdl_code, 0 ,0,0}
-#define N(name, key_name, sdl_code) \
-  { name, "SDLK_"key_name, sdl_code, 0,0,0 }
+  { name, sdl_code, 0 ,0, 0}
 #define KNL() \
-  { NULL, NULL, 0, 0 ,0,0}
+  { NULL, 0, 0 ,0, 0}
 
 
 #define KEY_COLS 10
-#define KEY_ROWS 5
+#define KEY_ROWS 6
 
-extern struct computer ordenador; 
+extern struct computer ordenador;
+void clean_screen(); 
 
 //TO DO Key_name and name are not necessary
 static virtkey_t keys[KEY_COLS * KEY_ROWS] = {
-  K("1",49),K("2",50), K("3",51), K("4",52), K("5",53), K("6",54), K("7",55), K("8",56), K("9",57), K("0",48),
-  K("Q",113), K("W",119), K("E",101), K("R",114), K("T",116), K("Y",121), K("U",117), K("I",105), K("O",111), K("P",112),
-  K("A",97), K("S",115), K("D",100), K("F",102), K("G",103), K("H",104), K("J",106), K("K",107), K("L",108),N("Enter","RETURN",13),
-  N("Caps","LSHIFT",304),K("Z",122),K("X",120),K("C",99), K("V",118), K("B",98), K("N",110), K("M",109), N("Sym","LCTRL",306),N("Space","SPACE",32),
-  N("Ext","TAB",9), K("None",0),N("Del","BACKSPACE",8),K(",",44),K(".",46),N("Fire","LALT",308), K("UP",273),K("DOWN",274), K("LEFT",276),K("RIGHT",275)};
+  K(" 1",SDLK_1),K(" 2",SDLK_2), K(" 3",SDLK_3), K(" 4",SDLK_4), K(" 5",SDLK_5), K(" 6",SDLK_6), K(" 7",SDLK_7), K(" 8",SDLK_8), K(" 9",SDLK_9), K(" 0",SDLK_0),
+  K(" Q",SDLK_q), K(" W",SDLK_w), K(" E",SDLK_e), K(" R",SDLK_r), K(" T",SDLK_t), K(" Y",SDLK_y), K(" U",SDLK_u), K(" I",SDLK_i), K(" O",SDLK_o), K(" P",SDLK_p),
+  K(" A",SDLK_a), K(" S",SDLK_s), K(" D",SDLK_d), K(" F",SDLK_f), K(" G",SDLK_g), K(" H",SDLK_h), K(" J",SDLK_j), K(" K",SDLK_k), K(" L",SDLK_l),K("Enter",SDLK_RETURN),
+  K("Caps",SDLK_LSHIFT),K(" Z",SDLK_z),K(" X",SDLK_x),K(" C",SDLK_c), K(" V",SDLK_v), K(" B",SDLK_b), K(" N",SDLK_n), K(" M",SDLK_m), K("Sym",SDLK_LCTRL),K("Space",SDLK_SPACE),
+  K("Ext",SDLK_TAB),K(" ,",SDLK_COMMA),K(" .",SDLK_PERIOD), K(" ;",SDLK_SEMICOLON), K(" \"",SDLK_QUOTEDBL),KNL(),K(" Up",SDLK_UP),K("Down",SDLK_DOWN), K("Left",SDLK_LEFT),K("Right",SDLK_RIGHT),
+  K("None",0),K("Done",1),K("Fire",SDLK_LALT),K("Del",SDLK_BACKSPACE),KNL(),KNL(),KNL(),KNL(),KNL(),KNL()};
 
 void VirtualKeyboard_init(SDL_Surface *screen, TTF_Font *font)
 {
@@ -151,7 +151,11 @@ struct virtkey *get_key_internal()
 		else if (k & KEY_SELECT)
 		{
 			virtkey_t *key = &keys[ VirtualKeyboard.sel_y * KEY_COLS + VirtualKeyboard.sel_x ];
-			
+			/*
+			if (key->sdl_code == 1) // "Done"
+				if (keys[3 * KEY_COLS + 0 ].is_done)  {key->sdl_code = 304;  return key; } //Caps Shit
+				else if (keys[3 * KEY_COLS + 8 ].is_done)  {key->sdl_code = 306;  return key; } //Sym Shit
+			*/
 			if ((key->sdl_code == 304) && !keys[3 * KEY_COLS + 8 ].is_done)
 			keys[3 * KEY_COLS + 0 ].is_done = !keys[3 * KEY_COLS + 0 ].is_done; //Caps Shit
 			else if ((key->sdl_code == 306) && !keys[3 * KEY_COLS + 0 ].is_done) 
@@ -170,7 +174,7 @@ struct virtkey *get_key_internal()
 struct virtkey* get_key()
 {
 	virtkey_t *key;
-	SDL_Rect rect = {32, 128, FULL_DISPLAY_X-64, FULL_DISPLAY_Y-272};
+	SDL_Rect rect = {32, 120, FULL_DISPLAY_X-64, FULL_DISPLAY_Y-250};
 	
 	keys[3 * KEY_COLS + 0 ].is_done = 0; //Caps Shit
 	keys[3 * KEY_COLS + 8 ].is_done = 0; //Sym Shift
@@ -178,6 +182,8 @@ struct virtkey* get_key()
 	SDL_FillRect(VirtualKeyboard.screen, &rect, SDL_MapRGB(ordenador.screen->format, 0xff, 0xff, 0xff));
 	
 	key = get_key_internal();
+	
+	clean_screen();
 
 	return key;
 }
