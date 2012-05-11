@@ -414,7 +414,7 @@ void save_config(struct computer *object) {
 	fprintf(fconfig,"ay_sound=%c%c",48+object->ay_emul,10);
 	fprintf(fconfig,"interface1=%c%c",48+object->mdr_active,10);
 	fprintf(fconfig,"doublescan=%c%c",48+object->dblscan,10);
-	fprintf(fconfig,"volume=%c%c",65+(object->volume/4),10);
+	fprintf(fconfig,"volume=%c%c",65+(object->volume),10);
 	fprintf(fconfig,"bw=%c%c",48+object->bw,10);
 	fprintf(fconfig,"tap_fast=%c%c",48+object->tape_fast_load,10);
 	fprintf(fconfig,"joypad1=%c%c",48+object->joypad_as_joystick[0],10);
@@ -437,7 +437,7 @@ void load_config(struct computer *object) {
 	char line[1024],carac,done;
 	int length,pos, key_sdl=0;;
 	FILE *fconfig;
-	unsigned char volume=255,mode128k=255,issue=255,joystick1=255,joystick2=255,ay_emul=255,mdr_active=255,
+	unsigned char volume=16,mode128k=255,issue=255,joystick1=255,joystick2=255,ay_emul=255,mdr_active=255,
 	dblscan=255,bw=255, tap_fast=0, joypad1=0, joypad2=0, rumble1=0, rumble2=0, joy_n=0, key_n=0;
 	
 	strcpy(config_path,getenv("HOME"));
@@ -503,7 +503,7 @@ void load_config(struct computer *object) {
 			continue;
 		}
 		if (!strncmp(line,"volume=",7)) {
-			volume=4*(line[7]-'A');
+			volume=(line[7]-'A');
 			continue;
 		}
 		if (!strncmp(line,"bw=",3)) {
@@ -562,7 +562,7 @@ void load_config(struct computer *object) {
 	if (bw<2) {
 		object->bw=bw;
 	}
-	if (volume<255) {
+	if (volume<17) {
 		object->volume=volume;
 		set_volume(volume);
 	}
@@ -638,7 +638,7 @@ int main(int argc,char *argv[]) {
 	printf("Modo: %d\n",ordenador.mode128k);
 	
 	printf("Set volume\n");
-	set_volume(70);
+	set_volume(16);
 	
 	// load current config
 	load_config(&ordenador);

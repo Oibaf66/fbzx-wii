@@ -860,15 +860,15 @@ inline void read_keyboard () {
 		break;
 
 		case SDLK_F11:	// lower volume
-			if (ordenador.volume > 3)
-				set_volume (ordenador.volume - 4);
-			sprintf (ordenador.osd_text, " Volume: %d ",ordenador.volume / 4);
+			if (ordenador.volume > 0)
+				set_volume (ordenador.volume - 1);
+			sprintf (ordenador.osd_text, " Volume: %d ",ordenador.volume);
 			ordenador.osd_time = 50;
 		break;
 			
 		case SDLK_F12:	// upper volume
-			set_volume (ordenador.volume + 4);
-			sprintf (ordenador.osd_text, " Volume: %d ",ordenador.volume / 4);
+			set_volume (ordenador.volume + 1);
+			sprintf (ordenador.osd_text, " Volume: %d ",ordenador.volume);
 			ordenador.osd_time = 50;
 			break;
 		}
@@ -1420,8 +1420,8 @@ void set_volume (unsigned char volume) {
 	unsigned char vol2;
 	int bucle;
 
-	if (volume > 64)
-		vol2 = 64;
+	if (volume > 16)
+		vol2 = 16;
 	else
 		vol2 = volume;
 

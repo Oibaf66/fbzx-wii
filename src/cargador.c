@@ -553,7 +553,7 @@ void load_snap(struct z80snapshot *snap) {
     break;
   case 1: // 128k
   	printf("Mode 128K\n");
-    ordenador.mode128k=2; // +2 mode
+    ordenador.mode128k=1; // 128k mode
     ordenador.issue=3;
     ResetComputer();
     printf("Pager: %X\n",snap->pager);

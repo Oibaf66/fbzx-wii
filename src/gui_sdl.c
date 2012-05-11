@@ -333,7 +333,7 @@ static void emulation_settings(void)
 	memset(submenus, 0, sizeof(submenus));
 	
 	submenus[0] = get_machine_model();
-	submenus[1] = (unsigned int) (ordenador.volume/8);
+	submenus[1] = ordenador.volume/2;
 	submenus[2] = !ordenador.tape_fast_load;
 	submenus[3] = !ordenador.turbo;
 	submenus[4] = !ordenador.dblscan;
@@ -351,7 +351,7 @@ static void emulation_settings(void)
 	if (submenus[0] != submenus_old[0]) ResetComputer(); else 
 	ordenador.ay_emul = !submenus[6];
 	
-	ordenador.volume = submenus[1]*8; //I should use set_volume() ?
+	ordenador.volume = submenus[1]*2; //I should use set_volume() ?
 	ordenador.tape_fast_load = !submenus[2];
 	ordenador.turbo = !submenus[3];
 	

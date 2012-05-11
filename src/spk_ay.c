@@ -293,8 +293,8 @@ inline void play_sound (unsigned int tstados) {
 				sample_v = ordenador.sample1b[bucle];
 				if ((ordenador.sound_bit) && (sample_v)) {
 					ordenador.sound_current_value+=(ordenador.tst_sample/8);
-					if(ordenador.sound_current_value>ordenador.volume)
-						ordenador.sound_current_value = ordenador.volume;
+					if(ordenador.sound_current_value>ordenador.volume*4)
+						ordenador.sound_current_value = ordenador.volume*4;
 				} else {
 					if(ordenador.sound_current_value>=(ordenador.tst_sample/8))
 						ordenador.sound_current_value-=((ordenador.tst_sample)/8);
@@ -325,7 +325,7 @@ inline void play_sound (unsigned int tstados) {
 				if (value > 255)
 					value = 255;
 				sample_v = (char)(value - (unsigned int)ordenador.sign);
-				*ordenador.current_buffer =	2*sample_v;			
+				*ordenador.current_buffer =	sample_v;	
 				ordenador.current_buffer++;
 			}
 		ordenador.sound_cuantity++;
