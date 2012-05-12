@@ -207,6 +207,13 @@ struct computer {
 	unsigned int joybuttonkey[2][22];
 	unsigned char joypad_as_joystick[2];
 	unsigned char rumble[2];
+	unsigned char port; //SD, USB or SMB
+	unsigned char smb_enable;
+	unsigned char SmbUser[32]; 
+	unsigned char SmbPwd[32];
+	unsigned char SmbShare[32]; 
+	unsigned char SmbIp[32];
+
 };
 
 void computer_init();

@@ -38,7 +38,7 @@
 #define ID_BUTTON_OFFSET 0
 #define ID_AXIS_OFFSET 32
 
-//extern int usbismount, smbismount; per ora
+extern int usbismount, smbismount;
 
 #ifdef DEBUG
 extern FILE *fdebug;
@@ -127,6 +127,9 @@ static const char *tools_messages[] = {
 		/*04*/		"Load SCR",
 		/*05*/		"  ",
 		/*06*/		"Insert poke",
+		/*07*/		"  ",
+		/*08*/		"Port",
+		/*09*/		"^|sd|usb|smb",
 		NULL
 };
 
@@ -137,10 +140,10 @@ static const char *help_messages[] = {
 		/*03*/		"#2buttons in the 'Wiimote' menu and",
 		/*04*/		"#2change emulation options in the Settings menu.",
 		/*05*/		"#2 ",
-		/*06*/		"#2 ",
-		/*07*/		"#2 ",
-		/*08*/		"#2 ",
-		/*09*/		"#2 ",
+		/*06*/		"#2The easiest way to play a game is to load",
+		/*07*/		"#2a snapshot (.z80 and .sna files).",
+		/*08*/		"#2You can also insert a tape file (.tap and .tzx)",
+		/*09*/		"#2and then load the file in the tape menu.",
 		/*10*/		"#2 ",
 		/*11*/		"#2More information is available on the wiki:",
 		/*12*/		"#2   http://wiibrew.org/wiki/FBZX_Wii",
@@ -181,7 +184,8 @@ static void insert_tape()
 		fclose(ordenador.tap_file);
 	}
 
-	ordenador.tap_file=fopen(filename,"r+"); // read and write
+	if (!strncmp(filename,"smb:",4)) ordenador.tap_file=fopen(filename,"r"); //tinysmb does not work with r+
+	else ordenador.tap_file=fopen(filename,"r+"); // read and write
 	
 	ordenador.tape_write = 0; // by default, can't record
 	
@@ -684,14 +688,58 @@ static void save_scr()
 	}
 }
 
+static void set_port(int which)
+{
+	int length;
+	
+	switch (which)
+	{
+	case 0: //PORT_SD
+		strcpy(path_snaps,getenv("HOME"));
+		length=strlen(path_snaps);
+		if ((length>0)&&(path_snaps[length-1]!='/'))
+		strcat(path_snaps,"/");
+		strcpy(path_taps,path_snaps);
+		strcat(path_snaps,"snapshots");
+		strcat(path_taps,"tapes");
+		ordenador.port = which;
+		break;
+	case 1: //PORT_USB
+		if (usbismount) {
+			strcpy(path_snaps,"usb:/");
+			strcpy(path_taps,"usb:/");
+			ordenador.port = which;}
+		else
+			msgInfo("USB is not mounted",3000,NULL);
+		break;
+	case 2: //PORT_SMB
+		if (smbismount) {
+			strcpy(path_snaps,"smb:/");
+			strcpy(path_taps,"smb:/");
+			ordenador.port = which;}
+		else
+			msgInfo("SMB is not mounted",3000,NULL);
+		break;
+	default:
+		break;		
+	}	
+}
+
 static void tools()
 {
 	int opt ;
-	
+	int submenus[1];
+
+	memset(submenus, 0, sizeof(submenus));
+
+	submenus[0] = ordenador.port;
+
 	opt = menu_select_title("Tools menu",
-			tools_messages, NULL);
+			tools_messages, submenus);
 	if (opt < 0)
 		return;
+		
+	set_port(submenus[0]);
 	
 	switch(opt)
 		{
@@ -713,39 +761,6 @@ static void tools()
 		}		
 }
 
-
-/*
-
-static void set_Port(int which)
-{
-	switch (which)
-	{
-	case PORT_SD:
-		prefs_set_attr ("floppy_path",    strdup_path_expand (TARGET_FLOPPY_PATH));
-		changed_prefs.Port = which;
-		currprefs.Port = changed_prefs.Port;
-		break;
-	case PORT_USB:
-		if (usbismount) {
-			prefs_set_attr ("floppy_path",    strdup_path_expand (TARGET_USB_PATH));
-			changed_prefs.Port = which;
-			currprefs.Port = changed_prefs.Port;}
-		else
-			msgInfo("USB is not mounted",3000,NULL);
-		break;
-	case PORT_SMB:
-		if (smbismount) {
-			prefs_set_attr ("floppy_path",    strdup_path_expand (TARGET_SMB_PATH));
-			changed_prefs.Port = which;
-			currprefs.Port = changed_prefs.Port;}
-		else
-			msgInfo("SMB is not mounted",3000,NULL);
-		break;
-	default:
-		break;		
-	}	
-}
-*/
 
 void virtual_keyboard(void)
 {

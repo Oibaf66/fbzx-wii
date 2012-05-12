@@ -291,17 +291,11 @@ inline void play_sound (unsigned int tstados) {
 		if (sound_type!=1) //!SOUND_OSS
 			for (bucle = 0; bucle < ordenador.increment; bucle++) {
 				sample_v = ordenador.sample1b[bucle];
-				if ((ordenador.sound_bit) && (sample_v)) {
-					ordenador.sound_current_value+=(ordenador.tst_sample/8);
-					if(ordenador.sound_current_value>ordenador.volume*4)
-						ordenador.sound_current_value = ordenador.volume*4;
-				} else {
-					if(ordenador.sound_current_value>=(ordenador.tst_sample/8))
-						ordenador.sound_current_value-=((ordenador.tst_sample)/8);
-					else
-						ordenador.sound_current_value = 0;
-				}
+				if ((ordenador.sound_bit) && (sample_v)) 
+					ordenador.sound_current_value=ordenador.volume*4;
+					else ordenador.sound_current_value=0;
 				value = ordenador.sound_current_value;
+				
 				if (ordenador.ay_emul) {	// if emulation is ON, emulate it
 					if ((ordenador.ayval_a) && (sample_v)
 						&& (!(ordenador.ay_registers[7] & 0x01)))

@@ -42,6 +42,9 @@
 #ifdef GEKKO
 #include <gccore.h>
 #include <fat.h>
+#include <ogc/usbstorage.h>
+#include <network.h>
+#include <smb.h>
 #endif
 
 #ifdef DEBUG
@@ -68,6 +71,108 @@ unsigned int colors[80];
 unsigned int jump_frames,curr_frames;
 char *filenames[5];
 static SDL_Surface *image;
+
+bool usbismount = false;
+bool networkisinit = false;
+bool smbismount = false; 
+
+#if defined(GEKKO)
+
+/****************************************************************************
+ * Mount SMB Share
+ ****************************************************************************/
+
+bool ConnectShare ()
+{
+	
+	if(smbismount)
+		return true;
+		printf("user:  %s\n", ordenador.SmbUser);
+		printf("pass:  %s\n", ordenador.SmbPwd);
+		printf("share: %s\n", ordenador.SmbShare);
+		printf("ip:    %s\n", ordenador.SmbIp);
+		
+		int a;
+		for (a=0;a<3;a++)
+		if(smbInit(ordenador.SmbUser, ordenador.SmbPwd,ordenador.SmbShare, ordenador.SmbIp))
+			{smbismount = true;	break;}
+			
+		
+		if(!smbismount) printf("Failed to connect to SMB share\n");
+		else {
+		printf("Established connection to SMB share\n");
+		}
+
+	return smbismount;
+}
+
+void CloseShare()
+{
+
+	if(smbismount) {
+	printf("Disconnected from SMB share\n");
+	smbClose("smb");
+	}
+	smbismount = false;
+}
+
+/****************************************************************************
+ * init and deinit USB device functions
+ ****************************************************************************/
+ 
+bool InitUSB()
+{ 
+	printf("Initializing USB FAT subsytem ...\n");
+	fatUnmount("usb:");
+	
+	// This should wake up the drive
+	bool isMounted = fatMountSimple("usb", &__io_usbstorage);
+	
+	bool isInserted = __io_usbstorage.isInserted();
+	if (!isInserted) 
+	{
+	printf("USB device not found\n");
+	return false;
+	}
+ 
+	// USB Drive may be "sleeeeping" 
+	// We need to try Mounting a few times to wake it up
+	int retry = 10;
+	while (retry && !isMounted)
+	{
+		sleep(1);
+		isMounted = fatMountSimple("usb", &__io_usbstorage);
+		retry--; 
+	}
+	if (isMounted) 
+		printf("USB FAT subsytem initialized\n");
+	else
+		printf("Impossible to initialize USB FAT subsytem\n");
+	return isMounted;
+ }
+ 
+ void DeInitUSB()
+{
+	fatUnmount("usb:");
+	__io_usbstorage.shutdown(); 
+}
+
+bool InitNetwork()
+{
+        char myIP[16];
+
+        memset(myIP, 0, sizeof(myIP));
+	printf("Getting IP address via DHCP...\n");
+
+	if (if_config(myIP, NULL, NULL, true) < 0) {
+	        	printf("No DHCP reply\n");
+	        	return false;
+        }
+	printf("Got an address: %s\n",myIP);
+	return true;
+}
+
+#endif
 
 int load_zxspectrum_picture()
 {
@@ -421,6 +526,7 @@ void save_config(struct computer *object) {
 	fprintf(fconfig,"joypad2=%c%c",48+object->joypad_as_joystick[1],10);
 	fprintf(fconfig,"rumble1=%c%c",48+object->rumble[0],10);
 	fprintf(fconfig,"rumble2=%c%c",48+object->rumble[1],10);
+	fprintf(fconfig,"port=%c%c",48+object->port,10);
 	
 	
 	for (joy_n=0; joy_n<2; joy_n++)
@@ -431,14 +537,83 @@ void save_config(struct computer *object) {
 	
 }
 
+void load_config_smb(struct computer *object) {
+	
+	char line[1024],carac,done;
+	int pos;
+	FILE *fconfig;
+	unsigned char smb_enable=0;
+	
+	fconfig = fopen("/fbzx-wii/fbzx.smb","r");
+	if (fconfig==NULL) {
+		return;
+	}
+	
+	done=1;
+	pos=0;
+	line[0]=0;
+	while(!feof(fconfig)) {
+		if (done) {
+			line[0]=0;
+			pos=0;
+			done=0;
+		}
+		if (0!=fread(&carac,1,1,fconfig)) {
+			if ((carac!=13)&&(carac!=10)) {
+				line[pos]=carac;
+				if (pos<1023) {
+					pos++;
+				}
+				continue;
+			}
+		}
+		done=1;
+		line[pos]=0;
+		if (line[0]=='#') { // comment
+			continue;
+		}
+		if (!strncmp(line,"smb_enable=",11)) {
+			smb_enable=line[11]-'0';
+			continue;
+		}
+		if (!strncmp(line,"user=",5)) {
+			if (line[5])
+			strcpy (object->SmbUser,line+5);
+			continue;
+		}
+		if (!strncmp(line,"password=",9)) {
+			if (line[9])
+			strcpy (object->SmbPwd,line+9);
+			continue;
+		}
+		if (!strncmp(line,"share_name=",11)) {
+			if (line[11])
+			strcpy (object->SmbShare,line+11);
+			continue;
+		}
+		
+		if (!strncmp(line,"smb_ip=",7)) {
+			if (line[7])
+			strcpy (object->SmbIp,line+7);
+			continue;
+		}
+		
+		if (smb_enable<2) {
+		object->smb_enable=smb_enable;}
+	}
+		
+		
+fclose(fconfig);
+}
+
 void load_config(struct computer *object) {
 	
 	char config_path[1024];
 	char line[1024],carac,done;
-	int length,pos, key_sdl=0;;
+	int length,pos, key_sdl=0;
 	FILE *fconfig;
 	unsigned char volume=16,mode128k=255,issue=255,joystick1=255,joystick2=255,ay_emul=255,mdr_active=255,
-	dblscan=255,bw=255, tap_fast=0, joypad1=0, joypad2=0, rumble1=0, rumble2=0, joy_n=0, key_n=0;
+	dblscan=255,bw=255, tap_fast=0, joypad1=0, joypad2=0, rumble1=0, rumble2=0, joy_n=0, key_n=0, port=0;
 	
 	strcpy(config_path,getenv("HOME"));
 	length=strlen(config_path);
@@ -470,7 +645,7 @@ void load_config(struct computer *object) {
 		}
 		done=1;
 		line[pos]=0;
-		if (line[0]=='#') { // coment
+		if (line[0]=='#') { // comment
 			continue;
 		}
 		if (!strncmp(line,"mode=",5)) {
@@ -530,6 +705,10 @@ void load_config(struct computer *object) {
 			rumble2=line[8]-'0';
 			continue;
 		}
+		if (!strncmp(line,"port=",5)) {
+			port=line[5]-'0';
+			continue;
+		}
 		if (!strncmp(line,"joybutton_",10)) {
 			sscanf(line, "joybutton_%c_%c=%3d",&joy_n ,&key_n, &key_sdl);
 			if ((joy_n<50) && (joy_n>47) && (key_n<119) && (key_n>96))
@@ -581,6 +760,9 @@ void load_config(struct computer *object) {
 	if (rumble2<2) {
 		object->rumble[1]=rumble2;
 	}
+	if (port<3) {
+		object->port=port;
+	}
 		
 	fclose(fconfig);
 }
@@ -621,14 +803,13 @@ int main(int argc,char *argv[]) {
 	//initialize libfat library
 	if (!fatInitDefault())
 	{ 
-		printf("Couldn't initialize SD fat subsytem\n\n");
+		printf("Couldn't initialize SD fat subsytem\n");
 		
 		exit(0);
 	}
 	else
-		printf("SD FAT subsytem initialized\n\n");
-			
-	
+		printf("SD FAT subsytem initialized\n");
+		
 	#endif
 
 
@@ -774,7 +955,18 @@ int main(int argc,char *argv[]) {
 	menu_init(ordenador.screen);
 	
 	//Load the splash screen
-	if (load_zxspectrum_picture()) {sleep(1); SDL_FreeSurface (image);}
+	if (load_zxspectrum_picture()) SDL_FreeSurface (image);
+	
+	#ifdef GEKKO
+	usbismount = InitUSB();
+	
+	load_config_smb(&ordenador);
+	
+	if (ordenador.smb_enable) networkisinit = InitNetwork();
+	
+	if (networkisinit && ordenador.smb_enable) ConnectShare(); 
+	
+	#endif
 
 	// assign initial values for PATH variables
 
@@ -789,6 +981,17 @@ int main(int argc,char *argv[]) {
 	strcat(path_taps,"tapes");
 	strcat(path_mdrs,"microdrives");
 	strcat(path_scr,"scr");
+	
+	#ifdef GEKKO
+	if ((ordenador.port==1)&&usbismount) {
+	strcpy(path_snaps,"usb:/");
+	strcpy(path_taps,"usb:/");
+	}
+	if ((ordenador.port==2)&&smbismount) {
+	strcpy(path_snaps,"smb:/");
+	strcpy(path_taps,"smb:/");
+	}	
+	#endif
 	
 	ordenador.current_tap[0]=0;
 
@@ -910,6 +1113,8 @@ int main(int argc,char *argv[]) {
 	}
 	
 	#ifdef GEKKO
+	if (smbismount) CloseShare ();
+	DeInitUSB();
 	fatUnmount(0);
 	#endif
 	

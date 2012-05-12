@@ -696,7 +696,8 @@ void select_tapfile() {
 		fclose(ordenador.tap_file);
 	}
 
-	ordenador.tap_file=fopen(filename,"r+"); // read and write
+	if (!strncmp(filename,"smb:",4)) ordenador.tap_file=fopen(filename,"r"); //tinysmb does not work with r+
+	else ordenador.tap_file=fopen(filename,"r+"); // read and write
 	ordenador.tape_write = 0; // by default, can't record
 	if(ordenador.tap_file==NULL)
 		retorno=-1;

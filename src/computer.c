@@ -137,6 +137,12 @@ void computer_init () {
 	ordenador.key = SDL_GetKeyState(NULL);
 	ordenador.joybuttonkey[0][0]=SDLK_LALT; //Fire button to wiimote1 button A
 	ordenador.joybuttonkey[1][0]=SDLK_LALT; //Fire button to wiimote1 button A
+	ordenador.port=0; //PORT SD
+	ordenador.smb_enable=0;
+	strcpy (ordenador.SmbUser,"User");
+	strcpy (ordenador.SmbPwd, "Password");
+	strcpy (ordenador.SmbShare, "Share");
+	strcpy (ordenador.SmbIp, "192.168.0.1");
 
 }
 
