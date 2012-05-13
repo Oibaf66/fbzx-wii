@@ -25,7 +25,7 @@ INCLUDES	:=
 # options for code generation
 #---------------------------------------------------------------------------------
 
-CFLAGS	= -g -O3 -Wall -Wno-unused-but-set-variable $(MACHDEP) $(INCLUDE) -Wno-pointer-sign
+CFLAGS	= -g -O2 -Wall -Wno-unused-but-set-variable $(MACHDEP) $(INCLUDE) -Wno-pointer-sign
 CXXFLAGS	=	$(CFLAGS)
 
 LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
@@ -33,7 +33,7 @@ LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
-LIBS	:=	 -lasnd -lSDL_mixer -lsmpeg -lvorbisidec -lSDL_image -lpng -ljpeg -lz -lSDL_ttf -lSDL -lSDL_gfx -lfreetype -lfat -lwiiuse -lbte -logc -lm -lwiikeyboard 
+LIBS	:=	 -lasnd -lSDL_mixer -lsmpeg -lvorbisidec -lSDL_image -lpng -ljpeg -lz -lSDL_ttf -lSDL -lSDL_gfx -lfreetype -lfat -lwiiuse -lbte -logc -lm -lwiikeyboard -ltinysmb
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
@@ -126,12 +126,13 @@ dist: $(BUILD)
 	cp keymap.bmp $@/fbzx-wii/fbzx
 	cp ZXSpectrum48k.png $@/fbzx-wii/fbzx
 	cp FreeMono.ttf $@/fbzx-wii/fbzx
+	cp fbzx.smb $@/fbzx-wii
 	cp AMSTRAD CAPABILITIES COPYING FAQ README README.TZX VERSIONS VERSIONS.wii $@/apps/fbzx-wii/doc
 	touch $@/fbzx-wii/tapes/dummy
 	touch $@/fbzx-wii/snapshots/dummy
 	touch $@/fbzx-wii/microdrives/dummy
 	touch $@/fbzx-wii/scr/dummy
-	cd $@ && tar -czf ../fbzx-wii-bin.tar.gz *
+	cd $@ && tar -czf ../fbzx-wii-vx-bin.tar.gz *
 
 distsource:
 	cd .. && cp -r fbzx-wii fbzx-wii-v

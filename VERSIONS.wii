@@ -3,3 +3,14 @@ version 1:
 		* Initial release
 
 		-- Fabio Olimpieri <fabio.olimpieri@tin.it> May 1 2012
+
+version 2:
+		* Added smb support
+		* Added usb disk support
+		* Added joypad as joystick function
+		* Added saving of all configurations and buttons 
+		* Improved virtual keyboard
+		* Fixed bug in sound emulation  
+		* Fixed some other small bugs
+		
+		-- Fabio Olimpieri <fabio.olimpieri@tin.it> May 13 2012

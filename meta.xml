@@ -2,8 +2,8 @@
   <app version="1">
     <name>FBZX Wii</name>
     <coder>Oibaf</coder>
-    <version>1.0</version>
-    <release_date>20120501</release_date>
+    <version>2.0</version>
+    <release_date>20120513</release_date>
     <short_description>ZX Spectrum Emulator</short_description>
     <long_description>A ZX Spectrum emulator for FrameBuffer written by Sergio Costas, see http://www.rastersoft.com/fbzx.html.
 The port to Wii was done by Fabio Olimpieri.
@@ -15,16 +15,25 @@ Put .z80 and .sna files in /fbzx-wii/snapshots or .tap and .tzx files in /fbzx-w
 Press the home button to access the in-game menu. Press 1 to select an item and 2 to escape.
 
 Press the "+" button to access the virtual keyboard.
+
+The in-game menu allows you to insert tapes, load them and configure the display, joysticks etc.
+
+The easiest way to play a game is to load a snapshot (.z80 and .sna files).
+
+You can also insert a tape file (.tap and .tzx) and then load the file in the tape menu (it simulates the command Load "").
  
-The in-game menu allows you to insert tapes, load them and configure the display, joysticks etc. 
+If you have problems with a .tap file, likely the TAP file has a program which uses a custom routine to load the blocks; in this case, try to disbale the "Tap fast speed" function.
+ 
+If you want to speed up the tape file loading (both for .tzx file and .tap file with "tap fast speed" disabled), try to enable "turbo mode" which speeds up the emulator by 4.
+In this case, do not forget to revert to normal speed after the loading.
 
-Snapshots and scr files will be stored on the SD card.
+The preferences are saved (joystick type, machine, buttons bindings, etc.) from the main in-game menu and they are loaded on start-up.
 
-The preferences are saved (joystick type, machine, etc.) from the main in-game menu and they are loaded on start-up. 
+You can also load a file from a usb disk and from your PC using a wi-fi connection.
 
 If rumble is enabled, the wiimote rumbles each time the fire button is pressed. 
 
-See http://wiibrew.org/wiki/fbzx-wii for more information.
+See http://wiibrew.org/wiki/FBZX_Wii for more information.
 
 </long_description>
   </app>

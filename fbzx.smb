@@ -1,0 +1,7 @@
+# SMB configuration
+# set to 1 to enable smb
+smb_enable=0
+user=USER
+password=PASSWORD
+share_name=FOLDER
+smb_ip=192.168.0.1
