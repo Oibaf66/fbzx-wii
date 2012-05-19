@@ -903,34 +903,34 @@ inline void read_keyboard () {
 	{ //No Joypad
 	 switch (ordenador.joystick[joy_n]) {
 		case 0:	// cursor
-			if (ordenador.joy_axis_y_state[joy_n] == JOY_UP) ordenador.k12|= 8;
-			if (ordenador.joy_axis_y_state[joy_n] == JOY_DOWN) ordenador.k12|= 16;
-			if (ordenador.joy_axis_x_state[joy_n] == JOY_RIGHT)ordenador.k12|= 4;
-			if (ordenador.joy_axis_x_state[joy_n] == JOY_LEFT) ordenador.k11|= 16;
+			if ((ordenador.joy_axis_y_state[joy_n] == JOY_UP)||(joybutton_matrix[joy_n][SDLK_UP])) ordenador.k12|= 8;
+			if ((ordenador.joy_axis_y_state[joy_n] == JOY_DOWN) ||(joybutton_matrix[joy_n][SDLK_DOWN])) ordenador.k12|= 16;
+			if ((ordenador.joy_axis_x_state[joy_n] == JOY_RIGHT)||(joybutton_matrix[joy_n][SDLK_RIGHT])) ordenador.k12|= 4;
+			if ((ordenador.joy_axis_x_state[joy_n] == JOY_LEFT) ||(joybutton_matrix[joy_n][SDLK_LEFT])) ordenador.k11|= 16;
 			if (joybutton_matrix[joy_n][SDLK_LALT]) {ordenador.k12|= 1; fire_on[joy_n]=1;}//fire button
 		break; 
 			
 		case 1: //Kempston
-			if (ordenador.joy_axis_y_state[joy_n] == JOY_UP) ordenador.jk|= 8;
-			if (ordenador.joy_axis_y_state[joy_n] == JOY_DOWN) ordenador.jk|= 4;
-			if (ordenador.joy_axis_x_state[joy_n] == JOY_RIGHT) ordenador.jk|= 1;
-			if (ordenador.joy_axis_x_state[joy_n] == JOY_LEFT) ordenador.jk|= 2;
+			if ((ordenador.joy_axis_y_state[joy_n] == JOY_UP)||(joybutton_matrix[joy_n][SDLK_UP])) ordenador.jk|= 8;
+			if ((ordenador.joy_axis_y_state[joy_n] == JOY_DOWN)||(joybutton_matrix[joy_n][SDLK_DOWN])) ordenador.jk|= 4;
+			if ((ordenador.joy_axis_x_state[joy_n] == JOY_RIGHT)||(joybutton_matrix[joy_n][SDLK_RIGHT])) ordenador.jk|= 1;
+			if ((ordenador.joy_axis_x_state[joy_n] == JOY_LEFT)||(joybutton_matrix[joy_n][SDLK_LEFT])) ordenador.jk|= 2;
 			if (joybutton_matrix[joy_n][SDLK_LALT]) {ordenador.jk |= 16; fire_on[joy_n]=1;}//fire button
 		break;
 		
 		case 2:	// sinclair 1
-			if (ordenador.joy_axis_y_state[joy_n] == JOY_UP) ordenador.k11|= 8;
-			if (ordenador.joy_axis_y_state[joy_n] == JOY_DOWN)ordenador.k11|= 4;
-			if (ordenador.joy_axis_x_state[joy_n] == JOY_RIGHT)ordenador.k11|= 2;
-			if (ordenador.joy_axis_x_state[joy_n] == JOY_LEFT) ordenador.k11|= 1;
+			if ((ordenador.joy_axis_y_state[joy_n] == JOY_UP)||(joybutton_matrix[joy_n][SDLK_UP])) ordenador.k11|= 8;
+			if ((ordenador.joy_axis_y_state[joy_n] == JOY_DOWN)||(joybutton_matrix[joy_n][SDLK_DOWN])) ordenador.k11|= 4;
+			if ((ordenador.joy_axis_x_state[joy_n] == JOY_RIGHT)||(joybutton_matrix[joy_n][SDLK_RIGHT])) ordenador.k11|= 2;
+			if ((ordenador.joy_axis_x_state[joy_n] == JOY_LEFT)||(joybutton_matrix[joy_n][SDLK_LEFT])) ordenador.k11|= 1;
 			if (joybutton_matrix[joy_n][SDLK_LALT]) {ordenador.k11|= 16;fire_on[joy_n]=1;}	//fire button
 		break;
 		
 		case 3:	// sinclair 2
-			if (ordenador.joy_axis_y_state[joy_n] == JOY_UP) ordenador.k12|= 2;
-			if (ordenador.joy_axis_y_state[joy_n] == JOY_DOWN)ordenador.k12|= 4;
-			if (ordenador.joy_axis_x_state[joy_n] == JOY_RIGHT)ordenador.k12|= 8;
-			if (ordenador.joy_axis_x_state[joy_n] == JOY_LEFT) ordenador.k12|= 16;
+			if ((ordenador.joy_axis_y_state[joy_n] == JOY_UP) ||(joybutton_matrix[joy_n][SDLK_UP]))ordenador.k12|= 2;
+			if ((ordenador.joy_axis_y_state[joy_n] == JOY_DOWN)||(joybutton_matrix[joy_n][SDLK_DOWN])) ordenador.k12|= 4;
+			if ((ordenador.joy_axis_x_state[joy_n] == JOY_RIGHT)||(joybutton_matrix[joy_n][SDLK_RIGHT])) ordenador.k12|= 8;
+			if ((ordenador.joy_axis_x_state[joy_n] == JOY_LEFT)||(joybutton_matrix[joy_n][SDLK_LEFT])) ordenador.k12|= 16;
 			if (joybutton_matrix[joy_n][SDLK_LALT]) {ordenador.k12|= 1; fire_on[joy_n]=1;}//fire button
 		break;
 		}
@@ -939,34 +939,34 @@ inline void read_keyboard () {
 	{ //Joypad as Joystick
 	 switch (ordenador.joystick[joy_n]) {
 		case 0:	// cursor
-			if (status_hat[joy_n] & SDL_HAT_UP) ordenador.k12|= 8;
-			if (status_hat[joy_n] & SDL_HAT_DOWN) ordenador.k12|= 16;
-			if (status_hat[joy_n] & SDL_HAT_RIGHT) ordenador.k12|= 4;
-			if (status_hat[joy_n] & SDL_HAT_LEFT) ordenador.k11|= 16;
+			if ((status_hat[joy_n] & SDL_HAT_UP)||(joybutton_matrix[joy_n][SDLK_UP])) ordenador.k12|= 8;
+			if ((status_hat[joy_n] & SDL_HAT_DOWN)||(joybutton_matrix[joy_n][SDLK_DOWN])) ordenador.k12|= 16;
+			if ((status_hat[joy_n] & SDL_HAT_RIGHT)||(joybutton_matrix[joy_n][SDLK_RIGHT])) ordenador.k12|= 4;
+			if ((status_hat[joy_n] & SDL_HAT_LEFT)||(joybutton_matrix[joy_n][SDLK_LEFT])) ordenador.k11|= 16;
 			if (joybutton_matrix[joy_n][SDLK_LALT]) {ordenador.k12|= 1; fire_on[joy_n]=1;}//fire button
 		break; 
 			
 		case 1: //Kempston
-			if (status_hat[joy_n] & SDL_HAT_UP) ordenador.jk|= 8;
-			if (status_hat[joy_n] & SDL_HAT_DOWN) ordenador.jk|= 4;
-			if (status_hat[joy_n] & SDL_HAT_RIGHT) ordenador.jk|= 1;
-			if (status_hat[joy_n] & SDL_HAT_LEFT) ordenador.jk|= 2;
+			if ((status_hat[joy_n] & SDL_HAT_UP)||(joybutton_matrix[joy_n][SDLK_UP])) ordenador.jk|= 8;
+			if ((status_hat[joy_n] & SDL_HAT_DOWN)||(joybutton_matrix[joy_n][SDLK_DOWN])) ordenador.jk|= 4;
+			if ((status_hat[joy_n] & SDL_HAT_RIGHT)||(joybutton_matrix[joy_n][SDLK_RIGHT])) ordenador.jk|= 1;
+			if ((status_hat[joy_n] & SDL_HAT_LEFT)||(joybutton_matrix[joy_n][SDLK_LEFT])) ordenador.jk|= 2;
 			if (joybutton_matrix[joy_n][SDLK_LALT]) {ordenador.jk |= 16; fire_on[joy_n]=1;}//fire button
 		break;
 		
 		case 2:	// sinclair 1
-			if (status_hat[joy_n] & SDL_HAT_UP) ordenador.k11|= 8;
-			if (status_hat[joy_n] & SDL_HAT_DOWN) ordenador.k11|= 4;
-			if (status_hat[joy_n] & SDL_HAT_RIGHT) ordenador.k11|= 2;
-			if (status_hat[joy_n] & SDL_HAT_LEFT) ordenador.k11|= 1;
+			if ((status_hat[joy_n] & SDL_HAT_UP)||(joybutton_matrix[joy_n][SDLK_UP])) ordenador.k11|= 8;
+			if ((status_hat[joy_n] & SDL_HAT_DOWN)||(joybutton_matrix[joy_n][SDLK_DOWN])) ordenador.k11|= 4;
+			if ((status_hat[joy_n] & SDL_HAT_RIGHT)||(joybutton_matrix[joy_n][SDLK_RIGHT])) ordenador.k11|= 2;
+			if ((status_hat[joy_n] & SDL_HAT_LEFT) ||(joybutton_matrix[joy_n][SDLK_LEFT]))ordenador.k11|= 1;
 			if (joybutton_matrix[joy_n][SDLK_LALT]) {ordenador.k11|= 16;fire_on[joy_n]=1;}	//fire button
 		break;
 		
 		case 3:	// sinclair 2
-			if (status_hat[joy_n] & SDL_HAT_UP) ordenador.k12|= 2;
-			if (status_hat[joy_n] & SDL_HAT_DOWN) ordenador.k12|= 4;
-			if (status_hat[joy_n] & SDL_HAT_RIGHT) ordenador.k12|= 8;
-			if (status_hat[joy_n] & SDL_HAT_LEFT) ordenador.k12|= 16;
+			if ((status_hat[joy_n] & SDL_HAT_UP)||(joybutton_matrix[joy_n][SDLK_UP])) ordenador.k12|= 2;
+			if ((status_hat[joy_n] & SDL_HAT_DOWN)||(joybutton_matrix[joy_n][SDLK_DOWN])) ordenador.k12|= 4;
+			if ((status_hat[joy_n] & SDL_HAT_RIGHT)||(joybutton_matrix[joy_n][SDLK_RIGHT])) ordenador.k12|= 8;
+			if ((status_hat[joy_n] & SDL_HAT_LEFT)||(joybutton_matrix[joy_n][SDLK_LEFT])) ordenador.k12|= 16;
 			if (joybutton_matrix[joy_n][SDLK_LALT]) {ordenador.k12|= 1; fire_on[joy_n]=1;}//fire button
 		break;
 		}
@@ -1071,10 +1071,10 @@ inline void read_keyboard () {
 	if (ordenador.key[SDLK_c] || joybutton_matrix[0][SDLK_c] || joybutton_matrix[1][SDLK_c]) ordenador.k8 |=8;
 	if (ordenador.key[SDLK_v] || joybutton_matrix[0][SDLK_v] || joybutton_matrix[1][SDLK_v]) ordenador.k8 |=16;
 
-	if (ordenador.key[SDLK_UP]|| joybutton_matrix[0][SDLK_UP] || joybutton_matrix[1][SDLK_UP]) {ordenador.k12 |=8;ordenador.k8|=1;}
-	if (ordenador.key[SDLK_DOWN]|| joybutton_matrix[0][SDLK_DOWN] || joybutton_matrix[1][SDLK_DOWN]) {ordenador.k12 |=16;ordenador.k8|=1;}
-	if (ordenador.key[SDLK_LEFT]|| joybutton_matrix[0][SDLK_LEFT] || joybutton_matrix[1][SDLK_LEFT]) {ordenador.k11 |=16;ordenador.k8|=1;}
-	if (ordenador.key[SDLK_RIGHT]|| joybutton_matrix[0][SDLK_RIGHT] || joybutton_matrix[1][SDLK_RIGHT]) {ordenador.k12 |=4;ordenador.k8|=1;}
+	if (ordenador.key[SDLK_UP]) {ordenador.k12 |=8;ordenador.k8|=1;}
+	if (ordenador.key[SDLK_DOWN]) {ordenador.k12 |=16;ordenador.k8|=1;}
+	if (ordenador.key[SDLK_LEFT]) {ordenador.k11 |=16;ordenador.k8|=1;}
+	if (ordenador.key[SDLK_RIGHT]) {ordenador.k12 |=4;ordenador.k8|=1;}
 	
 	if (ordenador.key[SDLK_TAB]|| joybutton_matrix[0][SDLK_TAB] || joybutton_matrix[1][SDLK_TAB]) {ordenador.k15|=2;ordenador.k8|=1;} //Extended mode
 
