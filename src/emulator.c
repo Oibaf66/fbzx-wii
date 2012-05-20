@@ -67,6 +67,7 @@ char path_snaps[2049];
 char path_taps[2049];
 char path_mdrs[2049];
 char path_scr[2049];
+char path_confs[2049];
 unsigned int colors[80];
 unsigned int jump_frames,curr_frames;
 char *filenames[5];
@@ -527,6 +528,7 @@ void save_config(struct computer *object) {
 	fprintf(fconfig,"rumble1=%c%c",48+object->rumble[0],10);
 	fprintf(fconfig,"rumble2=%c%c",48+object->rumble[1],10);
 	fprintf(fconfig,"port=%c%c",48+object->port,10);
+	fprintf(fconfig,"autoconf=%c%c",48+object->autoconf,10);
 	
 	
 	for (joy_n=0; joy_n<2; joy_n++)
@@ -534,6 +536,39 @@ void save_config(struct computer *object) {
 		fprintf(fconfig,"joybutton_%c_%c=%.3d%c",joy_n+48,key+97, object->joybuttonkey[joy_n][key],10);
 	
 	fclose(fconfig);
+	
+}
+
+int save_config_game(struct computer *object, char *filename, int overwrite) {
+	
+	unsigned char key, joy_n;
+	FILE *fconfig;
+	
+	fconfig=fopen(filename,"r");
+	if((fconfig!=NULL)&&(!overwrite)) {
+    fclose(fconfig);
+    return -1; // file already exists
+	}
+	
+	fconfig = fopen(filename,"wb");
+	if (fconfig==NULL) {
+		return -2; // can't create file
+	}
+	
+	fprintf(fconfig,"joystick1=%c%c",48+object->joystick[0],10);
+	fprintf(fconfig,"joystick2=%c%c",48+object->joystick[1],10);
+	fprintf(fconfig,"ay_sound=%c%c",48+object->ay_emul,10);
+	fprintf(fconfig,"joypad1=%c%c",48+object->joypad_as_joystick[0],10);
+	fprintf(fconfig,"joypad2=%c%c",48+object->joypad_as_joystick[1],10);
+	fprintf(fconfig,"rumble1=%c%c",48+object->rumble[0],10);
+	fprintf(fconfig,"rumble2=%c%c",48+object->rumble[1],10);
+	
+	for (joy_n=0; joy_n<2; joy_n++)
+		for (key=0; key<22; key++)
+		fprintf(fconfig,"joybutton_%c_%c=%.3d%c",joy_n+48,key+97, object->joybuttonkey[joy_n][key],10);
+	
+	fclose(fconfig);
+	return 0;
 	
 }
 
@@ -606,23 +641,29 @@ void load_config_smb(struct computer *object) {
 fclose(fconfig);
 }
 
-void load_config(struct computer *object) {
+int load_config(struct computer *object, char *filename) {
 	
 	char config_path[1024];
 	char line[1024],carac,done;
 	int length,pos, key_sdl=0;
 	FILE *fconfig;
-	unsigned char volume=16,mode128k=255,issue=255,joystick1=255,joystick2=255,ay_emul=255,mdr_active=255,
-	dblscan=255,bw=255, tap_fast=0, joypad1=0, joypad2=0, rumble1=0, rumble2=0, joy_n=0, key_n=0, port=0;
+	unsigned char volume=255,mode128k=255,issue=255,joystick1=255,joystick2=255,ay_emul=255,mdr_active=255,
+	dblscan=255,bw=255, tap_fast=255, joypad1=255, joypad2=255, rumble1=255, rumble2=255, joy_n=255, key_n=255, port=255, autoconf=255;
 	
+	if (filename) strcpy(config_path,filename); 
+	
+	else
+	{
 	strcpy(config_path,getenv("HOME"));
 	length=strlen(config_path);
 	if ((length>0)&&(config_path[length-1]!='/'))
 		strcat(config_path,"/");
 	strcat(config_path,"fbzx_conf");
+	}
+	
 	fconfig = fopen(config_path,"rb");
 	if (fconfig==NULL) {
-		return;
+		return -1;
 	}
 	
 	done=1;
@@ -709,6 +750,10 @@ void load_config(struct computer *object) {
 			port=line[5]-'0';
 			continue;
 		}
+		if (!strncmp(line,"autoconf=",9)) {
+			autoconf=line[9]-'0';
+			continue;
+		}
 		if (!strncmp(line,"joybutton_",10)) {
 			sscanf(line, "joybutton_%c_%c=%3d",&joy_n ,&key_n, &key_sdl);
 			if ((joy_n<50) && (joy_n>47) && (key_n<119) && (key_n>96))
@@ -763,8 +808,12 @@ void load_config(struct computer *object) {
 	if (port<3) {
 		object->port=port;
 	}
+	if (autoconf<2) {
+		object->autoconf=autoconf;
+	}
 		
 	fclose(fconfig);
+	return 0;
 }
 
 int main(int argc,char *argv[]) {
@@ -822,7 +871,7 @@ int main(int argc,char *argv[]) {
 	set_volume(16);
 	
 	// load current config
-	load_config(&ordenador);
+	load_config(&ordenador, NULL);
 	printf("Modo: %d\n",ordenador.mode128k);
 	while(argumento<argc) {
 		if ((0==strcmp(argv[argumento],"-h"))||(0==strcmp(argv[argumento],"--help"))) {
@@ -977,10 +1026,12 @@ int main(int argc,char *argv[]) {
 	strcpy(path_taps,path_snaps);
 	strcpy(path_mdrs,path_snaps);
 	strcpy(path_scr,path_snaps);
+	strcpy(path_confs,path_snaps);
 	strcat(path_snaps,"snapshots");
 	strcat(path_taps,"tapes");
 	strcat(path_mdrs,"microdrives");
 	strcat(path_scr,"scr");
+	strcat(path_confs,"configurations");
 	
 	#ifdef GEKKO
 	if ((ordenador.port==1)&&usbismount) {

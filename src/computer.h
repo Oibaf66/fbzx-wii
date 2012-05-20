@@ -213,7 +213,7 @@ struct computer {
 	unsigned char SmbPwd[32];
 	unsigned char SmbShare[32]; 
 	unsigned char SmbIp[32];
-
+	unsigned char autoconf;
 };
 
 void computer_init();

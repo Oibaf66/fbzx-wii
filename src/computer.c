@@ -143,7 +143,7 @@ void computer_init () {
 	strcpy (ordenador.SmbPwd, "Password");
 	strcpy (ordenador.SmbShare, "Share");
 	strcpy (ordenador.SmbIp, "192.168.0.1");
-
+	ordenador.autoconf=0;
 }
 
 void computer_set_palete() {

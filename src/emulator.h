@@ -36,13 +36,16 @@ extern char path_snaps[2049];
 extern char path_taps[2049];
 extern char path_mdrs[2049];
 extern char path_scr[2049];
+extern char path_confs[2049];
 extern unsigned int colors[80];
 extern unsigned int jump_frames,curr_frames;
 
 void SDL_Fullscreen_Switch(void);
 void load_rom(char);
 void load_main_game(char *nombre);
+int load_config(struct computer *object, char *filename);
 void save_config(struct computer *object);
+int save_config_game(struct computer *object, char *filename, int overwrite);
 FILE *myfopen(char *filename,char *mode);
 
 #endif

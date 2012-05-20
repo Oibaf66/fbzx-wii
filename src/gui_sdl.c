@@ -64,7 +64,7 @@ static const char *main_menu_messages[] = {
 		/*07*/		"Emulation settings",
 		/*08*/		"Microdrive",
 		/*09*/		"Tools",
-		/*10*/		"Save confs",
+		/*10*/		"Confs files",
 		/*11*/		"Reset",
 		/*12*/		"Help",
 		/*13*/		"Quit",
@@ -152,6 +152,40 @@ static const char *help_messages[] = {
 		NULL,
 };
 
+static const char *confs_messages[] = {
+		/*00*/		"Save general configs",
+		/*01*/		"  ",
+		/*02*/		"Game configurations",
+		/*03*/		"^|Load|Save|Delete",
+		/*04*/		"  ",
+		/*05*/		"Load confs automatically",
+		/*06*/		"^|on|off",
+		NULL
+};
+
+void maybe_load_conf(const char *filename)
+{
+	const char *dir = path_confs;
+	char *ptr;
+	char db[256];
+	char fb[81];
+	
+	if (filename==NULL) return;	
+
+	if (strrchr(filename, '/'))
+		strncpy(fb, strrchr(filename, '/') + 1, 80);
+	else
+		strncpy(fb, filename, 80);
+		
+	//remove the extension
+	ptr = strrchr (fb, '.');
+		if (ptr) *ptr = 0;	
+
+	snprintf(db, 255, "%s/%s.conf", dir, fb);
+	if (!load_config(&ordenador,db)) msgInfo("Configurations loaded",2000,NULL)	;
+	
+}
+
 static void insert_tape()
 {
 	unsigned char char_id[11];
@@ -198,6 +232,7 @@ static void insert_tape()
 	case 0: // all right
 	strcpy(ordenador.current_tap,filename);
 	strcpy(ordenador.last_selected_file,filename);
+	if (ordenador.autoconf) maybe_load_conf(filename);
 	break;
 	case -1:
 		msgInfo("Error: Can't load that file",3000,NULL);
@@ -819,6 +854,7 @@ static void save_load_snapshot(int which)
 				switch(retorno) {
 				case 0: // all right
 				strcpy(ordenador.last_selected_file,filename);
+				if (ordenador.autoconf) maybe_load_conf(filename);
 				break;
 				case -1:
 				msgInfo("Error: Can't load that file",3000,NULL);
@@ -858,6 +894,105 @@ static void save_load_snapshot(int which)
 		break;
 	}
 }
+
+static void save_load_configurations(int which)
+{
+	const char *dir = path_confs;
+	const char *tape = ordenador.last_selected_file;
+	char *ptr;
+	char db[256];
+	char fb[81];
+	int retorno;
+
+	// Name (for saves) - TO CHECK
+	if (tape && strrchr(tape, '/'))
+		strncpy(fb, strrchr(tape, '/') + 1, 80);
+	else
+		strcpy(fb, "unknown");
+		
+	//remove the extension
+	ptr = strrchr (fb, '.');
+		if (ptr) *ptr = 0;	
+	
+	snprintf(db, 255, "%s/%s.conf", dir, fb);
+	
+	switch(which)
+	{
+	case 2:
+	case 0: // Load or delete file
+	{
+		const char *filename = menu_select_file(dir, NULL,-1);
+
+		if (!filename)
+			return;
+
+		if (ext_matches(filename, ".conf")|ext_matches(filename, ".CONF"))
+		{
+			if (which == 0) // Load config file
+			{
+				if (!load_config(&ordenador,db)) msgInfo("Configurations loaded",3000,NULL);
+				break;
+			}
+			else // Delete config file
+				if (msgYesNo("Delete the file?", 0, FULL_DISPLAY_X /2-138, FULL_DISPLAY_Y /2-48)) unlink(filename);
+		}	
+		free((void*)filename);
+	} break;
+	case 1: // Save configuration file
+		retorno=save_config_game(&ordenador,db,0);
+		
+		switch(retorno) 
+			{
+			case 0: //OK
+				msgInfo("Configurations saved",3000,NULL);
+				break;
+			case -1:
+				if (msgYesNo("Overwrite the exiting file?", 0, FULL_DISPLAY_X /2-160, FULL_DISPLAY_Y /2-48))
+				{
+					save_config_game(&ordenador,db,1); //force overwrite
+					msgInfo("Configurations saved",3000,NULL);
+				}
+				break;
+			case -2:
+				msgInfo("Can't create file",3000,NULL);
+				break;
+			}
+		break;
+	default:
+		break;
+	}
+}
+
+static void manage_configurations()
+{
+	int opt ;
+	int submenus[2];
+
+	memset(submenus, 0, sizeof(submenus));
+	
+	submenus[1]=!ordenador.autoconf;
+
+	opt = menu_select_title("Configurations file menu",
+			confs_messages, submenus);
+	if (opt < 0)
+		return;
+		
+	ordenador.autoconf=!submenus[1];	
+	
+	switch(opt)
+		{
+		case 0: // Save general configurations 
+			save_config(&ordenador);
+			msgInfo("Configurations saved",3000,NULL);
+			break;
+		case 2: // Save, load and delete game configurations
+			save_load_configurations(submenus[0]);
+			break;
+		default:
+			break;
+		}		
+}
+
 	
 static void help(void)
 {
@@ -899,8 +1034,7 @@ void main_menu()
 			tools();
 			break;	
 		case 10:
-			save_config(&ordenador);
-			msgInfo("Configurations saved",3000,NULL);
+			manage_configurations();
 			break;
 		case 11:
 			ResetComputer ();
