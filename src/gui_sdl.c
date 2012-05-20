@@ -79,7 +79,7 @@ static const char *emulation_messages[] = {
 		/*04*/		"Tap fast speed",
 		/*05*/		"^|on|off",
 		/*06*/		"Turbo mode",
-		/*07*/		"^|on|off",
+		/*07*/		"^|off|speed|ultraspeed",
 		/*08*/		"Double scan",
 		/*09*/		"^|on|off",
 		/*10*/		"TV mode",
@@ -374,7 +374,7 @@ static void emulation_settings(void)
 	submenus[0] = get_machine_model();
 	submenus[1] = ordenador.volume/2;
 	submenus[2] = !ordenador.tape_fast_load;
-	submenus[3] = !ordenador.turbo;
+	submenus[3] = ordenador.turbo;
 	submenus[4] = !ordenador.dblscan;
 	submenus[5] = ordenador.bw;
 	submenus[6] = !ordenador.ay_emul;
@@ -392,16 +392,26 @@ static void emulation_settings(void)
 	
 	ordenador.volume = submenus[1]*2; //I should use set_volume() ?
 	ordenador.tape_fast_load = !submenus[2];
-	ordenador.turbo = !submenus[3];
+	ordenador.turbo = submenus[3];
 	
-	if(ordenador.turbo){
-				ordenador.tst_sample=12000000/ordenador.freq; //5,0 MHz max emulation speed for wii at full frames
-				jump_frames=3;
-			} else {
-				ordenador.tst_sample=3500000/ordenador.freq;
-				jump_frames=0;
-				curr_frames=0;
-			}
+	curr_frames=0;
+	switch(ordenador.turbo)
+	{
+	case 0: //off
+		ordenador.tst_sample=3500000/ordenador.freq;
+		jump_frames=0;
+		break;	
+	case 1:	//speed	
+		ordenador.tst_sample=12000000/ordenador.freq; //5,0 MHz max emulation speed for wii at full frames
+		jump_frames=3;
+		break;
+	case 2:	//very speed
+		ordenador.tst_sample=20000000/ordenador.freq;
+		jump_frames=24;
+		break;
+	default:
+		break;	
+	}
 	
 	ordenador.dblscan = !submenus[4];
 	ordenador.bw = submenus[5]; 

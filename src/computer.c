@@ -1275,7 +1275,7 @@ void Z80free_Out (register word Port, register byte Value) {
 	
 	register word maskport;
 	
-	if (((Port&0x0001)==0)||((Port>=0x4000)&&(Port<0x8000))) {
+	if (((Port&0x0001)==0)||((Port>=0x4000)&&(Port<0x8000))||Port == 0xBF3B||Port == 0xFF3B) {
 		do_contention();
 	}
 
@@ -1348,7 +1348,7 @@ byte Z80free_In (register word Port) {
 	static unsigned int temporal_io;
 	byte pines;
 
-	if (((Port&0x0001)==0)||((Port>=0x4000)&&(Port<0x8000))) {
+	if (((Port&0x0001)==0)||((Port>=0x4000)&&(Port<0x8000))||Port == 0xFF3B) {
 		do_contention();
 	}
 

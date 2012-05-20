@@ -282,15 +282,15 @@ void settings_menu() {
 			computer_set_palete();
 		break;
 		case SDLK_t:
+			curr_frames=0;
 			if(ordenador.turbo){
 				ordenador.tst_sample=3500000/ordenador.freq;
 				ordenador.turbo = 0;
 				jump_frames=0;
-				curr_frames=0;
 			} else {
 				ordenador.tst_sample=12000000/ordenador.freq; //5,0 MHz max emulation speed for wii at full frames
 				ordenador.turbo = 1;
-				jump_frames=3;
+				jump_frames=3;	
 			}
 		break;	
 		}
