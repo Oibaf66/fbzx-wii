@@ -351,7 +351,6 @@ void load_rom(char type) {
 void init_screen(int resx,int resy,int depth,int fullscreen,int dblbuffer,int hwsurface) {
 
 	int retorno,bucle,bucle2,valores,ret2;
-	unsigned char value;
 
 	//if (sound_type!=3)
 	retorno=SDL_Init(SDL_INIT_VIDEO);
@@ -431,14 +430,12 @@ void init_screen(int resx,int resy,int depth,int fullscreen,int dblbuffer,int hw
 	else
 		ordenador.increment=ordenador.channels;
 	
-	value=0;
 	for(bucle2=0;bucle2<NUM_SNDBUF;bucle2++) {
 		//sound[bucle2]=(unsigned char *)malloc(ordenador.buffer_len*ordenador.increment+8);
 		//ASND Required alligned memory with padding
 		sound[bucle2]=(unsigned char *)memalign(32,ordenador.buffer_len*ordenador.increment+32);
 		for(bucle=0;bucle<ordenador.buffer_len*ordenador.increment+4;bucle++)
-			sound[bucle2][bucle]=value;
-			value+=4; 
+			sound[bucle2][bucle]=0; 
 	}
 
 	printf("Init sound 2\n");
