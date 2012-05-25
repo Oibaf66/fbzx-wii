@@ -838,7 +838,7 @@ class z80_parser(generic_parser):
 			return False
 		
 		if opcode=="OUTI":
-			self.file_out.write("\t\t/*OUTI, OUTD, OTIR and OTDR first decrements B and then uses it*/\n")
+			self.file_out.write("\t\t/*OUTI, OUTD, OTIR and OTDR first decrement B and then uses it*/\n")
 			self.file_out.write("\t\tprocessor->Rm.br.B=Z80free_doIncDec(processor,processor->Rm.br.B,1);\n")
 			self.file_out.write("\t\tZ80free_Out(processor->Rm.wr.BC,Z80free_Rd(processor->Rm.wr.HL));\n")
 			self.file_out.write("\t\tprocessor->Rm.wr.HL++;\n")
@@ -910,8 +910,11 @@ class z80_parser(generic_parser):
 			self.file_out.write("\t\t\tprocessor->PC-=2;\n")
 			self.file_out.write("\t\t\treturn ("+str(tst1)+");\n")
 			self.file_out.write("\t\t} else {\n")
-			self.file_out.write("\t\t\tZ80free_resFlag(processor,F_H|F_N|F_PV|F_3|F_5);\n")
+			self.file_out.write("\t\t\tZ80free_resFlag(processor,F_H|F_PV|F_3|F_5);\n")
+			self.file_out.write("\t\t\tZ80free_setFlag(processor,F_N);\n")
 			self.file_out.write("\t\tZ80free_valFlag(processor,F_C,tmp2);\n")
+			self.file_out.write("\t\tif (processor->Rm.wr.BC)\n")
+			self.file_out.write("\t\t\tZ80free_setFlag(processor,F_PV);")
 			self.file_out.write("\t\t\treturn ("+str(tst2)+");\n")
 			self.file_out.write("\t\t}\n")
 			return True
@@ -964,8 +967,11 @@ class z80_parser(generic_parser):
 			self.file_out.write("\t\t\tprocessor->PC-=2;\n")
 			self.file_out.write("\t\t\treturn ("+str(tst1)+");\n")
 			self.file_out.write("\t\t} else {\n")
-			self.file_out.write("\t\t\tZ80free_resFlag(processor,F_H|F_N|F_PV|F_3|F_5);\n")
+			self.file_out.write("\t\t\tZ80free_resFlag(processor,F_H|F_PV|F_3|F_5);\n")
+			self.file_out.write("\t\t\tZ80free_setFlag(processor,F_N);\n")
 			self.file_out.write("\t\tZ80free_valFlag(processor,F_C,tmp2);\n")
+			self.file_out.write("\t\tif (processor->Rm.wr.BC)\n")
+			self.file_out.write("\t\t\tZ80free_setFlag(processor,F_PV);")
 			self.file_out.write("\t\t\treturn ("+str(tst2)+");\n")
 			self.file_out.write("\t\t}\n")
 			return True
@@ -1305,4 +1311,5 @@ aparser=parser_DDCB("Z80free_codesDDCB")
 aparser=parser_ED("Z80free_codesED")
 aparser=parser_FD("Z80free_codesFD")
 aparser=parser_FDCB("Z80free_codesFDCB")
+
 

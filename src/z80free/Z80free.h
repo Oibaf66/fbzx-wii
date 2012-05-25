@@ -22,7 +22,10 @@
 #ifndef Z80FREE_H
 #define Z80FREE_H
 
+#ifdef GEKKO
 #include <machine/endian.h>
+#endif
+
 #ifndef Z80_H
 typedef unsigned short int word;
 typedef unsigned char byte;

@@ -791,6 +791,11 @@ inline void read_keyboard () {
 			ordenador.keyboard_buffer[0][ordenador.kbd_buffer_pointer+1] = 0;
 			ordenador.keyboard_buffer[1][ordenador.kbd_buffer_pointer+1] = 0;
 			}
+			else
+			{
+			joybutton_matrix[0][(ordenador.keyboard_buffer[0][ordenador.kbd_buffer_pointer+1])]=1;
+			joybutton_matrix[0][(ordenador.keyboard_buffer[1][ordenador.kbd_buffer_pointer+1])]=1;
+			}
 		countdown--;
 		}
 		else if (ordenador.kbd_buffer_pointer)
@@ -1275,16 +1280,18 @@ void Z80free_Out (register word Port, register byte Value) {
 	
 	register word maskport;
 	
-	if (((Port&0x0001)==0)||((Port>=0x4000)&&(Port<0x8000))||Port == 0xBF3B||Port == 0xFF3B) {
+	if (((Port&0x0001)==0)||((Port>=0x4000)&&(Port<0x8000))) {
 		do_contention();
 	}
 
 	// ULAPlus
 	if (Port == 0xBF3B) {
+		do_contention();
 		ordenador.ulaplus_reg = Value;
 		return;
 	}
 	if (Port == 0xFF3B) {
+		do_contention();
 		if (ordenador.ulaplus_reg==0x40) { // mode
 			ordenador.ulaplus=Value&0x01;
 			return;
@@ -1348,13 +1355,14 @@ byte Z80free_In (register word Port) {
 	static unsigned int temporal_io;
 	byte pines;
 
-	if (((Port&0x0001)==0)||((Port>=0x4000)&&(Port<0x8000))||Port == 0xFF3B) {
+	if (((Port&0x0001)==0)||((Port>=0x4000)&&(Port<0x8000))) {
 		do_contention();
 	}
 
 	temporal_io = (unsigned int) Port;
 
 	if (Port == 0xFF3B) {
+		do_contention();
 		if (ordenador.ulaplus_reg==0x40) { // mode
 			return(ordenador.ulaplus&0x01);
 		}

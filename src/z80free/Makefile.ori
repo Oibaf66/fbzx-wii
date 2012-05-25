@@ -1,5 +1,5 @@
-CC = gcc -c -O1 -Wall
-CCo = gcc -O1 -Wall
+CC = gcc -c -O1 -Wall -DBYTE_ORDER=LITTLE_ENDIAN
+CCo = gcc -O1 -Wall -DBYTE_ORDER=LITTLE_ENDIAN
 
 z80free_tester: z80free_tester.o Z80free.o Z80free_codes.o Z80free_codesCB.o Z80free_codesED.o Z80free_codesDD.o Z80free_codesFD.o Z80free_codesDDCB.o Z80free_codesFDCB.o 
 	$(CCo) -o z80free_tester z80free_tester.o Z80free.o Z80free_codes.o Z80free_codesCB.o Z80free_codesED.o Z80free_codesDD.o Z80free_codesFD.o Z80free_codesDDCB.o Z80free_codesFDCB.o
