@@ -44,7 +44,7 @@ void SDL_Fullscreen_Switch(void);
 void load_rom(char);
 void load_main_game(char *nombre);
 int load_config(struct computer *object, char *filename);
-void save_config(struct computer *object);
+int save_config(struct computer *object, char *filename);
 int save_config_game(struct computer *object, char *filename, int overwrite);
 FILE *myfopen(char *filename,char *mode);
 

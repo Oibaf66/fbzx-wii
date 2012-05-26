@@ -494,22 +494,16 @@ void load_main_game(char *nombre) {
 	}
 }
 
-void save_config(struct computer *object) {
+int save_config(struct computer *object, char *filename) {
 	
-	char config_path[1024];
-	int length; 
 	unsigned char key, joy_n;
 	FILE *fconfig;
 	
-	strcpy(config_path,getenv("HOME"));
-	length=strlen(config_path);
-	if ((length>0)&&(config_path[length-1]!='/'))
-		strcat(config_path,"/");
-	strcat(config_path,"fbzx_conf");
-	fconfig = fopen(config_path,"wb");
+	fconfig = fopen(filename,"wb");
 	if (fconfig==NULL) {
-		return;
+		return -2; // can't create file
 	}
+	
 	fprintf(fconfig,"mode=%c%c",48+object->mode128k,10);
 	fprintf(fconfig,"issue=%c%c",48+object->issue,10);
 	fprintf(fconfig,"joystick1=%c%c",48+object->joystick[0],10);
@@ -533,6 +527,7 @@ void save_config(struct computer *object) {
 		fprintf(fconfig,"joybutton_%c_%c=%.3d%c",joy_n+48,key+97, object->joybuttonkey[joy_n][key],10);
 	
 	fclose(fconfig);
+	return 0;
 	
 }
 
@@ -642,21 +637,13 @@ int load_config(struct computer *object, char *filename) {
 	
 	char config_path[1024];
 	char line[1024],carac,done;
-	int length,pos, key_sdl=0;
+	int pos, key_sdl=0;
 	FILE *fconfig;
 	unsigned char volume=255,mode128k=255,issue=255,joystick1=255,joystick2=255,ay_emul=255,mdr_active=255,
 	dblscan=255,bw=255, tap_fast=255, joypad1=255, joypad2=255, rumble1=255, rumble2=255, joy_n=255, key_n=255, port=255, autoconf=255;
 	
 	if (filename) strcpy(config_path,filename); 
-	
-	else
-	{
-	strcpy(config_path,getenv("HOME"));
-	length=strlen(config_path);
-	if ((length>0)&&(config_path[length-1]!='/'))
-		strcat(config_path,"/");
-	strcat(config_path,"fbzx_conf");
-	}
+	else return -2;
 	
 	fconfig = fopen(config_path,"rb");
 	if (fconfig==NULL) {
@@ -816,8 +803,10 @@ int load_config(struct computer *object, char *filename) {
 int main(int argc,char *argv[]) {
 
 	int bucle,tstados,argumento,fullscreen,dblbuffer,hwsurface,length;
-	char gamefile[4096];
+	char gamefile[4096],config_path[1024] ;
+	
 	word PC=0;
+	
 
 	// by default, try all sound modes
 	sound_type=SOUND_AUTOMATIC;
@@ -868,7 +857,14 @@ int main(int argc,char *argv[]) {
 	set_volume(16);
 	
 	// load current config
-	load_config(&ordenador, NULL);
+	strcpy(config_path,getenv("HOME"));
+	length=strlen(config_path);
+	if ((length>0)&&(config_path[length-1]!='/'))
+		strcat(config_path,"/");
+	strcat(config_path,"fbzx.conf");	
+	
+	load_config(&ordenador, config_path);
+	
 	printf("Modo: %d\n",ordenador.mode128k);
 	while(argumento<argc) {
 		if ((0==strcmp(argv[argumento],"-h"))||(0==strcmp(argv[argumento],"--help"))) {

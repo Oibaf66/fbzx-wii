@@ -62,9 +62,9 @@ static const char *main_menu_messages[] = {
 		/*05*/		"Wiimote configuration",
 		/*06*/		"^|Wiimote1|Wiimote2",
 		/*07*/		"Emulation settings",
-		/*08*/		"Microdrive",
-		/*09*/		"Tools",
-		/*10*/		"Confs files",
+		/*08*/		"Confs files",
+		/*09*/		"Microdrive",
+		/*10*/		"Tools",
 		/*11*/		"Reset",
 		/*12*/		"Help",
 		/*13*/		"Quit",
@@ -153,13 +153,14 @@ static const char *help_messages[] = {
 };
 
 static const char *confs_messages[] = {
-		/*00*/		"Save general configs",
-		/*01*/		"  ",
-		/*02*/		"Game configurations",
-		/*03*/		"^|Load|Save|Delete",
-		/*04*/		"  ",
-		/*05*/		"Load confs automatically",
-		/*06*/		"^|on|off",
+		/*00*/		"General configurations",
+		/*01*/		"^|Load|Save|Delete",
+		/*02*/		"  ",
+		/*03*/		"Game configurations",
+		/*04*/		"^|Load|Save|Delete",
+		/*05*/		"  ",
+		/*06*/		"Load confs automatically",
+		/*07*/		"^|on|off",
 		NULL
 };
 
@@ -905,7 +906,7 @@ static void save_load_snapshot(int which)
 	}
 }
 
-static void save_load_configurations(int which)
+static void save_load_game_configurations(int which)
 {
 	const char *dir = path_confs;
 	const char *tape = ordenador.last_selected_file;
@@ -913,18 +914,6 @@ static void save_load_configurations(int which)
 	char db[256];
 	char fb[81];
 	int retorno;
-
-	// Name (for saves) - TO CHECK
-	if (tape && strrchr(tape, '/'))
-		strncpy(fb, strrchr(tape, '/') + 1, 80);
-	else
-		strcpy(fb, "unknown");
-		
-	//remove the extension
-	ptr = strrchr (fb, '.');
-		if (ptr) *ptr = 0;	
-	
-	snprintf(db, 255, "%s/%s.conf", dir, fb);
 	
 	switch(which)
 	{
@@ -932,7 +921,7 @@ static void save_load_configurations(int which)
 	case 0: // Load or delete file
 	{
 		const char *filename = menu_select_file(dir, NULL,-1);
-
+		
 		if (!filename)
 			return;
 
@@ -940,7 +929,7 @@ static void save_load_configurations(int which)
 		{
 			if (which == 0) // Load config file
 			{
-				if (!load_config(&ordenador,db)) msgInfo("Configurations loaded",3000,NULL);
+				if (!load_config(&ordenador,db)) msgInfo("Game confs loaded",3000,NULL);
 				break;
 			}
 			else // Delete config file
@@ -949,18 +938,35 @@ static void save_load_configurations(int which)
 		free((void*)filename);
 	} break;
 	case 1: // Save configuration file
+		
+		// Name (for game config saves) - TO CHECK
+		if (tape && strrchr(tape, '/'))
+			strncpy(fb, strrchr(tape, '/') + 1, 80);
+		else
+			{
+			msgInfo("No file selected",3000,NULL);
+			return;
+			}
+		
+		//remove the extension
+		ptr = strrchr (fb, '.');
+		
+		if (ptr) *ptr = 0;	
+	
+		snprintf(db, 255, "%s/%s.conf", dir, fb);
+	
 		retorno=save_config_game(&ordenador,db,0);
 		
 		switch(retorno) 
 			{
 			case 0: //OK
-				msgInfo("Configurations saved",3000,NULL);
+				msgInfo("Game confs saved",3000,NULL);
 				break;
 			case -1:
 				if (msgYesNo("Overwrite the exiting file?", 0, FULL_DISPLAY_X /2-160, FULL_DISPLAY_Y /2-48))
 				{
 					save_config_game(&ordenador,db,1); //force overwrite
-					msgInfo("Configurations saved",3000,NULL);
+					msgInfo("Game confs saved",3000,NULL);
 				}
 				break;
 			case -2:
@@ -972,31 +978,87 @@ static void save_load_configurations(int which)
 		break;
 	}
 }
+static void save_load_general_configurations(int which)
+{
 
+	int retorno;
+	unsigned char old_bw,old_model;
+	char config_path[1024];
+	int length;
+	FILE *fconfig; 
+	
+	strcpy(config_path,getenv("HOME"));
+	length=strlen(config_path);
+	if ((length>0)&&(config_path[length-1]!='/'))
+		strcat(config_path,"/");
+	strcat(config_path,"fbzx.conf");
+	
+	switch(which)
+	{
+	case 2:
+	case 0: // Load or delete file
+	{
+		fconfig = fopen(config_path,"r");
+		if (fconfig==NULL) 
+			{
+			msgInfo("Can not access the file",3000,NULL);
+			return;
+			}
+		else fclose(fconfig);
+		
+			if (which == 0) // Load config file
+			{
+				old_bw = ordenador.bw;
+				old_model= get_machine_model();
+				if (!load_config(&ordenador,config_path)) msgInfo("General confs loaded",3000,NULL);
+				if (old_bw!=ordenador.bw) computer_set_palete();
+				if (old_model != get_machine_model()) ResetComputer();
+				break;
+			}
+			else // Delete config file
+				if (msgYesNo("Delete the file?", 0, FULL_DISPLAY_X /2-138, FULL_DISPLAY_Y /2-48)) unlink(config_path);
+		
+	} break;
+	case 1: // Save configuration file
+		retorno=save_config(&ordenador,config_path);
+		
+		switch(retorno) 
+			{
+			case 0: //OK
+				msgInfo("General confs saved",3000,NULL);
+				break;
+			case -2:
+				msgInfo("Can't create file",3000,NULL);
+				break;
+			}
+		break;
+	default:
+		break;
+	}
+}
 static void manage_configurations()
 {
 	int opt ;
-	int submenus[2];
+	int submenus[3];
 
 	memset(submenus, 0, sizeof(submenus));
 	
-	submenus[1]=!ordenador.autoconf;
+	submenus[2]=!ordenador.autoconf;
 
 	opt = menu_select_title("Configurations file menu",
 			confs_messages, submenus);
 	if (opt < 0)
 		return;
 		
-	ordenador.autoconf=!submenus[1];	
+	ordenador.autoconf=!submenus[2];	
 	
 	switch(opt)
 		{
-		case 0: // Save general configurations 
-			save_config(&ordenador);
-			msgInfo("Configurations saved",3000,NULL);
+		case 0: // Save, load and delete general configurations 
+			save_load_general_configurations(submenus[0]);
 			break;
-		case 2: // Save, load and delete game configurations
-			save_load_configurations(submenus[0]);
+		case 3: // Save, load and delete game configurations
+			save_load_game_configurations(submenus[1]);
 			break;
 		default:
 			break;
@@ -1038,13 +1100,13 @@ void main_menu()
 			emulation_settings();
 			break;	
 		case 8:
-			microdrive();
+			manage_configurations();
 			break;
 		case 9:
-			tools();
+			microdrive();
 			break;	
 		case 10:
-			manage_configurations();
+			tools();
 			break;
 		case 11:
 			ResetComputer ();
@@ -1064,7 +1126,7 @@ void main_menu()
 		default:
 			break;
 		}
-	} while (opt == 5 || opt == 7 || opt == 8 || opt == 12);
+	} while (opt == 5 || opt == 7 || opt == 9 || opt == 12);
 	
 	clean_screen();
 	
