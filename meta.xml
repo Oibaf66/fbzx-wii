@@ -24,7 +24,7 @@ You can also insert a tape file (.tap and .tzx) and then load the file in the ta
  
 If you have problems with a .tap file, likely the TAP file has a program which uses a custom routine to load the blocks; in this case, try to disbale the "Tap fast speed" function.
  
-If you want to speed up the tape file loading (both for .tzx file and .tap file with "tap fast speed" disabled), try to enable "turbo mode" which speeds up the emulator by 4.
+If you want to speed up the tape file loading (both for .tzx file and .tap file with "tap fast speed" disabled), try to enable "turbo mode" which speeds up the emulator by 4 or by 7.
 In this case, do not forget to revert to normal speed after the loading.
 
 The general preferences are saved (joystick type, machine, buttons bindings, etc.) from the main in-game menu and they are loaded on start-up.

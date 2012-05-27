@@ -15,7 +15,7 @@ version 2:
 		
 		-- Fabio Olimpieri <fabio.olimpieri@tin.it> May 13 2012
 version 3:
-	    * Added arrows keys binding to joysticks
+	    	* Added arrows keys binding to joysticks
 		* Added game configuration management 
 		* Changed general configuration management 
 		* Added ultraspeed turbo mode 
