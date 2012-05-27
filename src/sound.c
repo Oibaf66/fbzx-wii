@@ -495,7 +495,7 @@ void sound_play() {
 #ifdef GEKKO
 	case SOUND_ASND: // ASND
 		if (!started_sound_asnd) {
-		ASND_SetVoice(1,VOICE_MONO_8BIT,48000,0,sound[0],ordenador.buffer_len,
+		ASND_SetVoice(1,VOICE_MONO_8BIT_U,48000,0,sound[0],ordenador.buffer_len,
 		MID_VOLUME, MID_VOLUME, callback);
 		started_sound_asnd = 1;
 		}

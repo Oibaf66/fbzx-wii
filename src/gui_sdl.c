@@ -369,6 +369,7 @@ static void emulation_settings(void)
 {
 	unsigned int submenus[7],submenus_old[7];
 	int opt, i;
+	unsigned char old_mode;
 	
 	memset(submenus, 0, sizeof(submenus));
 	
@@ -381,6 +382,7 @@ static void emulation_settings(void)
 	submenus[6] = !ordenador.ay_emul;
 	
 	for (i=0; i<7; i++) submenus_old[i] = submenus[i];
+	old_mode=ordenador.mode128k;
 	
 	opt = menu_select_title("Emulation settings menu",
 			emulation_messages, submenus);
@@ -388,7 +390,7 @@ static void emulation_settings(void)
 		return;
 	
 	set_machine_model(submenus[0]);
-	if (submenus[0] != submenus_old[0]) ResetComputer(); else 
+	if (old_mode!=ordenador.mode128k) ResetComputer(); else 
 	ordenador.ay_emul = !submenus[6];
 	
 	ordenador.volume = submenus[1]*2; //I should use set_volume() ?
@@ -982,7 +984,7 @@ static void save_load_general_configurations(int which)
 {
 
 	int retorno;
-	unsigned char old_bw,old_model;
+	unsigned char old_bw,old_mode;
 	char config_path[1024];
 	int length;
 	FILE *fconfig; 
@@ -1009,10 +1011,10 @@ static void save_load_general_configurations(int which)
 			if (which == 0) // Load config file
 			{
 				old_bw = ordenador.bw;
-				old_model= get_machine_model();
+				old_mode= ordenador.mode128k;
 				if (!load_config(&ordenador,config_path)) msgInfo("General confs loaded",3000,NULL);
 				if (old_bw!=ordenador.bw) computer_set_palete();
-				if (old_model != get_machine_model()) ResetComputer();
+				if (old_mode != ordenador.mode128k) ResetComputer();
 				break;
 			}
 			else // Delete config file

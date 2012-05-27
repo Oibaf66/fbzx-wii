@@ -1344,7 +1344,7 @@ void Z80free_Out (register word Port, register byte Value) {
 
 	if (((Port|maskport) == 0xBFFD)&&(ordenador.ay_emul)) {
 		ordenador.ay_registers[ordenador.ay_latch] = (unsigned char) Value;
-		if (ordenador.ay_latch == 13)
+		if (ordenador.ay_latch == 13) //Envelope shape
 			ordenador.ay_envel_way = 2;	// start cycle
 	}
 }

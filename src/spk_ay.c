@@ -230,7 +230,7 @@ inline void play_ay (unsigned int tstados) {
 				(unsigned
 				 char) ((((unsigned int) ordenador.
 					  ay_envel_value)) *
-					(unsigned int) ordenador.volume) / 15;
+					(unsigned int) ordenador.volume) / 10;
 		else
 			ordenador.vol_a =
 				(unsigned
@@ -238,14 +238,14 @@ inline void play_ay (unsigned int tstados) {
 							  ay_registers[8] &
 							  0x0F)) *
 					 (unsigned int) ordenador.volume) /
-					15);
+					10);
 
 		if (ordenador.ay_registers[10] & 0x10)
 			ordenador.vol_c =
 				(unsigned
 				 char) ((((unsigned int) ordenador.
 					  ay_envel_value)) *
-					(unsigned int) ordenador.volume) / 15;
+					(unsigned int) ordenador.volume) / 10;
 		else
 			ordenador.vol_c =
 				(unsigned
@@ -253,14 +253,14 @@ inline void play_ay (unsigned int tstados) {
 							  ay_registers[10] &
 							  0x0F)) *
 					 (unsigned int) ordenador.volume) /
-					15);
+					10);
 
 		if (ordenador.ay_registers[9] & 0x10)
 			ordenador.vol_b =
 				(unsigned
 				 char) ((((unsigned int) ordenador.
 					  ay_envel_value)) *
-					(unsigned int) ordenador.volume) / 15;
+					(unsigned int) ordenador.volume) / 10;
 		else
 			ordenador.vol_b =
 				(unsigned
@@ -268,7 +268,7 @@ inline void play_ay (unsigned int tstados) {
 							  ay_registers[9] &
 							  0x0F)) *
 					 (unsigned int) ordenador.volume) /
-					15);
+					10);
 
 	}
 }
@@ -292,7 +292,7 @@ inline void play_sound (unsigned int tstados) {
 			for (bucle = 0; bucle < ordenador.increment; bucle++) {
 				sample_v = ordenador.sample1b[bucle];
 				if ((ordenador.sound_bit) && (sample_v)) 
-					ordenador.sound_current_value=ordenador.volume*4;
+					ordenador.sound_current_value=ordenador.volume*6;
 					else ordenador.sound_current_value=0;
 				value = ordenador.sound_current_value;
 				
