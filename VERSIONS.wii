@@ -14,3 +14,16 @@ version 2:
 		* Fixed some other small bugs
 		
 		-- Fabio Olimpieri <fabio.olimpieri@tin.it> May 13 2012
+version 3:
+	    * Added arrows keys binding to joysticks
+		* Added game configuration management 
+		* Changed general configuration management 
+		* Added ultraspeed turbo mode 
+		* Added ULA+ contention
+		* Fixed bug in sound and increased volume
+		* Fixed some bugs in Z80 emulation. Ant Attack works now
+		* Fixed some other small bugs
+		
+		-- Fabio Olimpieri <fabio.olimpieri@tin.it> May 27 2012
+
+
