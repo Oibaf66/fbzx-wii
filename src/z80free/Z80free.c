@@ -214,7 +214,7 @@ inline int Z80free_getFlag(Z80FREE *processor, byte flag) {
  * --------------------------------------------------------- 
  */
 
-static int Z80free_parityBit[256] = { 
+int Z80free_parityBit[256] = { 
 	
 	1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 
 	0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
@@ -560,6 +560,7 @@ void Z80free_doRLD(Z80FREE *processor) {
 
 	Z80free_resFlag(processor,F_H | F_N);
 	Z80free_adjustFlagSZP(processor, processor->Rm.br.A);
+	Z80free_adjustFlags(processor, processor->Rm.br.A);
 	
 }
 
@@ -575,6 +576,7 @@ void Z80free_doRRD(Z80FREE *processor) {
 
 	Z80free_resFlag(processor,F_H | F_N);
 	Z80free_adjustFlagSZP(processor, processor->Rm.br.A);
+	Z80free_adjustFlags(processor, processor->Rm.br.A);
 	
 }
 
@@ -708,6 +710,7 @@ void Z80free_doDAA (Z80FREE *processor) {
 		Z80free_setFlag(processor,F_Z);
 	}
 	Z80free_valFlag(processor,F_PV, Z80free_parityBit[processor->Rm.br.A]);
+	Z80free_adjustFlags(processor, processor->Rm.br.A);
 	
 }
 

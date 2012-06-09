@@ -38,7 +38,7 @@ byte ports[256];
 word portdirs[256];
 int portpos=0,elements=0;
 
-#define NO35
+//#define NO35
 
 int compare_processors() {
 

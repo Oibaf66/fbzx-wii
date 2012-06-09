@@ -311,6 +311,7 @@ int Z80free_codes (Z80FREE *processor,byte opcode) {
 		return (7);
 	break;
 	case 63: // CCF
+		Z80free_valFlag(processor,F_H,(processor->Rm.br.F)&F_C);
 		Z80free_valFlag(processor,F_C,(~processor->Rm.br.F)&F_C);
 		Z80free_resFlag(processor,F_N);
 		Z80free_adjustFlags(processor,processor->Rm.br.A);

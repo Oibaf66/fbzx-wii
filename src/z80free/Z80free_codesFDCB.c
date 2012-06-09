@@ -21,6 +21,7 @@
 
 int Z80free_codesFDCB (Z80FREE *processor,byte d1) {
 	static byte tmp1;
+	static word tmp2;
 	static byte opcode;
 	opcode=Z80free_Rd(processor->PC++);
 
@@ -394,259 +395,387 @@ int Z80free_codesFDCB (Z80FREE *processor,byte d1) {
 		return (19);
 	break;
 	case 64: // BIT 0,(IY+d)
-		Z80free_doBIT(processor,0,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,0,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 65: // BIT 0,(IY+d)
-		Z80free_doBIT(processor,0,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,0,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 66: // BIT 0,(IY+d)
-		Z80free_doBIT(processor,0,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,0,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 67: // BIT 0,(IY+d)
-		Z80free_doBIT(processor,0,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,0,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 68: // BIT 0,(IY+d)
-		Z80free_doBIT(processor,0,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,0,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 69: // BIT 0,(IY+d)
-		Z80free_doBIT(processor,0,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,0,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 70: // BIT 0,(IY+d)
-		Z80free_doBIT(processor,0,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,0,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 71: // BIT 0,(IY+d)
-		Z80free_doBIT(processor,0,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,0,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 72: // BIT 1,(IY+d)
-		Z80free_doBIT(processor,1,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,1,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 73: // BIT 1,(IY+d)
-		Z80free_doBIT(processor,1,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,1,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 74: // BIT 1,(IY+d)
-		Z80free_doBIT(processor,1,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,1,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 75: // BIT 1,(IY+d)
-		Z80free_doBIT(processor,1,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,1,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 76: // BIT 1,(IY+d)
-		Z80free_doBIT(processor,1,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,1,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 77: // BIT 1,(IY+d)
-		Z80free_doBIT(processor,1,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,1,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 78: // BIT 1,(IY+d)
-		Z80free_doBIT(processor,1,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,1,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 79: // BIT 1,(IY+d)
-		Z80free_doBIT(processor,1,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,1,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 80: // BIT 2,(IY+d)
-		Z80free_doBIT(processor,2,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,2,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 81: // BIT 2,(IY+d)
-		Z80free_doBIT(processor,2,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,2,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 82: // BIT 2,(IY+d)
-		Z80free_doBIT(processor,2,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,2,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 83: // BIT 2,(IY+d)
-		Z80free_doBIT(processor,2,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,2,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 84: // BIT 2,(IY+d)
-		Z80free_doBIT(processor,2,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,2,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 85: // BIT 2,(IY+d)
-		Z80free_doBIT(processor,2,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,2,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 86: // BIT 2,(IY+d)
-		Z80free_doBIT(processor,2,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,2,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 87: // BIT 2,(IY+d)
-		Z80free_doBIT(processor,2,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,2,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 88: // BIT 3,(IY+d)
-		Z80free_doBIT(processor,3,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,3,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 89: // BIT 3,(IY+d)
-		Z80free_doBIT(processor,3,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,3,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 90: // BIT 3,(IY+d)
-		Z80free_doBIT(processor,3,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,3,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 91: // BIT 3,(IY+d)
-		Z80free_doBIT(processor,3,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,3,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 92: // BIT 3,(IY+d)
-		Z80free_doBIT(processor,3,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,3,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 93: // BIT 3,(IY+d)
-		Z80free_doBIT(processor,3,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,3,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 94: // BIT 3,(IY+d)
-		Z80free_doBIT(processor,3,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,3,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 95: // BIT 3,(IY+d)
-		Z80free_doBIT(processor,3,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,3,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 96: // BIT 4,(IY+d)
-		Z80free_doBIT(processor,4,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,4,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 97: // BIT 4,(IY+d)
-		Z80free_doBIT(processor,4,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,4,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 98: // BIT 4,(IY+d)
-		Z80free_doBIT(processor,4,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,4,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 99: // BIT 4,(IY+d)
-		Z80free_doBIT(processor,4,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,4,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 100: // BIT 4,(IY+d)
-		Z80free_doBIT(processor,4,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,4,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 101: // BIT 4,(IY+d)
-		Z80free_doBIT(processor,4,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,4,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 102: // BIT 4,(IY+d)
-		Z80free_doBIT(processor,4,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,4,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 103: // BIT 4,(IY+d)
-		Z80free_doBIT(processor,4,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,4,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 104: // BIT 5,(IY+d)
-		Z80free_doBIT(processor,5,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,5,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 105: // BIT 5,(IY+d)
-		Z80free_doBIT(processor,5,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,5,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 106: // BIT 5,(IY+d)
-		Z80free_doBIT(processor,5,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,5,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 107: // BIT 5,(IY+d)
-		Z80free_doBIT(processor,5,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,5,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 108: // BIT 5,(IY+d)
-		Z80free_doBIT(processor,5,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,5,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 109: // BIT 5,(IY+d)
-		Z80free_doBIT(processor,5,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,5,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 110: // BIT 5,(IY+d)
-		Z80free_doBIT(processor,5,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,5,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 111: // BIT 5,(IY+d)
-		Z80free_doBIT(processor,5,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,5,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 112: // BIT 6,(IY+d)
-		Z80free_doBIT(processor,6,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,6,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 113: // BIT 6,(IY+d)
-		Z80free_doBIT(processor,6,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,6,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 114: // BIT 6,(IY+d)
-		Z80free_doBIT(processor,6,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,6,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 115: // BIT 6,(IY+d)
-		Z80free_doBIT(processor,6,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,6,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 116: // BIT 6,(IY+d)
-		Z80free_doBIT(processor,6,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,6,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 117: // BIT 6,(IY+d)
-		Z80free_doBIT(processor,6,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,6,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 118: // BIT 6,(IY+d)
-		Z80free_doBIT(processor,6,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,6,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 119: // BIT 6,(IY+d)
-		Z80free_doBIT(processor,6,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,6,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 120: // BIT 7,(IY+d)
-		Z80free_doBIT(processor,7,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,7,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 121: // BIT 7,(IY+d)
-		Z80free_doBIT(processor,7,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,7,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 122: // BIT 7,(IY+d)
-		Z80free_doBIT(processor,7,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,7,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 123: // BIT 7,(IY+d)
-		Z80free_doBIT(processor,7,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,7,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 124: // BIT 7,(IY+d)
-		Z80free_doBIT(processor,7,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,7,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 125: // BIT 7,(IY+d)
-		Z80free_doBIT(processor,7,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,7,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 126: // BIT 7,(IY+d)
-		Z80free_doBIT(processor,7,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,7,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 127: // BIT 7,(IY+d)
-		Z80free_doBIT(processor,7,Z80free_Rd(Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1)));
+		tmp2=Z80free_addr_relativeXDCB(processor,processor->Rm.wr.IY,d1);
+		Z80free_doBIT(processor,7,Z80free_Rd(tmp2));
+		Z80free_adjustFlags (processor, ((byte) (tmp2>>8)));
 		return (16);
 	break;
 	case 128: // LD_RES B,0,(IY+d)
