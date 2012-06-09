@@ -944,39 +944,38 @@ inline void read_keyboard () {
 	{ //Joypad as Joystick
 	 switch (ordenador.joystick[joy_n]) {
 		case 0:	// cursor
-			if ((status_hat[joy_n] & SDL_HAT_UP)||(joybutton_matrix[joy_n][SDLK_UP])) ordenador.k12|= 8;
-			if ((status_hat[joy_n] & SDL_HAT_DOWN)||(joybutton_matrix[joy_n][SDLK_DOWN])) ordenador.k12|= 16;
-			if ((status_hat[joy_n] & SDL_HAT_RIGHT)||(joybutton_matrix[joy_n][SDLK_RIGHT])) ordenador.k12|= 4;
-			if ((status_hat[joy_n] & SDL_HAT_LEFT)||(joybutton_matrix[joy_n][SDLK_LEFT])) ordenador.k11|= 16;
+			if ((ordenador.joy_axis_y_state[joy_n] == JOY_UP)||(status_hat[joy_n] & SDL_HAT_UP)) ordenador.k12|= 8;
+			if ((ordenador.joy_axis_y_state[joy_n] == JOY_DOWN) ||(status_hat[joy_n] & SDL_HAT_DOWN)) ordenador.k12|= 16;
+			if ((ordenador.joy_axis_x_state[joy_n] == JOY_RIGHT)||(status_hat[joy_n] & SDL_HAT_RIGHT)) ordenador.k12|= 4;
+			if ((ordenador.joy_axis_x_state[joy_n] == JOY_LEFT)||(status_hat[joy_n] & SDL_HAT_LEFT)) ordenador.k11|= 16;
 			if (joybutton_matrix[joy_n][SDLK_LALT]) {ordenador.k12|= 1; fire_on[joy_n]=1;}//fire button
 		break; 
 			
 		case 1: //Kempston
-			if ((status_hat[joy_n] & SDL_HAT_UP)||(joybutton_matrix[joy_n][SDLK_UP])) ordenador.jk|= 8;
-			if ((status_hat[joy_n] & SDL_HAT_DOWN)||(joybutton_matrix[joy_n][SDLK_DOWN])) ordenador.jk|= 4;
-			if ((status_hat[joy_n] & SDL_HAT_RIGHT)||(joybutton_matrix[joy_n][SDLK_RIGHT])) ordenador.jk|= 1;
-			if ((status_hat[joy_n] & SDL_HAT_LEFT)||(joybutton_matrix[joy_n][SDLK_LEFT])) ordenador.jk|= 2;
+			if ((ordenador.joy_axis_y_state[joy_n] == JOY_UP)||(status_hat[joy_n] & SDL_HAT_UP)) ordenador.jk|= 8;
+			if ((ordenador.joy_axis_y_state[joy_n] == JOY_DOWN)||(status_hat[joy_n] & SDL_HAT_DOWN)) ordenador.jk|= 4;
+			if ((ordenador.joy_axis_x_state[joy_n] == JOY_RIGHT)||(status_hat[joy_n] & SDL_HAT_RIGHT)) ordenador.jk|= 1;
+			if ((ordenador.joy_axis_x_state[joy_n] == JOY_LEFT)||(status_hat[joy_n] & SDL_HAT_LEFT)) ordenador.jk|= 2;
 			if (joybutton_matrix[joy_n][SDLK_LALT]) {ordenador.jk |= 16; fire_on[joy_n]=1;}//fire button
 		break;
 		
 		case 2:	// sinclair 1
-			if ((status_hat[joy_n] & SDL_HAT_UP)||(joybutton_matrix[joy_n][SDLK_UP])) ordenador.k11|= 8;
-			if ((status_hat[joy_n] & SDL_HAT_DOWN)||(joybutton_matrix[joy_n][SDLK_DOWN])) ordenador.k11|= 4;
-			if ((status_hat[joy_n] & SDL_HAT_RIGHT)||(joybutton_matrix[joy_n][SDLK_RIGHT])) ordenador.k11|= 2;
-			if ((status_hat[joy_n] & SDL_HAT_LEFT) ||(joybutton_matrix[joy_n][SDLK_LEFT]))ordenador.k11|= 1;
+			if ((ordenador.joy_axis_y_state[joy_n] == JOY_UP)||(status_hat[joy_n] & SDL_HAT_UP)) ordenador.k11|= 8;
+			if ((ordenador.joy_axis_y_state[joy_n] == JOY_DOWN)||(status_hat[joy_n] & SDL_HAT_DOWN)) ordenador.k11|= 4;
+			if ((ordenador.joy_axis_x_state[joy_n] == JOY_RIGHT)||(status_hat[joy_n] & SDL_HAT_RIGHT)) ordenador.k11|= 2;
+			if ((ordenador.joy_axis_x_state[joy_n] == JOY_LEFT)||(status_hat[joy_n] & SDL_HAT_LEFT))ordenador.k11|= 1;
 			if (joybutton_matrix[joy_n][SDLK_LALT]) {ordenador.k11|= 16;fire_on[joy_n]=1;}	//fire button
 		break;
 		
 		case 3:	// sinclair 2
-			if ((status_hat[joy_n] & SDL_HAT_UP)||(joybutton_matrix[joy_n][SDLK_UP])) ordenador.k12|= 2;
-			if ((status_hat[joy_n] & SDL_HAT_DOWN)||(joybutton_matrix[joy_n][SDLK_DOWN])) ordenador.k12|= 4;
-			if ((status_hat[joy_n] & SDL_HAT_RIGHT)||(joybutton_matrix[joy_n][SDLK_RIGHT])) ordenador.k12|= 8;
-			if ((status_hat[joy_n] & SDL_HAT_LEFT)||(joybutton_matrix[joy_n][SDLK_LEFT])) ordenador.k12|= 16;
+			if ((ordenador.joy_axis_y_state[joy_n] == JOY_UP)||(status_hat[joy_n] & SDL_HAT_UP)) ordenador.k12|= 2;
+			if ((ordenador.joy_axis_y_state[joy_n] == JOY_DOWN)||(status_hat[joy_n] & SDL_HAT_DOWN)) ordenador.k12|= 4;
+			if ((ordenador.joy_axis_x_state[joy_n] == JOY_RIGHT)||(status_hat[joy_n] & SDL_HAT_RIGHT)) ordenador.k12|= 8;
+			if ((ordenador.joy_axis_x_state[joy_n] == JOY_LEFT)||(status_hat[joy_n] & SDL_HAT_LEFT)) ordenador.k12|= 16;
 			if (joybutton_matrix[joy_n][SDLK_LALT]) {ordenador.k12|= 1; fire_on[joy_n]=1;}//fire button
 		break;
 		}
 	}
-	
 	
 		#ifdef GEKKO
 		//Wiimote Rumble
