@@ -184,29 +184,39 @@ inline void play_ay (unsigned int tstados) {
 		tone_period_b= ((unsigned int) ordenador.ay_registers[2]) + 256 * ((unsigned int) ((ordenador.ay_registers[3]) & 0x0F));
 		tone_period_c= ((unsigned int) ordenador.ay_registers[4]) + 256 * ((unsigned int) ((ordenador.ay_registers[5]) & 0x0F));
 		noise_period= ((unsigned int) ordenador.ay_registers[6]) & 0x1F;
-	
 		
-		if (!tone_period_a) tone_period_a = 1;
-		if (!tone_period_b) tone_period_b = 1;
-		if (!tone_period_c) tone_period_c = 1;
 		if (!noise_period) noise_period = 1;
 	
-		if (ordenador.aych_a<tone_period_a)
-			ordenador.aych_a++;
+		if (tone_period_a*ordenador.freq<110841)  //Freq_camp > cpufreq/(2*16*tone_period)
+			ordenador.aych_a =1;
 		else
 		{
-			ordenador.ayval_a = !ordenador.ayval_a;
-			ordenador.aych_a =0;		
+			if (ordenador.aych_a<tone_period_a)
+				ordenador.aych_a++;
+			else
+			{
+				ordenador.ayval_a = !ordenador.ayval_a;
+				ordenador.aych_a =0;		
+			}
 		}
 
-		if (ordenador.aych_b<tone_period_b)
-			ordenador.aych_b++;
+		if (tone_period_b*ordenador.freq<110841)  //Freq_camp > cpufreq/(2*16*tone_period)
+			ordenador.aych_b =1;
 		else
 		{
-			ordenador.ayval_b = !ordenador.ayval_b;
-			ordenador.aych_b =0;			
+			if (ordenador.aych_b<tone_period_b)
+				ordenador.aych_b++;
+			else
+			{
+				ordenador.ayval_b = !ordenador.ayval_b;
+				ordenador.aych_b =0;			
+			}
 		}
 		
+		if (tone_period_c*ordenador.freq<110841)  //Freq_camp > cpufreq/(2*16*tone_period)
+			ordenador.aych_c =1;
+		else
+		{
 		if (ordenador.aych_c<tone_period_c)
 			ordenador.aych_c++;
 		else
@@ -214,7 +224,7 @@ inline void play_ay (unsigned int tstados) {
 			ordenador.ayval_c = !ordenador.ayval_c;
 			ordenador.aych_c =0;			
 		}
-		
+		}
 	
 		if (ordenador.aych_n<noise_period)
 			ordenador.aych_n++;
