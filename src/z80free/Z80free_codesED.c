@@ -243,7 +243,7 @@ int Z80free_codesED (Z80FREE *processor,byte opcode) {
 		return (4);
 	break;
 	case 69: // RETN
-		processor->IFF1=(processor->IFF2 ? 2 : 0);
+		processor->IFF1=processor->IFF2;
 		processor->PC=Z80free_doPop(processor);
 		return (10);
 	break;
@@ -279,8 +279,7 @@ int Z80free_codesED (Z80FREE *processor,byte opcode) {
 		return (4);
 	break;
 	case 77: // RETI
-		processor->IFF1=2;
-		processor->IFF2=1;
+		processor->IFF1=processor->IFF2;
 		processor->PC=Z80free_doPop(processor);
 		return (10);
 	break;
@@ -316,7 +315,7 @@ int Z80free_codesED (Z80FREE *processor,byte opcode) {
 		return (4);
 	break;
 	case 85: // RETN
-		processor->IFF1=(processor->IFF2 ? 2 : 0);
+		processor->IFF1=processor->IFF2;
 		processor->PC=Z80free_doPop(processor);
 		return (10);
 	break;
@@ -352,7 +351,7 @@ int Z80free_codesED (Z80FREE *processor,byte opcode) {
 		return (4);
 	break;
 	case 93: // RETN
-		processor->IFF1=(processor->IFF2 ? 2 : 0);
+		processor->IFF1=processor->IFF2;
 		processor->PC=Z80free_doPop(processor);
 		return (10);
 	break;
@@ -388,7 +387,7 @@ int Z80free_codesED (Z80FREE *processor,byte opcode) {
 		return (4);
 	break;
 	case 101: // RETN
-		processor->IFF1=(processor->IFF2 ? 2 : 0);
+		processor->IFF1=processor->IFF2;
 		processor->PC=Z80free_doPop(processor);
 		return (10);
 	break;
@@ -424,7 +423,7 @@ int Z80free_codesED (Z80FREE *processor,byte opcode) {
 		return (4);
 	break;
 	case 109: // RETN
-		processor->IFF1=(processor->IFF2 ? 2 : 0);
+		processor->IFF1=processor->IFF2;
 		processor->PC=Z80free_doPop(processor);
 		return (10);
 	break;
@@ -460,7 +459,7 @@ int Z80free_codesED (Z80FREE *processor,byte opcode) {
 		return (4);
 	break;
 	case 117: // RETN
-		processor->IFF1=(processor->IFF2 ? 2 : 0);
+		processor->IFF1=processor->IFF2;
 		processor->PC=Z80free_doPop(processor);
 		return (10);
 	break;
@@ -495,7 +494,7 @@ int Z80free_codesED (Z80FREE *processor,byte opcode) {
 		return (4);
 	break;
 	case 125: // RETN
-		processor->IFF1=(processor->IFF2 ? 2 : 0);
+		processor->IFF1=processor->IFF2;
 		processor->PC=Z80free_doPop(processor);
 		return (10);
 	break;
