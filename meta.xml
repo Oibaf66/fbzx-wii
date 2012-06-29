@@ -2,8 +2,8 @@
   <app version="1">
     <name>FBZX Wii</name>
     <coder>Oibaf</coder>
-    <version>3.0</version>
-    <release_date>20120527</release_date>
+    <version>4.0</version>
+    <release_date>20120629</release_date>
     <short_description>ZX Spectrum Emulator</short_description>
     <long_description>A ZX Spectrum emulator for FrameBuffer written by Sergio Costas, see http://www.rastersoft.com/fbzx.html.
 The port to Wii was done by Fabio Olimpieri.

@@ -1,19 +1,11 @@
-
-version 1:
-		* Initial release
-
-		-- Fabio Olimpieri <fabio.olimpieri@tin.it> May 1 2012
-
-version 2:
-		* Added smb support
-		* Added usb disk support
-		* Added joypad as joystick function
-		* Added saving of all configurations and buttons 
-		* Improved virtual keyboard
-		* Fixed bug in sound emulation  
-		* Fixed some other small bugs
+version 4:
+	    * Fixed RETN and RETI Z80 instructions
+	    * In Joypad mode, the nunchuck works now
+	    * New code for Y-3-8912 emulation
+	    * Fixed Flag emulation for many Z80 opcodes: Speedlock loader works now 		
 		
-		-- Fabio Olimpieri <fabio.olimpieri@tin.it> May 13 2012
+		-- Fabio Olimpieri <fabio.olimpieri@tin.it> June 29 2012
+
 version 3:
 	    	* Added arrows keys binding to joysticks
 		* Added game configuration management 
@@ -25,5 +17,21 @@ version 3:
 		* Fixed some other small bugs
 		
 		-- Fabio Olimpieri <fabio.olimpieri@tin.it> May 27 2012
+
+version 2:
+		* Added smb support
+		* Added usb disk support
+		* Added joypad as joystick function
+		* Added saving of all configurations and buttons 
+		* Improved virtual keyboard
+		* Fixed bug in sound emulation  
+		* Fixed some other small bugs
+		
+		-- Fabio Olimpieri <fabio.olimpieri@tin.it> May 13 2012
+
+version 1:
+		* Initial release
+
+		-- Fabio Olimpieri <fabio.olimpieri@tin.it> May 1 2012
 
 
