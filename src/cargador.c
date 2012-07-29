@@ -591,9 +591,10 @@ void load_snap(struct z80snapshot *snap) {
   	printf("Mode 128K\n");
     ordenador.mode128k=1; // 128k mode
     ordenador.issue=3;
+	ordenador.videosystem=0;
     ResetComputer();
     printf("Pager: %X\n",snap->pager);
-    Z80free_Out(0x7FFD,snap->pager);
+    Z80free_Out_fake(0x7FFD,snap->pager);
     break;
   default:
     break;
@@ -642,7 +643,7 @@ void load_snap(struct z80snapshot *snap) {
 	printf("IFF1:%x IFF2:%x\n",snap->IFF1,snap->IFF1);
   procesador.IM=snap->Imode;
   printf("IM:%x\n",snap->Imode);
-  Z80free_Out(0xFFFE,((snap->border&0x07)|0x10));
+  Z80free_Out_fake(0xFFFE,((snap->border&0x07)|0x10));
 
   switch(snap->type) {
   case 0: // 48K

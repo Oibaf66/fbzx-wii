@@ -743,7 +743,7 @@ void fastload_block (FILE * fichero) {
 			salir = 2;
 		if (!salir) {
 			retval=fread (value, 1, 1, fichero);	// read byte
-			Z80free_Wr (procesador.Rm.wr.IX, (byte) value[0]);	// store the byte
+			Z80free_Wr_fake (procesador.Rm.wr.IX, (byte) value[0]);	// store the byte
 			procesador.Rm.wr.IX++;
 			procesador.Rm.wr.DE--;
 			longitud--;

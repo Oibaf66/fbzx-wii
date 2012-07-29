@@ -67,8 +67,8 @@ void draw()
 	int y,x;
 	int screen_w = VirtualKeyboard.screen->w;
 	int screen_h = VirtualKeyboard.screen->h;
-	int key_w = 54;
-	int key_h = 36;
+	int key_w = 54/RATIO;
+	int key_h = 36/RATIO;
 	int border_x = (screen_w - (key_w * KEY_COLS)) / 2;
 	int border_y = (screen_h - (key_h * KEY_ROWS)) / 2;
 	SDL_Rect bg_rect = {border_x, border_y,
@@ -170,7 +170,7 @@ struct virtkey *get_key_internal()
 struct virtkey* get_key()
 {
 	virtkey_t *key;
-	SDL_Rect rect = {32, 120, FULL_DISPLAY_X-64, FULL_DISPLAY_Y-250};
+	SDL_Rect rect = {32/RATIO, 120/RATIO, FULL_DISPLAY_X-64/RATIO, FULL_DISPLAY_Y-250/RATIO};
 	
 	keys[3 * KEY_COLS + 0 ].is_done = 0; //Caps Shit
 	keys[3 * KEY_COLS + 8 ].is_done = 0; //Sym Shift

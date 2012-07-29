@@ -31,7 +31,7 @@
 #include "emulator.h"
 #include "VirtualKeyboard.h"
 #include "tape.h"
-//#include "menus.h"
+#include "menus.h"
 #include "emulator.h"
 #include "cargador.h"
 
@@ -62,30 +62,43 @@ static const char *main_menu_messages[] = {
 		/*05*/		"Wiimote configuration",
 		/*06*/		"^|Wiimote1|Wiimote2",
 		/*07*/		"Emulation settings",
-		/*08*/		"Confs files",
-		/*09*/		"Microdrive",
-		/*10*/		"Tools",
-		/*11*/		"Reset",
-		/*12*/		"Help",
-		/*13*/		"Quit",
+		/*08*/		"Screen settings",
+		/*09*/		"Confs files",
+		/*10*/		"Microdrive",
+		/*11*/		"Tools",
+		/*12*/		"Reset",
+		/*13*/		"Help",
+		/*14*/		"Quit",
 		NULL
 };
 
 static const char *emulation_messages[] = {
 		/*00*/		"Emulated machine",
-		/*01*/		"^|48k_2|48K_3|128k|+2|+2A/+3|128K_Sp",
+		/*01*/		"^|48k_2|48K_3|128k|+2|+2A/+3|128K_Sp|NTSC",
 		/*02*/		"Volume",
 		/*03*/		"^|0|1|2|3|4|5|6|7|max",
-		/*04*/		"Tap fast speed",
-		/*05*/		"^|on|off",
-		/*06*/		"Turbo mode",
-		/*07*/		"^|off|speed|ultraspeed",
-		/*08*/		"Double scan",
-		/*09*/		"^|on|off",
-		/*10*/		"TV mode",
-		/*11*/		"^|Color|B&W",
+		/*04*/		"Frame rate",
+		/*05*/		"^|100%|50%|33%|25%|20%",
+		/*06*/		"Tap fast speed",
+		/*07*/		"^|on|off",
+		/*08*/		"Turbo mode",
+		/*09*/		"^|off|speed|ultraspeed",
+		/*10*/		"Precision",
+		/*11*/		"^|on|off",
 		/*12*/		"AY-3-8912 Emulation",
 		/*13*/		"^|on|off",		
+		NULL
+};
+
+static const char *screen_messages[] = {
+		/*00*/		"Double scan",
+		/*01*/		"^|on|off",
+		/*02*/		"  ",
+		/*03*/		"TV mode",
+		/*04*/		"^|Color|B&W",
+		/*05*/		"  ",
+		/*06*/		"Resolution",
+		/*07*/		"^|640X480|320X240",		
 		NULL
 };
 
@@ -264,7 +277,7 @@ static void delete_tape()
 	
 	if ((ext_matches(filename, ".tap")|ext_matches(filename, ".TAP")|ext_matches(filename, ".tzx")|
 	ext_matches(filename, ".TZX"))
-	&& (msgYesNo("Delete the file?", 0, FULL_DISPLAY_X /2-138, FULL_DISPLAY_Y /2-48))) unlink(filename);
+	&& (msgYesNo("Delete the file?", 0, FULL_DISPLAY_X /2-138/RATIO, FULL_DISPLAY_Y /2-48/RATIO))) unlink(filename);
 	
 	free((void *)filename);
 }
@@ -323,7 +336,9 @@ static void manage_tape(int which)
 
 static unsigned int get_machine_model(void)
 {
-	return  ordenador.mode128k + (ordenador.issue==3);
+	if (ordenador.videosystem == 0)
+	return  (ordenador.mode128k + (ordenador.issue==3));
+	else return (6); 
 }
 
 static void set_machine_model(int which)
@@ -334,34 +349,45 @@ static void set_machine_model(int which)
 			ordenador.issue=2;
 			ordenador.mode128k=0;
 			ordenador.ay_emul=0;
+			ordenador.videosystem =0;
 		break;
 	case 1: //48k issue3
 			ordenador.issue=3;
 			ordenador.mode128k=0;
 			ordenador.ay_emul=0;
+			ordenador.videosystem =0;
 		break;
 	case 2: //128k
 			ordenador.issue=3;
 			ordenador.mode128k=1;
 			ordenador.ay_emul=1;
+			ordenador.videosystem =0;
 		break;
 	case 3: //Amstrad +2
 			ordenador.issue=3;
 			ordenador.mode128k=2;
 			ordenador.ay_emul=1;
+			ordenador.videosystem =0;
 		break;
 	case 4: //Amstrad +2A/+3
 			ordenador.issue=3;
 			ordenador.mode128k=3;
 			ordenador.ay_emul=1;
 			ordenador.mdr_active=0;
+			ordenador.videosystem =0;
 		break;
 	case 5: //128K Spanish
 			ordenador.issue=3;
 			ordenador.mode128k=4;
 			ordenador.ay_emul=1;
-		break;	
-	
+			ordenador.videosystem =0;
+		break;
+	case 6: //48k ntsc
+			ordenador.issue=3;
+			ordenador.mode128k=0;
+			ordenador.ay_emul=0;
+			ordenador.videosystem =1;
+		break;
 	}
 }
 
@@ -369,20 +395,21 @@ static void emulation_settings(void)
 {
 	unsigned int submenus[7],submenus_old[7];
 	int opt, i;
-	unsigned char old_mode;
+	unsigned char old_mode, old_videosystem;
 	
 	memset(submenus, 0, sizeof(submenus));
 	
 	submenus[0] = get_machine_model();
 	submenus[1] = ordenador.volume/2;
-	submenus[2] = !ordenador.tape_fast_load;
-	submenus[3] = ordenador.turbo;
-	submenus[4] = !ordenador.dblscan;
-	submenus[5] = ordenador.bw;
+	submenus[2] = jump_frames;
+	submenus[3] = !ordenador.tape_fast_load;
+	submenus[4] = ordenador.turbo;
+	submenus[5] = !ordenador.precision;
 	submenus[6] = !ordenador.ay_emul;
 	
 	for (i=0; i<7; i++) submenus_old[i] = submenus[i];
 	old_mode=ordenador.mode128k;
+	old_videosystem = ordenador.videosystem;
 	
 	opt = menu_select_title("Emulation settings menu",
 			emulation_messages, submenus);
@@ -390,36 +417,72 @@ static void emulation_settings(void)
 		return;
 	
 	set_machine_model(submenus[0]);
-	if (old_mode!=ordenador.mode128k) ResetComputer(); else 
+	if ((old_mode!=ordenador.mode128k)||(old_videosystem!=ordenador.videosystem)) ResetComputer(); else 
 	ordenador.ay_emul = !submenus[6];
 	
 	ordenador.volume = submenus[1]*2; //I should use set_volume() ?
-	ordenador.tape_fast_load = !submenus[2];
-	ordenador.turbo = submenus[3];
+	jump_frames = submenus[2];
+	ordenador.tape_fast_load = !submenus[3];
+	ordenador.turbo = submenus[4];
 	
 	curr_frames=0;
+	if (submenus[4] != submenus_old[4])
+	{
 	switch(ordenador.turbo)
 	{
 	case 0: //off
-		ordenador.tst_sample=3500000/ordenador.freq;
+		update_frequency(0); //set machine frequency
 		jump_frames=0;
 		break;	
 	case 1:	//speed	
-		ordenador.tst_sample=12000000/ordenador.freq; //5,0 MHz max emulation speed for wii at full frames
-		jump_frames=3;
+		update_frequency(10000000);
+		jump_frames=4;
+		ordenador.precision =0;
 		break;
-	case 2:	//very speed
-		ordenador.tst_sample=20000000/ordenador.freq;
+	case 2:	//ultra speed
+		update_frequency(15000000);
 		jump_frames=24;
+		ordenador.precision =0;
 		break;
 	default:
 		break;	
 	}
+	}
 	
-	ordenador.dblscan = !submenus[4];
-	ordenador.bw = submenus[5]; 
-	if (submenus[5]!=submenus_old[5]) computer_set_palete();
+	if (ordenador.turbo==0) ordenador.precision = !submenus[5];
+}
+
+static void save_load_general_configurations(int);
+
+static void screen_settings(void)
+{
+	unsigned int submenus[3],submenus_old[3];
+	int opt, i;
 	
+	memset(submenus, 0, sizeof(submenus));
+	
+	submenus[0] = !ordenador.dblscan;
+	submenus[1] = ordenador.bw;
+	submenus[2] = ordenador.zaurus_mini?1:0;
+	
+	for (i=0; i<3; i++) submenus_old[i] = submenus[i];
+	
+	
+	opt = menu_select_title("Screen settings menu",
+			screen_messages, submenus);
+	if (opt < 0)
+		return;
+	
+	ordenador.dblscan = !submenus[0];
+	ordenador.bw = submenus[1]; 
+	if (submenus[1]!=submenus_old[1]) computer_set_palete();
+	
+	if (submenus[2] != submenus_old[2])
+	{
+		if (submenus[2]==0) {ordenador.zaurus_mini = 0; ordenador.text_mini=0;}
+		else {ordenador.zaurus_mini = 3; ordenador.text_mini=1;}
+	    restart_video();
+	}	
 }
 
 static void setup_joystick(int joy, unsigned int sdl_key, int joy_key)
@@ -544,7 +607,7 @@ static void delete_mdr()
 		return; 
 	
 	if ((ext_matches(filename, ".mdr")|ext_matches(filename, ".MDR"))
-	&& (msgYesNo("Delete the file?", 0, FULL_DISPLAY_X /2-138, FULL_DISPLAY_Y /2-48))) unlink(filename);
+	&& (msgYesNo("Delete the file?", 0, FULL_DISPLAY_X /2-138/RATIO, FULL_DISPLAY_Y /2-48/RATIO))) unlink(filename);
 	
 	free((void *)filename);
 }
@@ -707,7 +770,7 @@ static void save_scr()
 	if(fichero!=NULL)
 	{	
 		fclose(fichero);
-		if (!msgYesNo("Overwrite the exiting file?", 0, FULL_DISPLAY_X /2-160, FULL_DISPLAY_Y /2-48))
+		if (!msgYesNo("Overwrite the exiting file?", 0, FULL_DISPLAY_X /2-160/RATIO, FULL_DISPLAY_Y /2-48/RATIO))
 			return; // file already exists
 	}
 	
@@ -781,7 +844,7 @@ static void tools()
 	memset(submenus, 0, sizeof(submenus));
 
 	submenus[0] = ordenador.port;
-
+	
 	opt = menu_select_title("Tools menu",
 			tools_messages, submenus);
 	if (opt < 0)
@@ -792,7 +855,7 @@ static void tools()
 	switch(opt)
 		{
 		case 0: // Show keyboard 
-			show_keyboard_layout();
+			if (ordenador.zaurus_mini == 0) show_keyboard_layout(); else msgInfo("No picture available in 320X240 resolution",3000,NULL);
 			break;
 		case 2: // Save SCR
 			save_scr();
@@ -879,7 +942,7 @@ static void save_load_snapshot(int which)
 				}
 			}
 			else // Delete snashot file
-				if (msgYesNo("Delete the file?", 0, FULL_DISPLAY_X /2-138, FULL_DISPLAY_Y /2-48)) unlink(filename);
+				if (msgYesNo("Delete the file?", 0, FULL_DISPLAY_X /2-138/RATIO, FULL_DISPLAY_Y /2-48/RATIO)) unlink(filename);
 		}	
 		free((void*)filename);
 	} break;
@@ -892,7 +955,7 @@ static void save_load_snapshot(int which)
 				msgInfo("Snapshot saved",3000,NULL);
 				break;
 			case -1:
-				if (msgYesNo("Overwrite the exiting file?", 0, FULL_DISPLAY_X /2-160, FULL_DISPLAY_Y /2-48))
+				if (msgYesNo("Overwrite the exiting file?", 0, FULL_DISPLAY_X /2-160/RATIO, FULL_DISPLAY_Y /2-48/RATIO))
 				{
 					save_z80(db,1); //force overwrite
 					msgInfo("Snapshot saved",3000,NULL);
@@ -935,7 +998,7 @@ static void save_load_game_configurations(int which)
 				break;
 			}
 			else // Delete config file
-				if (msgYesNo("Delete the file?", 0, FULL_DISPLAY_X /2-138, FULL_DISPLAY_Y /2-48)) unlink(filename);
+				if (msgYesNo("Delete the file?", 0, FULL_DISPLAY_X /2-138/RATIO, FULL_DISPLAY_Y /2-48/RATIO)) unlink(filename);
 		}	
 		free((void*)filename);
 	} break;
@@ -965,7 +1028,7 @@ static void save_load_game_configurations(int which)
 				msgInfo("Game confs saved",3000,NULL);
 				break;
 			case -1:
-				if (msgYesNo("Overwrite the exiting file?", 0, FULL_DISPLAY_X /2-160, FULL_DISPLAY_Y /2-48))
+				if (msgYesNo("Overwrite the exiting file?", 0, FULL_DISPLAY_X /2-160/RATIO, FULL_DISPLAY_Y /2-48/RATIO))
 				{
 					save_config_game(&ordenador,db,1); //force overwrite
 					msgInfo("Game confs saved",3000,NULL);
@@ -1018,7 +1081,7 @@ static void save_load_general_configurations(int which)
 				break;
 			}
 			else // Delete config file
-				if (msgYesNo("Delete the file?", 0, FULL_DISPLAY_X /2-138, FULL_DISPLAY_Y /2-48)) unlink(config_path);
+				if (msgYesNo("Delete the file?", 0, FULL_DISPLAY_X /2-138/RATIO, FULL_DISPLAY_Y /2-48/RATIO)) unlink(config_path);
 		
 	} break;
 	case 1: // Save configuration file
@@ -1100,17 +1163,20 @@ void main_menu()
 			break;
 		case 7:
 			emulation_settings();
-			break;	
+			break;
 		case 8:
-			manage_configurations();
+			screen_settings();
 			break;
 		case 9:
+			manage_configurations();
+			break;
+		case 10:
 			microdrive();
 			break;	
-		case 10:
+		case 11:
 			tools();
 			break;
-		case 11:
+		case 12:
 			ResetComputer ();
 			ordenador.pause = 1;
 			if (ordenador.tap_file != NULL) {
@@ -1118,17 +1184,17 @@ void main_menu()
 				rewind_tape (ordenador.tap_file,1);				
 			}
 			break;	
-		case 12:
+		case 13:
 			help();
 			break;
-		case 13:
-			if (msgYesNo("Are you sure to quit?", 0, FULL_DISPLAY_X /2-138, FULL_DISPLAY_Y /2-48)) 
+		case 14:
+			if (msgYesNo("Are you sure to quit?", 0, FULL_DISPLAY_X /2-138/RATIO, FULL_DISPLAY_Y /2-48/RATIO)) 
 				{salir = 0;}	
 			break;
 		default:
 			break;
 		}
-	} while (opt == 5 || opt == 7 || opt == 9 || opt == 12);
+	} while (opt == 5 || opt == 7 || opt == 10 || opt == 13);
 	
 	clean_screen();
 	

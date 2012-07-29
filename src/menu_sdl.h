@@ -38,8 +38,10 @@
 #define KEY_PAGEDOWN  64
 #define KEY_PAGEUP   128
 #define KEY_HELP     256
-#define FULL_DISPLAY_X 640
-#define FULL_DISPLAY_Y 480
+
+int FULL_DISPLAY_X; //640
+int FULL_DISPLAY_Y; //480
+int RATIO;
 
 
 void menu_print_font(SDL_Surface *screen, int r, int g, int b, int x, int y, const char *msg, int font_size);
@@ -57,6 +59,8 @@ extern void msgKill(SDL_Rect *rc);
 extern int msgInfo(char *text, int duration, SDL_Rect *rc);
 
 extern int msgYesNo(char *text, int def,int x, int y);
+
+void font_init();
 
 void menu_init(SDL_Surface *screen);
 

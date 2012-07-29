@@ -36,6 +36,7 @@ int countdown;
 
 struct computer {
 
+	unsigned char precision; //If set 1 emulate with more precision
 	unsigned int temporal_io;
 
 	// screen private global variables
@@ -52,7 +53,7 @@ struct computer {
 
 	unsigned int *p_translt,*p_translt2;
 	unsigned char *pixel; // current address
-	char border,flash;
+	char border,flash, border_p;
 	int currline,currpix;
 
 	int tstados_counter; // counts tstates leaved to the next call
@@ -67,8 +68,18 @@ struct computer {
 	int next_pixel; // next pixel
 	int pixancho,pixalto; // maximum pixel value for width and height
 	int jump_pixel;
+	int upper_border_line; //63 or 62 for 48k or 128k
+	int lower_border_line; //upper_border_line + 192
+	int start_screen; //Pixel at which the interrupt is generated
+	int cpufreq; //frequency CPU
+	int tstatodos_frame; //number of tstados per frame
+	int pixels_octect; //2 bits in the octect
+	int pixels_word; //2 bits in the word
+	int start_contention; //start tstados for contention
+	int end_contention; //end tstados for contention
+	
 	unsigned char screen_snow; // 0-> no emulate snow; 1-> emulate snow
-	unsigned char contended_zone; // 0-> no contention; 1-> contention possible
+	//unsigned char contended_zone; // 0-> no contention; 1-> contention possible
 	int cicles_counter; // counts how many pixel clock cicles passed since las interrupt
 
 	char ulaplus; // 0 = inactive; 1 = active
@@ -121,13 +132,18 @@ struct computer {
 	signed char ay_envel_value;
 	unsigned char ay_envel_way;
 	unsigned char sound_current_value;
+	unsigned int wr;
+	unsigned int r_fetch;
+	unsigned int io;
+	unsigned int contention;
 
 	// bus global variables
 
 	unsigned char bus_counter;
 	unsigned char bus_value;
 	unsigned char issue; // 2= 48K issue 2, 3= 48K issue 3
-	unsigned char mode128k; // 0=48K, 1=128K, 2=+2, 3=+3
+	unsigned char mode128k; // 0=48K, 1=128K, 2=+2, 3=+3 4=sp
+	unsigned char videosystem; //0=PAL, 1=NTSC
 	unsigned char joystick[2]; // 0=cursor, 1=kempston, 2=sinclair1, 3=sinclair2
 	unsigned char port254;
 
@@ -193,6 +209,7 @@ struct computer {
 	unsigned char memoria[196608]; // memory (12 pages of 16K each one). 4 for ROM, and 8 for RAM
 	unsigned char shadowrom[8192]; // space for Interface I's ROMs
 	unsigned char interr;
+	unsigned char readkeyboard;
 	unsigned char mustlock;
 	unsigned char other_ret; // 0=no change; 1=memory returns RET (201)
 
@@ -219,11 +236,13 @@ struct computer {
 void computer_init();
 void register_screen(SDL_Surface *);
 inline void show_screen(int);
-inline void paint_pixels(unsigned char, unsigned char, unsigned char);
+inline void show_screen_precision(int);
+inline void paint_pixels(unsigned char, unsigned char, unsigned char, unsigned char);
 inline void read_keyboard();
 void fill_audio(void *udata,Uint8 *,int);
 void set_volume(unsigned char);
 inline void play_sound(unsigned int);
+inline void emulate_screen(int);
 inline void emulate(int);
 void ResetComputer();
 inline byte bus_empty();
@@ -232,5 +251,6 @@ inline void play_ay();
 inline void paint_one_pixel(unsigned char *colour,unsigned char *address);
 void computer_set_palete();
 void set_palete_entry(unsigned char entry, byte Value);
+void restart_video();
 
 #endif

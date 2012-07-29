@@ -93,10 +93,10 @@ int Z80free_ustep(Z80FREE *processor) {
 				Z80free_doPush(processor,processor->PC);
 				if (processor->IM!=2) { // we will forget IM0 mode for now; maybe in the future...
 					processor->PC=0x0038;
-					return (13);
+					return (13); //IM1
 				} else {
 					processor->PC=Z80free_read16(((((word)processor->I)<<8)&0xFF00) | ((word)processor->empty_bus));
-					return (19);
+					return (19); //IM2
 				}
 			}
 		}
@@ -105,7 +105,7 @@ int Z80free_ustep(Z80FREE *processor) {
 	if (processor->IFF1>1) // set the right status for interrupts
 		processor->IFF1--;
 
-	opcode=Z80free_Rd(processor->PC);
+	opcode=Z80free_Rd_fetch(processor->PC);
 	processor->PC++;
 	switch(processor->Status) {
 	case Z80INT:
@@ -145,7 +145,7 @@ int Z80free_ustep(Z80FREE *processor) {
 		}
 		processor->Status=Z80XX;
 		if (opcode==0xCB) {
-			d1=Z80free_Rd(processor->PC++);
+			d1=Z80free_Rd_fetch(processor->PC++);
 			retval+=Z80free_codesDDCB(processor,d1);
 		} else {
 			retval+=Z80free_codesDD(processor,opcode);
@@ -163,7 +163,7 @@ int Z80free_ustep(Z80FREE *processor) {
 		}
 		processor->Status=Z80XX;
 		if (opcode==0xCB) {
-			d1=Z80free_Rd(processor->PC++);
+			d1=Z80free_Rd_fetch(processor->PC++);
 			retval+=Z80free_codesFDCB(processor,d1);
 		} else {
 			retval+=Z80free_codesFD(processor,opcode);

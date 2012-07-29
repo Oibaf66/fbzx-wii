@@ -77,6 +77,10 @@ bool usbismount = false;
 bool networkisinit = false;
 bool smbismount = false; 
 
+extern int FULL_DISPLAY_X; //640
+extern int FULL_DISPLAY_Y; //480
+extern int RATIO; 
+
 #if defined(GEKKO)
 
 /****************************************************************************
@@ -347,12 +351,11 @@ void load_rom(char type) {
 	size=fread(ordenador.shadowrom,8192,1,fichero);
   	fclose(fichero);
 }
+void init_sdl()
+{
+int retorno, bucle; 
 
-void init_screen(int resx,int resy,int depth,int fullscreen,int dblbuffer,int hwsurface) {
-
-	int retorno,bucle,bucle2,valores,ret2;
-
-	//if (sound_type!=3)
+//if (sound_type!=3)
 	retorno=SDL_Init(SDL_INIT_VIDEO);
 	/*else
 		retorno=SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO);*/
@@ -380,6 +383,11 @@ void init_screen(int resx,int resy,int depth,int fullscreen,int dblbuffer,int hw
   			}
   		}
 	}
+}
+
+void init_screen(int resx,int resy,int depth,int fullscreen,int dblbuffer,int hwsurface) {
+
+	int valores;
 
 	// screen initialization
 	valores=SDL_HWPALETTE|SDL_ANYFORMAT;
@@ -410,7 +418,18 @@ void init_screen(int resx,int resy,int depth,int fullscreen,int dblbuffer,int hw
 
 	printf("Locking screen: %d\n", ordenador.mustlock);
 
-	// sound initialization
+	
+	printf("Return screen init\n");
+	
+	FULL_DISPLAY_X = resx;
+	FULL_DISPLAY_Y = resy;
+	RATIO = 640/FULL_DISPLAY_X;
+}
+
+void init_sound()
+{
+int bucle, bucle2,ret2;
+// sound initialization
 
 	if (sound_type==SOUND_AUTOMATIC) {
 		ret2=sound_init(1); // check all sound systems
@@ -439,10 +458,9 @@ void init_screen(int resx,int resy,int depth,int fullscreen,int dblbuffer,int hw
 	}
 
 	printf("Init sound 2\n");
-	ordenador.tst_sample=3500000/ordenador.freq;
+	ordenador.tst_sample=ordenador.cpufreq/ordenador.freq;
 	//printf("Set volume\n");
 	//set_volume(70);
-	printf("Return init\n");
 }
 
 void end_system() {
@@ -506,11 +524,16 @@ int save_config(struct computer *object, char *filename) {
 	
 	fprintf(fconfig,"mode=%c%c",48+object->mode128k,10);
 	fprintf(fconfig,"issue=%c%c",48+object->issue,10);
+	fprintf(fconfig,"ntsc=%c%c",48+object->videosystem,10);
 	fprintf(fconfig,"joystick1=%c%c",48+object->joystick[0],10);
 	fprintf(fconfig,"joystick2=%c%c",48+object->joystick[1],10);
 	fprintf(fconfig,"ay_sound=%c%c",48+object->ay_emul,10);
 	fprintf(fconfig,"interface1=%c%c",48+object->mdr_active,10);
 	fprintf(fconfig,"doublescan=%c%c",48+object->dblscan,10);
+	fprintf(fconfig,"framerate=%c%c",48+jump_frames,10);
+	fprintf(fconfig,"screen=%c%c",48+object->zaurus_mini,10);
+	fprintf(fconfig,"text=%c%c",48+object->text_mini,10);
+	fprintf(fconfig,"precision=%c%c",48+object->precision,10);
 	fprintf(fconfig,"volume=%c%c",65+(object->volume),10);
 	fprintf(fconfig,"bw=%c%c",48+object->bw,10);
 	fprintf(fconfig,"tap_fast=%c%c",48+object->tape_fast_load,10);
@@ -639,8 +662,9 @@ int load_config(struct computer *object, char *filename) {
 	char line[1024],carac,done;
 	int pos, key_sdl=0;
 	FILE *fconfig;
-	unsigned char volume=255,mode128k=255,issue=255,joystick1=255,joystick2=255,ay_emul=255,mdr_active=255,
-	dblscan=255,bw=255, tap_fast=255, joypad1=255, joypad2=255, rumble1=255, rumble2=255, joy_n=255, key_n=255, port=255, autoconf=255;
+	unsigned char volume=255,mode128k=255,issue=255,ntsc=255, joystick1=255,joystick2=255,ay_emul=255,mdr_active=255,
+	dblscan=255,framerate =255, screen =255, text=255, precision=255, bw=255, tap_fast=255,
+	joypad1=255, joypad2=255, rumble1=255, rumble2=255, joy_n=255, key_n=255, port=255, autoconf=255;
 	
 	if (filename) strcpy(config_path,filename); 
 	else return -2;
@@ -682,6 +706,10 @@ int load_config(struct computer *object, char *filename) {
 			issue=line[6]-'0';
 			continue;
 		}
+		if (!strncmp(line,"ntsc=",5)) {
+			ntsc=line[5]-'0';
+			continue;
+		}
 		if (!strncmp(line,"joystick1=",10)) {
 			joystick1=line[10]-'0';
 			continue;
@@ -698,8 +726,24 @@ int load_config(struct computer *object, char *filename) {
 			mdr_active=line[11]-'0';
 			continue;
 		}
+		if (!strncmp(line,"screen=",7)) {
+			screen=line[7]-'0';
+			continue;
+		}
+		if (!strncmp(line,"text=",5)) {
+			text=line[5]-'0';
+			continue;
+		}
 		if (!strncmp(line,"doublescan=",11)) {
 			dblscan=line[11]-'0';
+			continue;
+		}
+		if (!strncmp(line,"framerate=",10)) {
+			framerate=line[10]-'0';
+			continue;
+		}
+		if (!strncmp(line,"precision=",10)) {
+			precision=line[10]-'0';
 			continue;
 		}
 		if (!strncmp(line,"volume=",7)) {
@@ -752,6 +796,9 @@ int load_config(struct computer *object, char *filename) {
 	if (issue<4) {
 		object->issue=issue;
 	}
+	if (issue<2) {
+		object->videosystem=ntsc;
+	}
 	if (joystick1<4) {
 		object->joystick[0]=joystick1;
 	}
@@ -766,6 +813,18 @@ int load_config(struct computer *object, char *filename) {
 	}
 	if (dblscan<2) {
 		object->dblscan=dblscan;
+	}
+	if (framerate<6) {
+		jump_frames=framerate;
+	}
+	if (screen<4) {
+		object->zaurus_mini=screen;
+	}
+	if (text<2) {
+		object->text_mini=text;
+	}
+	if (precision<2) {
+		object->precision=precision;
 	}
 	if (bw<2) {
 		object->bw=bw;
@@ -802,7 +861,7 @@ int load_config(struct computer *object, char *filename) {
 
 int main(int argc,char *argv[]) {
 
-	int bucle,tstados,argumento,fullscreen,dblbuffer,hwsurface,length;
+	int bucle,tstados,tstados_screen, argumento,fullscreen,dblbuffer,hwsurface,length;
 	char gamefile[4096],config_path[1024] ;
 	
 	word PC=0;
@@ -965,6 +1024,9 @@ int main(int argc,char *argv[]) {
 	}
 	
 	atexit(end_system);
+	
+	init_sdl();
+	
 	switch(ordenador.zaurus_mini) {
 	case 0:
 		init_screen(640,480,0,0,dblbuffer,hwsurface);
@@ -977,6 +1039,9 @@ int main(int argc,char *argv[]) {
 		init_screen(320,240,0,0,dblbuffer,hwsurface);
 	break;
 	}
+	
+	init_sound();
+	
 	printf("Modo: %d\n",ordenador.mode128k);
 	register_screen(screen);
 	printf("Screen registered\n");
@@ -988,16 +1053,18 @@ int main(int argc,char *argv[]) {
 	SDL_WM_SetCaption("FBZX","");
 	#endif
 	ordenador.interr=0;
+	ordenador.readkeyboard = 0;
 
 	ordenador.screenbuffer=ordenador.screen->pixels;
 	ordenador.screen_width=ordenador.screen->w;
 	
 	//Init SDL Menu
 	
+	font_init();
 	menu_init(ordenador.screen);
 	
 	//Load the splash screen
-	if (load_zxspectrum_picture()) SDL_FreeSurface (image);
+	if (ordenador.zaurus_mini==0) if (load_zxspectrum_picture()) SDL_FreeSurface (image);
 	
 	#ifdef GEKKO
 	usbismount = InitUSB();
@@ -1098,11 +1165,24 @@ int main(int argc,char *argv[]) {
 
 		do {
 			tstados=Z80free_ustep(&procesador);
-			if(tstados<0) {
-				printf("Error %X\n",procesador.PC);
-				exit(1);
+			
+		if (ordenador.precision)
+			{
+			tstados_screen=tstados-ordenador.r_fetch -ordenador.wr -ordenador.io;
+			if(tstados_screen>0) emulate_screen(tstados_screen);
+			ordenador.wr=0;
+			ordenador.r_fetch=0;
+			ordenador.io=0;
+			emulate(tstados+ordenador.contention); // execute the whole hardware emulation for that number of TSTATES
+			ordenador.contention=0;
 			}
-			emulate(tstados); // execute the whole hardware emulation for that number of TSTATES
+		else
+			if (tstados>0) {
+			emulate_screen(tstados);
+			emulate(tstados+ordenador.contention);
+			ordenador.contention=0;
+			}
+		
 		} while(procesador.Status!=Z80XX);
 			
 		PC=procesador.PC;
@@ -1149,10 +1229,14 @@ int main(int argc,char *argv[]) {
 		if((PC==0x0700)&&(ordenador.mdr_active))
 			ordenador.mdr_paged = 2;
 
-		if(ordenador.interr==1) {
+		if(ordenador.readkeyboard==1) {
 			read_keyboard ();	// read the physical keyboard
+			ordenador.readkeyboard = 0;
+		}
+		
+		if(ordenador.interr==1) {
 			Z80free_INT(&procesador,bus_empty());
-			ordenador.interr=0;
+			if (ordenador.precision==0) ordenador.interr=0;
 		}
 	}
 	

@@ -52,3 +52,4 @@ void do_poke();
 int ask_value(int *final_value,int y_coord,int max_value);
 void tools_menu();
 int launch_menu(unsigned int key_pressed);
+void update_frequency (int freq);

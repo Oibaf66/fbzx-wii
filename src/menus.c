@@ -232,18 +232,21 @@ void settings_menu() {
 			ordenador.issue=3;
 			ordenador.mode128k=1;
 			ordenador.ay_emul=1;
+			ordenador.videosystem=0;
 			ResetComputer();
 		break;
 		case SDLK_4:
 			ordenador.issue=3;
 			ordenador.mode128k=2;
 			ordenador.ay_emul=1;
+			ordenador.videosystem=0;
 			ResetComputer();
 		break;
 		case SDLK_5:
 			ordenador.issue=3;
 			ordenador.mode128k=3;
 			ordenador.ay_emul=1;
+			ordenador.videosystem=0;
 			ordenador.mdr_active=0;
 			ResetComputer();
 		break;
@@ -251,6 +254,7 @@ void settings_menu() {
 			ordenador.issue=3;
 			ordenador.mode128k=4;
 			ordenador.ay_emul=1;
+			ordenador.videosystem=0;
 			ResetComputer();
 		break;
 		case SDLK_7:
@@ -284,13 +288,13 @@ void settings_menu() {
 		case SDLK_t:
 			curr_frames=0;
 			if(ordenador.turbo){
-				ordenador.tst_sample=3500000/ordenador.freq;
+				update_frequency(0); //set machine frequency
 				ordenador.turbo = 0;
 				jump_frames=0;
 			} else {
-				ordenador.tst_sample=12000000/ordenador.freq; //5,0 MHz max emulation speed for wii at full frames
+				update_frequency(10000000); //5,0 MHz max emulation speed for wii at full frames
 				ordenador.turbo = 1;
-				jump_frames=3;	
+				jump_frames=4;	
 			}
 		break;	
 		}
@@ -1987,4 +1991,28 @@ void print_files(struct fichero *filelist,int from,int mark) {
 		print_string(videomem,spaces,-1,pos,0,0,ancho);
 		pos+=16;
 	}
+}
+
+void update_frequency (int freq)
+{
+if (freq == 0)
+		switch (ordenador.mode128k) {	
+	case 0:		// 48K
+		if (ordenador.videosystem==0) ordenador.cpufreq = 3500000;
+		else ordenador.cpufreq = 3527500;
+	break;
+	case 3:		// +2A/+3
+	case 1:		// 128K
+	case 2:		// +2
+	case 4:		// spanish 128K
+		ordenador.cpufreq = 3546900;
+	break;
+	default:
+	ordenador.cpufreq = 3500000;
+	break;
+	}
+else ordenador.cpufreq = freq;
+
+ordenador.tst_sample=ordenador.cpufreq/ordenador.freq;
+
 }

@@ -33,6 +33,7 @@
 #include "microdrive.h"
 #include "Virtualkeyboard.h"
 #include "gui_sdl.h"
+#include "menu_sdl.h"
 #if defined(GEKKO)
 # include <ogc/system.h>
 # include <wiiuse/wpad.h> 
@@ -47,6 +48,7 @@ extern FILE *fdebug;
  #endif
 #endif
 
+
 /* Returns the bus value when reading a port without a periferial */
 
 inline byte bus_empty () {
@@ -60,13 +62,19 @@ inline byte bus_empty () {
 /* calls all the routines that emulates the computer, runing them for 'tstados'
    tstates */
 
-inline void emulate (int tstados) {
+inline void emulate_screen (int tstados) {
 
-	if((procesador.I>=0x40)&&(procesador.I<=0x7F)) {
+	if((procesador.I & 0xC0) == 0x40) { // (procesador.I>=0x40)&&(procesador.I<=0x7F)
 		ordenador.screen_snow=1;
 	} else
 		ordenador.screen_snow=0;
-	show_screen (tstados);
+		
+	if (ordenador.precision) show_screen_precision (tstados);
+	else show_screen(tstados);
+}
+
+inline void emulate (int tstados) {
+
 	play_ay (tstados);
 	play_sound (tstados);
 	tape_read (ordenador.tap_file, tstados);
@@ -87,10 +95,12 @@ void computer_init () {
 	ordenador.port254 = 0;
 	ordenador.issue = 3;
 	ordenador.mode128k = 0;
+	ordenador.videosystem = 0; //PAL
 	ordenador.joystick[0] = 1; //Kemposton
 	ordenador.joystick[1] = 0; // Cursor
 	ordenador.rumble[0] = 0;
 	ordenador.rumble[1] = 0;
+	ordenador.precision = 0;
 
 	ordenador.tape_readed = 0;
 	ordenador.pause = 1;	// tape stop
@@ -124,6 +134,10 @@ void computer_init () {
 	ordenador.vol_c = 0;
 	ordenador.tst_ay = 0;
 	ordenador.tst_ay2 = 0;
+	ordenador.wr = 0;
+	ordenador.r_fetch = 0;
+	ordenador.io = 0;
+	ordenador.contention = 0;
 
 	ordenador.ayval_a = 0;
 	ordenador.ayval_b = 0;
@@ -144,6 +158,8 @@ void computer_init () {
 	strcpy (ordenador.SmbShare, "Share");
 	strcpy (ordenador.SmbIp, "192.168.0.1");
 	ordenador.autoconf=0;
+	
+	ordenador.cpufreq = 3500000; // values for 48K mode
 }
 
 void computer_set_palete() {
@@ -360,6 +376,7 @@ void register_screen (SDL_Surface * pantalla) {
 	ordenador.screen = pantalla;
 
 	ordenador.border = 0;
+	ordenador.border_p = 0;
 	ordenador.currline = 0;
 	ordenador.currpix = 0;
 	ordenador.flash = 0;
@@ -372,8 +389,6 @@ void register_screen (SDL_Surface * pantalla) {
 		ordenador.init_line = 0;
 		ordenador.next_line = 640;
 		ordenador.next_scanline = 640;
-		ordenador.first_line = 40;
-		ordenador.last_line = 280;
 		ordenador.first_pixel = 16;
 		ordenador.last_pixel = 336;
 		ordenador.next_pixel = 1;
@@ -383,8 +398,6 @@ void register_screen (SDL_Surface * pantalla) {
 		ordenador.init_line = 65;
 		ordenador.next_line = 160;
 		ordenador.next_scanline = 160;
-		ordenador.first_line = 40;
-		ordenador.last_line = 280;
 		ordenador.first_pixel = 0;
 		ordenador.last_pixel = 351;
 		ordenador.next_pixel = 1;
@@ -394,8 +407,6 @@ void register_screen (SDL_Surface * pantalla) {
 		ordenador.init_line = 479;
 		ordenador.next_line = -(307202);
 		ordenador.next_scanline = -1;
-		ordenador.first_line = 40;
-		ordenador.last_line = 280;
 		ordenador.first_pixel = 16;
 		ordenador.last_pixel = 336;
 		ordenador.next_pixel = 480;
@@ -405,8 +416,6 @@ void register_screen (SDL_Surface * pantalla) {
 		ordenador.init_line = 0;
 		ordenador.next_line = 0;
 		ordenador.next_scanline = 0;
-		ordenador.first_line = 40;
-		ordenador.last_line = 280;
 		ordenador.first_pixel = 0;
 		ordenador.last_pixel = 319;
 		ordenador.next_pixel = 1;
@@ -424,14 +433,15 @@ void register_screen (SDL_Surface * pantalla) {
 
 	ordenador.pixel = ((unsigned char *) (ordenador.screen->pixels)) +	ordenador.init_line;
 	ordenador.interr = 0;
-
+	ordenador.readkeyboard = 0;
+	
 	ordenador.p_translt = ordenador.translate;
 	ordenador.p_translt2 = ordenador.translate2;
 
 	ordenador.contador_flash = 0;
 	ordenador.readed = 0;
 
-	ordenador.contended_zone=0;
+	//ordenador.contended_zone=0;
 	ordenador.cicles_counter=0;
 	
 	ordenador.tstados_counter_sound = 0;
@@ -439,8 +449,6 @@ void register_screen (SDL_Surface * pantalla) {
 	ordenador.num_buff = 0;	// first buffer
 	ordenador.sound_cuantity = 0;
 	ordenador.sound_current_value = 0;
-	ordenador.pixancho = 447;
-	ordenador.pixalto = 311;	// values for 48K mode
 }
 
 void set_memory_pointers () {
@@ -514,38 +522,48 @@ void set_memory_pointers () {
 /* Paints the spectrum screen during the TSTADOS tstates that the Z80 used
 to execute last instruction */
 
+
 inline void show_screen (int tstados) {
 
-	static unsigned char temporal, ink, paper, fflash, tmp2;
+	static unsigned char temporal, temporal3, ink, paper, fflash, tmp2;
+
 
 	ordenador.tstados_counter += tstados;
 	ordenador.cicles_counter += tstados;
 	
 	if (curr_frames<jump_frames) { //Jump the frame drawing
-		if (ordenador.tstados_counter>=69888) {
-			ordenador.tstados_counter-=69888;
+		if (ordenador.tstados_counter>=ordenador.tstatodos_frame) {
+			ordenador.tstados_counter-=ordenador.tstatodos_frame;
 			ordenador.interr = 1;
+			if ((ordenador.turbo == 0) || (curr_frames%7 == 0)) ordenador.readkeyboard = 1;
 			curr_frames++;
 		}
 		return;
 	}
 	
 	fflash = 0; // flash flag
+	
 	while (ordenador.tstados_counter > 3) {
 		ordenador.tstados_counter -= 4;
-
+		
+		//test if current pixel is outside visible area
+		
+		if ((ordenador.currline >= ordenador.first_line) && (ordenador.currline < ordenador.last_line)&&
+		(ordenador.currpix > 15) && (ordenador.currpix < 336))
+		{
+		
+		
 		// test if current pixel is for border or for user area
 
-		if ((ordenador.currline < 64) || (ordenador.currline > 255)
+		if ((ordenador.currline < ordenador.upper_border_line ) || (ordenador.currline >= ordenador.lower_border_line)
 			|| (ordenador.currpix < 48) || (ordenador.currpix > 303)) {
 			
 			// is border
 				
-			ordenador.contended_zone=0; // no contention here
 			if (ordenador.ulaplus) {
-				paint_pixels (255, ordenador.border+24, 0);	// paint 8 pixels with BORDER color
+				paint_pixels (255, ordenador.border+24, 0, 8);	// paint 8 pixels with BORDER color
 			} else {
-				paint_pixels (255, ordenador.border, 0);	// paint 8 pixels with BORDER color
+				paint_pixels (255, ordenador.border, 0, 8);	// paint 8 pixels with BORDER color
 			}
 
 			ordenador.bus_value = 255;
@@ -553,11 +571,10 @@ inline void show_screen (int tstados) {
 		} else {
 
 			// is user area. We search for ink and paper colours
-
-			ordenador.contended_zone=1; // can have contention
 			
 			temporal = ordenador.memoria[(*ordenador.p_translt2) + ordenador.video_offset];	// attributes
 			ordenador.bus_value = temporal;
+	
 			ink = temporal & 0x07;	// ink colour
 			paper = (temporal >> 3) & 0x07;	// paper colour
 			if (ordenador.ulaplus) {
@@ -575,18 +592,23 @@ inline void show_screen (int tstados) {
 			// Snow Effect
 
 			if(ordenador.screen_snow) {
-				temporal = ordenador.memoria[(((*ordenador.p_translt) + (ordenador.video_offset))&0xFFFFFF00)+(procesador.R)];	// data with snow
+				temporal3 = ordenador.memoria[(((*ordenador.p_translt) + (ordenador.video_offset))&0xFFFFFF00)+(procesador.R)];	// data with snow
 				ordenador.screen_snow=0; // no more snow for now
 			} else
-				temporal = ordenador.memoria[(*ordenador.p_translt) + ordenador.video_offset];	// data
-			
+				temporal3 = ordenador.memoria[(*ordenador.p_translt) + ordenador.video_offset];	// bitmap	// bitmap
+				
 			ordenador.p_translt++;
 			ordenador.p_translt2++;
+			
 			if ((fflash) && (ordenador.flash))
-				paint_pixels (temporal, paper, ink);	// if FLASH, invert PAPER and INK
+				paint_pixels (temporal3, paper, ink, 8);	// if FLASH, invert PAPER and INK
 			else
-				paint_pixels (temporal, ink, paper);
+				paint_pixels (temporal3, ink, paper, 8);
+				
 		}
+		}
+		
+		//Update pixel position
 		ordenador.currpix += 8;
 		if (ordenador.currpix > ordenador.pixancho) {
 			ordenador.currpix = 0;
@@ -596,7 +618,9 @@ inline void show_screen (int tstados) {
 			}
 		}
 		
-		if ((ordenador.currline > ordenador.pixalto)&&(ordenador.currpix>=64)) {
+	
+		//End of frame
+		if ((ordenador.currline > ordenador.pixalto)&&(ordenador.currpix>63)) { 
 			ordenador.currpix=64;
 			if (ordenador.osd_time) {
 				ordenador.osd_time--;
@@ -626,6 +650,7 @@ inline void show_screen (int tstados) {
 			curr_frames=0;
 			ordenador.currline = 0;
 			ordenador.interr = 1;
+			ordenador.readkeyboard = 1;
 			ordenador.cicles_counter=0;
 			ordenador.pixel = ((unsigned char *) (ordenador.screen->pixels))+ordenador.init_line;	// +ordenador.init_line;
 			ordenador.p_translt = ordenador.translate;
@@ -639,21 +664,236 @@ inline void show_screen (int tstados) {
 	}
 }
 
+//Write the screen from 14339 state
 
-/* PAINT_PIXELS paints one byte with INK color for 1 bits and PAPER color
+inline void show_screen_precision (int tstados) {
+
+	static unsigned char temporal, temporal2, temporal_1, temporal2_1,temporal3, ink, paper, fflash, tmp2;
+
+	ordenador.tstados_counter += tstados;
+	
+	if (curr_frames<jump_frames) { //Jump the frame drawing
+		if (ordenador.tstados_counter>=ordenador.tstatodos_frame) {
+			ordenador.tstados_counter-=ordenador.tstatodos_frame;
+			ordenador.interr = 1;
+			ordenador.readkeyboard = 1;
+			curr_frames++;
+		}
+		if (ordenador.tstados_counter > 31) ordenador.interr = 0;
+		return;
+	}
+	
+	while (ordenador.tstados_counter>0) {
+		ordenador.tstados_counter--; 
+		
+		//test if current pixel is outside visible area
+		
+		if ((ordenador.currline >= ordenador.first_line) && (ordenador.currline < ordenador.last_line)&&
+		(ordenador.currpix > 15) && (ordenador.currpix < 336))
+		{
+
+		
+		ordenador.pixels_word = ordenador.currpix%16;
+		ordenador.pixels_octect = ordenador.currpix%8;
+		
+		// test if current pixel is for border or for user area
+
+		if ((ordenador.currline < ordenador.upper_border_line ) || (ordenador.currline >= ordenador.lower_border_line)
+			|| (ordenador.currpix < 48) || (ordenador.currpix > 303)) {
+			
+			// is border
+			
+			if (ordenador.pixels_octect==0) ordenador.border_p = ordenador.border;  
+				
+			if (ordenador.ulaplus) {
+				paint_pixels (255, ordenador.border_p+24, 0, 2);	// paint 2 pixels with BORDER color
+			} else {
+				paint_pixels (255, ordenador.border_p, 0, 2);	// paint 2 pixels with BORDER color
+			}
+
+			ordenador.bus_value = 255;
+			
+			if ((ordenador.currline == ordenador.upper_border_line) && (ordenador.currpix == 46))
+			{
+			
+				temporal = ordenador.memoria[(*ordenador.p_translt2) + ordenador.video_offset];	// attributes
+				temporal2 = ordenador.memoria[(*ordenador.p_translt) + ordenador.video_offset];	// bitmap
+				temporal_1 = ordenador.memoria[(*(ordenador.p_translt2+1)) + ordenador.video_offset];	// attributes
+				temporal2_1 = ordenador.memoria[((*ordenador.p_translt+1)) + ordenador.video_offset];	// bitmap
+				
+				ordenador.p_translt+=2;
+				ordenador.p_translt2+=2;
+				ordenador.bus_value = temporal2;
+			}
+
+		} else {
+
+			// is user area. We search for ink and paper colours
+
+			switch (ordenador.pixels_word)
+			{
+			case 0: //start of first byte
+			
+				ink = temporal & 0x07;	// ink colour
+				paper = (temporal >> 3) & 0x07;	// paper colour
+				if (ordenador.ulaplus) {
+					tmp2=0x10+((temporal>>2)&0x30);
+					ink+=tmp2;
+					paper+=8+tmp2;
+				} else {
+					if (temporal & 0x40) {	// bright flag?
+						ink += 8;
+						paper += 8;
+						}
+					fflash = temporal & 0x80;	// flash flag
+					}
+
+				// Snow Effect
+
+				if(ordenador.screen_snow) {
+					temporal3 = ordenador.memoria[(((*ordenador.p_translt) + (ordenador.video_offset))&0xFFFFFF00)+(procesador.R)];	// data with snow
+					ordenador.screen_snow=0; // no more snow for now
+				} else
+					temporal3 = temporal2;	// bitmap
+				
+			break;
+			
+			
+			case 8: //start of second byte
+			
+				ink = temporal_1 & 0x07;	// ink colour
+				paper = (temporal_1 >> 3) & 0x07;	// paper colour
+				if (ordenador.ulaplus) {
+					tmp2=0x10+((temporal_1>>2)&0x30);
+					ink+=tmp2;
+					paper+=8+tmp2;
+				} else {
+					if (temporal_1 & 0x40) {	// bright flag?
+						ink += 8;
+						paper += 8;
+						}
+					fflash = temporal_1 & 0x80;	// flash flag
+					}
+
+					temporal3 = temporal2_1;	// bitmap
+			break;
+			
+			case 14: //sample the memory 
+			
+				temporal = ordenador.memoria[(*ordenador.p_translt2) + ordenador.video_offset];	// attributes
+				temporal2 = ordenador.memoria[(*ordenador.p_translt) + ordenador.video_offset];	// bitmap
+				temporal_1 = ordenador.memoria[(*(ordenador.p_translt2+1)) + ordenador.video_offset];	// attributes
+				temporal2_1 = ordenador.memoria[((*ordenador.p_translt+1)) + ordenador.video_offset];	// bitmap
+				
+				ordenador.p_translt+=2;
+				ordenador.p_translt2+=2;
+				
+			break;
+			}
+		
+			//Floating bus
+			if (ordenador.currpix < 295)
+			switch (ordenador.pixels_word)
+			{
+			case 14:
+				// bitmap
+				ordenador.bus_value = temporal2; 
+				break;
+			case 0:
+				// attributes
+				ordenador.bus_value = temporal; 
+				break;	
+			case 2:
+				// bitmap
+				ordenador.bus_value = temporal2_1;
+				break;
+			case 4:	
+				// attributes
+				ordenador.bus_value = temporal_1;
+				break;
+			default:
+				ordenador.bus_value = 255;
+				break;
+			}
+			
+			if ((fflash) && (ordenador.flash))
+				paint_pixels (temporal3, paper, ink, 2);	// if FLASH, invert PAPER and INK
+			else
+				paint_pixels (temporal3, ink, paper ,2);
+				
+		}
+		}
+		
+		//Update pixel position
+		ordenador.cicles_counter++;
+		ordenador.currpix += 2;
+		if (ordenador.currpix > ordenador.pixancho) {
+			ordenador.currpix = 0;
+			ordenador.currline++;
+			if (ordenador.currline > ordenador.first_line) {	// ordenador.first_line)
+				ordenador.pixel += ordenador.next_line;	// ordenador.next_line;
+			}
+		}
+	
+		//End of frame
+		if ((ordenador.currline > ordenador.pixalto)&&(ordenador.currpix>ordenador.start_screen)){  
+			if (ordenador.osd_time) {
+				ordenador.osd_time--;
+				if (ordenador.osd_time==0) {
+					ordenador.tab_extended=0;
+					ordenador.esc_again=0;
+				}
+					
+				if (ordenador.osd_time)
+					print_string (ordenador.screenbuffer,ordenador.osd_text, -1,450, 12, 0,ordenador.screen_width);
+				else {
+					if (ordenador.zaurus_mini==0)
+						print_string (ordenador.screenbuffer,"                                      ",-1, 450, 12, 0,ordenador.screen_width);
+					else
+						print_string (ordenador.screenbuffer,"                            ",-1, 450, 12, 0,ordenador.screen_width);
+				}
+			}
+				
+			if (ordenador.mustlock) {
+				SDL_UnlockSurface (ordenador.screen);
+				SDL_Flip (ordenador.screen);
+				SDL_LockSurface (ordenador.screen);
+			} else {
+				SDL_Flip (ordenador.screen);
+			}
+			
+			curr_frames=0;
+			ordenador.currline = 0;
+			ordenador.interr = 1;
+			ordenador.readkeyboard = 1;
+			ordenador.cicles_counter=0;
+			ordenador.pixel = ((unsigned char *) (ordenador.screen->pixels))+ordenador.init_line;	// +ordenador.init_line;
+			ordenador.p_translt = ordenador.translate;
+			ordenador.p_translt2 = ordenador.translate2;
+			ordenador.contador_flash++;
+			if (ordenador.contador_flash == 16) {
+				ordenador.flash = 1 - ordenador.flash;
+				ordenador.contador_flash = 0;
+			}
+		}
+		
+		//End of interrupt
+		if (ordenador.cicles_counter == 32) ordenador.interr = 0;
+		
+	}
+}
+
+/* PAINT_PIXELS paints bits with INK color for 1 bits and PAPER color
 for 0 bits, and increment acordingly the pointer PIXEL */
 
-inline void paint_pixels (unsigned char octet,unsigned char ink, unsigned char paper) {
+inline void paint_pixels (unsigned char octet,unsigned char ink, unsigned char paper, unsigned char bit) {
 
 	static int bucle,valor,*p;
 	static unsigned char mask;
-
-	if ((ordenador.currpix < 16) || (ordenador.currpix >= 336)
-	    || (ordenador.currline < 40) || (ordenador.currline >= 280))
-		return;
-
-	mask = 0x80;
-	for (bucle = 0; bucle < 8; bucle++) {
+	
+	if (ordenador.pixels_octect==0 ||bit == 8) mask = 0x80;
+	 
+	for (bucle = 0; bucle < bit; bucle++) {
 		valor = (octet & mask) ? (int) ink : (int) paper;
 		p=(colors+valor);
 		
@@ -1132,17 +1372,45 @@ void ResetComputer () {
 
 	ordenador.updown=0;
 	ordenador.leftright=0;
+	
+	ordenador.wr=0;
+	ordenador.r_fetch = 0;
+	ordenador.io = 0;
+	ordenador.contention = 0;
 
 	ordenador.ulaplus=0;
 
 	ordenador.mport1 = 0;
 	ordenador.mport2 = 0;
 	ordenador.video_offset = 0;	// video in page 9 (page 5 in 128K)
-	switch (ordenador.mode128k) {
+	switch (ordenador.mode128k) {	
 	case 0:		// 48K
 		ordenador.pixancho = 447;
+		ordenador.start_screen=41;
+		if (ordenador.videosystem==0)
+		{
 		ordenador.pixalto = 311;
-
+		ordenador.upper_border_line = 64;
+		ordenador.lower_border_line = 64 + 192;
+		ordenador.cpufreq = 3500000;
+		ordenador.tstatodos_frame= 69888;
+		ordenador.start_contention = 14335;
+		ordenador.end_contention = 14335+224*192;
+		ordenador.first_line = 40;
+		ordenador.last_line = 280;
+		}
+		else
+		{
+		ordenador.pixalto = 263;
+		ordenador.upper_border_line = 40;
+		ordenador.lower_border_line = 40 + 192;
+		ordenador.cpufreq = 3527500;
+		ordenador.tstatodos_frame= 59136;
+		ordenador.start_contention = 8959;
+		ordenador.end_contention = 8959+224*192;
+		ordenador.first_line = 16;
+		ordenador.last_line = 256;
+		}
 		ordenador.block0 = ordenador.memoria;
 		ordenador.block1 = ordenador.memoria + 131072;	// video mem. in page 9 (page 5 in 128K)
 		ordenador.block2 = ordenador.memoria + 65536;	// 2nd block in page 6 (page 2 in 128K)
@@ -1151,13 +1419,22 @@ void ResetComputer () {
 	break;
 	
 	case 3:		// +2A/+3
-		Z80free_Out (0x1FFD, 0);
+		Z80free_Out_fake (0x1FFD, 0);
 	case 1:		// 128K
 	case 2:		// +2
 	case 4:		// spanish 128K
-		Z80free_Out (0x7FFD, 0);
+		Z80free_Out_fake (0x7FFD, 0);
 		ordenador.pixancho = 455;
 		ordenador.pixalto = 310;
+		ordenador.upper_border_line = 63;
+		ordenador.lower_border_line = 63 + 192;
+		ordenador.cpufreq = 3546900;
+		ordenador.tstatodos_frame= 70908;
+		ordenador.start_contention = 14361;
+		ordenador.end_contention = 14361+228*192;
+		ordenador.first_line = 40;
+		ordenador.last_line = 280;
+		ordenador.start_screen=45;
 	break;
 	}
 	
@@ -1167,36 +1444,75 @@ void ResetComputer () {
 // check if there's contention and waits the right number of tstates
 
 void do_contention() {
-	
-	if (!ordenador.contended_zone)
-		return;
-	
-	if (ordenador.cicles_counter<14335) {
-		return;
-	}
 
-	int ccicles=(ordenador.cicles_counter-14335)%8;
-
-	if (ccicles>5) {
-		return;
-	}
+	static int ccicles;
 	
-	emulate(6-ccicles);
-
+	if ((ordenador.currline < ordenador.upper_border_line ) || (ordenador.currline >= ordenador.lower_border_line)
+			|| (ordenador.currpix < 40) || (ordenador.currpix > 295)) return;
+	
+	if (ordenador.mode128k==3) //+3
+		{
+		ccicles=((ordenador.currpix-28)/2)%8; //44-16
+		if (ccicles>6) return;
+		ordenador.contention+=7-ccicles;
+		emulate_screen(7-ccicles);
+		}
+	else //64k/128k/+2
+		{
+		ccicles=((ordenador.currpix-40)/2)%8;
+		if (ccicles>5) return;
+		ordenador.contention+=6-ccicles;
+		emulate_screen(6-ccicles);
+		}
+	
 }
 
-void Z80free_Wr (register word Addr, register byte Value) {
 
+void Z80free_Wr (register word Addr, register byte Value) {
+	
+	ordenador.wr+=3;
 	switch (Addr & 0xC000) {
 	case 0x0000:
 	// only writes in the first 16K if we are in +3 mode and bit0 of mport2 is 1
-
+		if (ordenador.precision) emulate_screen(3);
 		if ((ordenador.mode128k == 3) && (1 == (ordenador.mport2 & 0x01)))
 			*(ordenador.block0 + Addr) = (unsigned char) Value;
 	break;
 
 	case 0x4000:
 		do_contention();
+		if (ordenador.precision) emulate_screen(3); 
+		*(ordenador.block1 + Addr) = (unsigned char) Value;
+	break;
+	
+	case 0x8000:
+		if (ordenador.precision) emulate_screen(3); 
+		*(ordenador.block2 + Addr) = (unsigned char) Value;
+	break;
+	
+	case 0xC000:
+		if (ordenador.precision) {
+		if (((ordenador.mode128k==1)||(ordenador.mode128k==2)||(ordenador.mode128k==4))&&(ordenador.mport1 & 0x01)) do_contention();
+		emulate_screen(3); 
+		}
+		*(ordenador.block3 + Addr) = (unsigned char) Value;
+	break;
+	}
+	
+}
+
+void Z80free_Wr_fake (register word Addr, register byte Value) {
+	
+	switch (Addr & 0xC000) {
+	
+	case 0x0000:
+	// only writes in the first 16K if we are in +3 mode and bit0 of mport2 is 1
+
+		if ((ordenador.mode128k == 3) && (1 == (ordenador.mport2 & 0x01)))
+			*(ordenador.block0 + Addr) = (unsigned char) Value;		
+	break;
+
+	case 0x4000:
 		*(ordenador.block1 + Addr) = (unsigned char) Value;
 	break;
 	
@@ -1210,8 +1526,7 @@ void Z80free_Wr (register word Addr, register byte Value) {
 	}
 }
 
-
-byte Z80free_Rd (register word Addr) {
+byte Z80free_Rd_fetch (register word Addr) {
 
 	if((ordenador.mdr_active)&&(ordenador.mdr_paged)&&(Addr<8192)) // Interface I
 		return((byte)ordenador.shadowrom[Addr]);
@@ -1223,21 +1538,77 @@ byte Z80free_Rd (register word Addr) {
 	break;
 
 	default:
+	ordenador.r_fetch+=4;	
 		switch (Addr & 0xC000) {
 		case 0x0000:
+			if (ordenador.precision) emulate_screen (4);
 			return ((byte) (*(ordenador.block0 + Addr)));
 		break;
 
 		case 0x4000:
 			do_contention();
+			if (ordenador.precision) emulate_screen (4);
 			return ((byte) (*(ordenador.block1 + Addr)));
 		break;
 
 		case 0x8000:
+			if (ordenador.precision) emulate_screen (4);
 			return ((byte) (*(ordenador.block2 + Addr)));
 		break;
 
 		case 0xC000:
+			if (ordenador.precision) {
+			if (((ordenador.mode128k==1)||(ordenador.mode128k==2)||(ordenador.mode128k==4))&&(ordenador.mport1 & 0x01)) do_contention();
+			emulate_screen (4);
+			}
+			return ((byte) (*(ordenador.block3 + Addr)));
+		break;
+
+		default:
+			printf ("Memory error\n");
+			exit (1);
+			return 0;
+		}
+		
+		break;
+	}
+}
+
+byte Z80free_Rd (register word Addr) {
+	
+	if((ordenador.mdr_active)&&(ordenador.mdr_paged)&&(Addr<8192)) // Interface I
+		return((byte)ordenador.shadowrom[Addr]);
+	
+	switch (ordenador.other_ret) {
+	case 1:
+		ordenador.other_ret = 0;
+		return (201);	// RET instruction
+	break;
+
+	default:
+		ordenador.wr+=3;
+		switch (Addr & 0xC000) {
+		case 0x0000:
+			if (ordenador.precision) emulate_screen (3);
+			return ((byte) (*(ordenador.block0 + Addr)));
+		break;
+
+		case 0x4000:
+			do_contention();
+			if (ordenador.precision) emulate_screen (3);
+			return ((byte) (*(ordenador.block1 + Addr)));
+		break;
+
+		case 0x8000:
+			if (ordenador.precision) emulate_screen (3);
+			return ((byte) (*(ordenador.block2 + Addr)));
+		break;
+
+		case 0xC000:
+			if (ordenador.precision) {
+			if (((ordenador.mode128k==1)||(ordenador.mode128k==2)||(ordenador.mode128k==4))&&(ordenador.mport1 & 0x01)) do_contention();
+			emulate_screen (3);
+			}
 			return ((byte) (*(ordenador.block3 + Addr)));
 		break;
 
@@ -1275,22 +1646,47 @@ void set_palete_entry(unsigned char entry, byte Value) {
 
 void Z80free_Out (register word Port, register byte Value) {
 
-	// Microdrive access
-	
 	register word maskport;
 	
-	if (((Port&0x0001)==0)||((Port>=0x4000)&&(Port<0x8000))) {
-		do_contention();
+	//It should out after 3 states
+	
+	if (ordenador.precision)
+	{
+		switch (ordenador.mode128k)
+		{
+		case 0:
+		if ((Port & 0xC000) == 0x4000) // (Port>=0x4000)&&(Port<0x8000)
+			{if ((Port&0x0001)==0 ||(Port == 0xBF3B)||(Port == 0xFF3B)) {do_contention();emulate_screen(1);do_contention();ordenador.io+=1;} 
+			else {do_contention();emulate_screen(1);do_contention();emulate_screen(1);do_contention();emulate_screen(1);do_contention();ordenador.io+=3;}
+			}
+		else
+			if ((Port&0x0001)==0 ||(Port == 0xBF3B)||(Port == 0xFF3B)) {emulate_screen(1);do_contention();ordenador.io+=1;}
+		break;
+		case 1:
+		case 2:
+		case 4:
+		if (((Port & 0xC000) == 0x4000)||((ordenador.mport1 & 0x01)&&((Port & 0xC000) == 0xC000))) // (Port>=0xc000)&&(Port<=0xffff)
+			{if ((Port&0x0001)==0 ||(Port == 0xBF3B)||(Port == 0xFF3B)) {do_contention();emulate_screen(1);do_contention();ordenador.io+=1;} 
+			else {do_contention();emulate_screen(1);do_contention();emulate_screen(1);do_contention();emulate_screen(1);do_contention();ordenador.io+=3;}
+			}
+		else
+			if ((Port&0x0001)==0 ||(Port == 0xBF3B)||(Port == 0xFF3B)) {emulate_screen(1);do_contention();ordenador.io+=1;}		
+		break;
+		case 3:
+		break; //no io contention in +3
+		default:
+		break;
+		}
 	}
+	else if ((Port&0x0001)==0) do_contention();	
 
+	
 	// ULAPlus
 	if (Port == 0xBF3B) {
-		do_contention();
 		ordenador.ulaplus_reg = Value;
 		return;
 	}
 	if (Port == 0xFF3B) {
-		do_contention();
 		if (ordenador.ulaplus_reg==0x40) { // mode
 			ordenador.ulaplus=Value&0x01;
 			return;
@@ -1300,6 +1696,8 @@ void Z80free_Out (register word Port, register byte Value) {
 			set_palete_entry(ordenador.ulaplus_reg,Value);
 		}
 	}
+	
+	// Microdrive access
 
 	if(((Port &0x0018)!=0x0018)&&(ordenador.mdr_active))
 		microdrive_out(Port,Value);
@@ -1321,9 +1719,9 @@ void Z80free_Out (register word Port, register byte Value) {
 	// Memory page (7FFD & 1FFD)
 
 	if (ordenador.mode128k==3) {
-		maskport=0x0FFD;
-	} else {
 		maskport=0x3FFD;
+	} else {
+		maskport=0x7FFD;
 	}
 	
 	if (((Port|maskport) == 0x7FFD) && (0 == (ordenador.mport1 & 0x20))) {
@@ -1331,37 +1729,104 @@ void Z80free_Out (register word Port, register byte Value) {
 		set_memory_pointers ();	// set the pointers
 	}
 
-	if (((Port|maskport) == 0x1FFD) && (0 == (ordenador.mport1 & 0x20))) {
+	if (((Port|0x0FFD) == 0x1FFD) && (0 == (ordenador.mport1 & 0x20))) {
 		ordenador.mport2 = (unsigned char) Value;
 		set_memory_pointers ();	// set the pointers
 	}
 
 	// Sound chip (AY-3-8912)
 
-	if (((Port|maskport) == 0xFFFD)&&(ordenador.ay_emul))
+	if (((Port|0x3FFD) == 0xFFFD)&&(ordenador.ay_emul)) // bit1, 14 ,15 according to the manual
 		ordenador.ay_latch = ((unsigned int) (Value & 0x0F));
 
-	if (((Port|maskport) == 0xBFFD)&&(ordenador.ay_emul)) {
+	if (((Port|0x3FFD) == 0xBFFD)&&(ordenador.ay_emul)) { //bit1, 14 ,15 according to the manual
 		ordenador.ay_registers[ordenador.ay_latch] = (unsigned char) Value;
 		if (ordenador.ay_latch == 13) //Envelope shape
 			ordenador.ay_envel_way = 2;	// start cycle
 	}
 }
 
+void Z80free_Out_fake (register word Port, register byte Value) {
+	
+	register word maskport;
+	
+	// ULA port (A0 low)
+
+	if (!(Port & 0x0001)) {
+		ordenador.port254 = (unsigned char) Value;
+		ordenador.border = (((unsigned char) Value) & 0x07);
+
+		if (ordenador.pause) {
+			if (Value & 0x10)
+				ordenador.sound_bit = 1;
+			else
+				ordenador.sound_bit = 0;	// assign to SOUND_BIT the value
+		}
+	}
+
+	// Memory page (7FFD & 1FFD)
+
+	if (ordenador.mode128k==3) {
+		maskport=0x3FFD;
+	} else {
+		maskport=0x7FFD;
+	}
+	
+	if (((Port|maskport) == 0x7FFD) && (0 == (ordenador.mport1 & 0x20))) {
+		ordenador.mport1 = (unsigned char) Value;
+		set_memory_pointers ();	// set the pointers
+	}
+
+	if (((Port|0x0FFD) == 0x1FFD) && (0 == (ordenador.mport1 & 0x20))) {
+		ordenador.mport2 = (unsigned char) Value;
+		set_memory_pointers ();	// set the pointers
+	}
+}
 
 byte Z80free_In (register word Port) {
 
 	static unsigned int temporal_io;
-	byte pines;
-
-	if (((Port&0x0001)==0)||((Port>=0x4000)&&(Port<0x8000))) {
-		do_contention();
+	static byte pines;
+	
+	
+	if (ordenador.precision)
+	{
+		ordenador.io+=4;
+		switch (ordenador.mode128k)
+		{
+		case 0:
+		if ((Port & 0xC000) == 0x4000) // (Port>=0x4000)&&(Port<0x8000)
+			{if ((Port&0x0001)==0 ||(Port == 0xBF3B)||(Port == 0xFF3B)) {do_contention();emulate_screen(1);do_contention();emulate_screen(3);} 
+			else {do_contention();emulate_screen(1);do_contention();emulate_screen(1);do_contention();emulate_screen(1);do_contention();emulate_screen(1);}
+			}
+		else
+			if ((Port&0x0001)==0 ||(Port == 0xBF3B)||(Port == 0xFF3B)) {emulate_screen(1);do_contention();emulate_screen(3);}
+			else emulate_screen(4);
+		break;
+		case 1:
+		case 2:
+		case 4:
+		if (((Port & 0xC000) == 0x4000)||((ordenador.mport1 & 0x01)&&((Port & 0xC000) == 0xC000))) // (Port>=0xc000)&&(Port<=0xffff)
+			{if ((Port&0x0001)==0 ||(Port == 0xBF3B)||(Port == 0xFF3B)) {do_contention();emulate_screen(1);do_contention();emulate_screen(3);} 
+			else {do_contention();emulate_screen(1);do_contention();emulate_screen(1);do_contention();emulate_screen(1);do_contention();emulate_screen(1);}
+			}
+		else
+			if ((Port&0x0001)==0 ||(Port == 0xBF3B)||(Port == 0xFF3B)) {emulate_screen(1);do_contention();emulate_screen(3);}
+			else emulate_screen(4);
+		break;
+		case 3:
+		emulate_screen(4);//no io contention in +3
+		break; 
+		default:
+		emulate_screen(4);
+		break;
+		}
 	}
-
+	else if ((Port&0x0001)==0) do_contention();	
+		
 	temporal_io = (unsigned int) Port;
-
+	
 	if (Port == 0xFF3B) {
-		do_contention();
 		if (ordenador.ulaplus_reg==0x40) { // mode
 			return(ordenador.ulaplus&0x01);
 		}
@@ -1415,7 +1880,10 @@ byte Z80free_In (register word Port) {
 		}
 	}
 
-	if ((temporal_io == 0xFFFD)&&(ordenador.ay_emul))
+	if ((temporal_io == 0xFFFD)&&(ordenador.ay_emul)) //any mask to apply?
+		return (ordenador.ay_registers[ordenador.ay_latch]);
+		
+	if ((temporal_io == 0xBFFD)&&(ordenador.ay_emul)&&(ordenador.mode128k==3)) //any mask to apply?
 		return (ordenador.ay_registers[ordenador.ay_latch]);
 
 	// Microdrive access
@@ -1424,7 +1892,12 @@ byte Z80free_In (register word Port) {
 		return(microdrive_in(Port));
 	
 	pines=bus_empty();
-
+	
+	if (ordenador.precision && (ordenador.mode128k==1||ordenador.mode128k==2||(ordenador.mode128k==4)))
+	 {	if (temporal_io == 0x7FFD) Z80free_Out_fake (0x7FFD,pines); //writeback 0X7ffd 
+		if (temporal_io == 0x3FFD) Z80free_Out_fake (0x3FFD,pines); //writeback 0X3ffd
+	 }
+	
 	return (pines);
 }
 
@@ -1474,4 +1947,47 @@ void set_volume (unsigned char volume) {
 		ordenador.sample1b[3] = 1;
 		break;
 	}
+}
+
+void restart_video()
+{
+ int dblbuffer=1,hwsurface=1;
+ char old_border;
+ 
+clean_screen();
+
+if (ordenador.mustlock) {
+				SDL_UnlockSurface (ordenador.screen);
+				SDL_Flip (ordenador.screen);
+				SDL_LockSurface (ordenador.screen);
+			} else {
+				SDL_Flip (ordenador.screen);
+			}
+			
+
+switch(ordenador.zaurus_mini) {
+	case 0:
+		init_screen(640,480,0,0,dblbuffer,hwsurface);
+	break;
+	case 1:
+	case 2:
+		init_screen(480,640,0,0,dblbuffer,hwsurface);
+	break;
+	case 3:
+		init_screen(320,240,0,0,dblbuffer,hwsurface);
+	break;
+	}
+	
+	old_border = ordenador.border;
+	register_screen(screen);
+	ordenador.border = old_border;
+
+	ordenador.screenbuffer=ordenador.screen->pixels;
+	ordenador.screen_width=ordenador.screen->w;
+	
+	//Init SDL Menu
+	
+	menu_init(ordenador.screen);
+
+	clean_screen();
 }
