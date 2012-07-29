@@ -2,8 +2,8 @@
   <app version="1">
     <name>FBZX Wii</name>
     <coder>Oibaf</coder>
-    <version>4.0</version>
-    <release_date>20120629</release_date>
+    <version>5.0</version>
+    <release_date>20120729</release_date>
     <short_description>ZX Spectrum Emulator</short_description>
     <long_description>A ZX Spectrum emulator for FrameBuffer written by Sergio Costas, see http://www.rastersoft.com/fbzx.html.
 The port to Wii was done by Fabio Olimpieri.
@@ -24,8 +24,10 @@ You can also insert a tape file (.tap and .tzx) and then load the file in the ta
  
 If you have problems with a .tap file, likely the TAP file has a program which uses a custom routine to load the blocks; in this case, try to disbale the "Tap fast speed" function.
  
-If you want to speed up the tape file loading (both for .tzx file and .tap file with "tap fast speed" disabled), try to enable "turbo mode" which speeds up the emulator by 4 or by 7.
+If you want to speed up the tape file loading (both for .tzx file and .tap file with "tap fast speed" disabled), try to enable "turbo mode" which speeds up the emulator by 3 or by 5.
 In this case, do not forget to revert to normal speed after the loading.
+
+It is possible to set precision emulation required by some demo graphic programs. Turbo mode is disable in this mode.
 
 The general preferences are saved (joystick type, machine, buttons bindings, etc.) from the main in-game menu and they are loaded on start-up.
 

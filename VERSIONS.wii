@@ -1,3 +1,12 @@
+version 5:
+	    * Added precision emulation setting (floating bus, contention, interrupt timing) 
+	    * Added NTSC 48K machine
+	    * Added 320X240 framebuffer resolution
+	    *	New screen setting menu	
+	    * Added framerate setting
+
+		-- Fabio Olimpieri <fabio.olimpieri@tin.it> July 29 2012
+
 version 4:
 	    * Fixed RETN and RETI Z80 instructions
 	    * In Joypad mode, the nunchuck works now
