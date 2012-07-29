@@ -796,7 +796,7 @@ int load_config(struct computer *object, char *filename) {
 	if (issue<4) {
 		object->issue=issue;
 	}
-	if (issue<2) {
+	if (ntsc<2) {
 		object->videosystem=ntsc;
 	}
 	if (joystick1<4) {
