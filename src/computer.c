@@ -1678,7 +1678,7 @@ void Z80free_Out (register word Port, register byte Value) {
 		break;
 		}
 	}
-	else if ((Port&0x0001)==0) do_contention();	
+	else if (((Port&0x0001)==0)&&(ordenador.mode128k!=3)) do_contention();
 
 	
 	// ULAPlus
@@ -1822,7 +1822,7 @@ byte Z80free_In (register word Port) {
 		break;
 		}
 	}
-	else if ((Port&0x0001)==0) do_contention();	
+	else if (((Port&0x0001)==0)&&(ordenador.mode128k!=3)) do_contention();	
 		
 	temporal_io = (unsigned int) Port;
 	
