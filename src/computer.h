@@ -79,6 +79,7 @@ struct computer {
 	int end_contention; //end tstados for contention
 	
 	unsigned char screen_snow; // 0-> no emulate snow; 1-> emulate snow
+	unsigned char fetch_state;
 	//unsigned char contended_zone; // 0-> no contention; 1-> contention possible
 	int cicles_counter; // counts how many pixel clock cicles passed since las interrupt
 

@@ -34,6 +34,7 @@
 #include "menus.h"
 #include "emulator.h"
 #include "cargador.h"
+#include "characters.h"
 
 #define ID_BUTTON_OFFSET 0
 #define ID_AXIS_OFFSET 32
@@ -235,7 +236,7 @@ static void insert_tape()
 	if (!strncmp(filename,"smb:",4)) ordenador.tap_file=fopen(filename,"r"); //tinysmb does not work with r+
 	else ordenador.tap_file=fopen(filename,"r+"); // read and write
 	
-	ordenador.tape_write = 0; // by default, can't record
+	ordenador.tape_write = 1; // by default, can record
 	
 	if(ordenador.tap_file==NULL)
 		retorno=-1;
@@ -281,7 +282,69 @@ static void delete_tape()
 	
 	free((void *)filename);
 }
+
+void create_tapfile_sdl() {
+
+	unsigned char *videomem;
+	int ancho,retorno;
+	unsigned char nombre2[1024];
+
+	videomem=screen->pixels;
+	ancho=screen->w;
+
+	clean_screen();
+
+	print_string(videomem,"Choose a name for the TAP file",-1,32,14,0,ancho);
+	print_string(videomem,"(up to 30 characters)",-1,52,14,0,ancho);
+
+	print_string(videomem,"TAP file will be saved in:",-1,112,12,0,ancho);
+	print_string(videomem,path_taps,0,132,12,0,ancho);
+
+
+	retorno=ask_filename_sdl(nombre2,82,"tap",path_taps,NULL);
+
+	clean_screen();
+
+	if(retorno==2) // abort
+		return;
+
+	if(ordenador.tap_file!=NULL)
+		fclose(ordenador.tap_file);
 	
+	ordenador.tap_file=fopen(nombre2,"r"); // test if it exists
+	if(ordenador.tap_file==NULL)
+		retorno=0;
+	else
+		retorno=-1;
+	
+	if(!retorno) {
+		ordenador.tap_file=fopen(nombre2,"a+"); // create for read and write
+		if(ordenador.tap_file==NULL)
+			retorno=-2;
+		else
+			retorno=0;
+	}
+	ordenador.tape_write=1; // allow to write
+	strcpy(ordenador.current_tap,nombre2);
+	ordenador.tape_file_type = TAP_TAP;
+	switch(retorno) {
+	case 0:
+	break;
+	case -1:
+		print_string(videomem,"File already exists",-1,80,10,0,ancho);
+		SDL_Flip(screen);
+		ordenador.current_tap[0]=0;
+		SDL_Delay(3000);
+	break;
+	case -2:
+		print_string(videomem,"Can't create file",-1,80,10,0,ancho);
+		ordenador.current_tap[0]=0;
+		SDL_Flip(screen);
+		SDL_Delay(3000);
+	break;
+	}
+	clean_screen();
+}	
 
 static void manage_tape(int which)
 {
@@ -291,20 +354,42 @@ static void manage_tape(int which)
 		insert_tape();
 		break;
 	case 1: //Emulate load ""
-		ordenador.kbd_buffer_pointer=6;
 		countdown=8;
-		ordenador.keyboard_buffer[0][6]= SDLK_1;		//Edit
-		ordenador.keyboard_buffer[1][6]= SDLK_LSHIFT;
-		ordenador.keyboard_buffer[0][5]= SDLK_j;		//Load
-		ordenador.keyboard_buffer[1][5]= 0;
-		ordenador.keyboard_buffer[0][4]= SDLK_p;		//"
-		ordenador.keyboard_buffer[1][4]= SDLK_LCTRL;
-		ordenador.keyboard_buffer[0][3]= SDLK_p;		//"
-		ordenador.keyboard_buffer[1][3]= SDLK_LCTRL;
-		ordenador.keyboard_buffer[0][2]= SDLK_RETURN;	// Return
-		ordenador.keyboard_buffer[1][2]= 0;
-		ordenador.keyboard_buffer[0][1]= SDLK_F6;		//F6
-		ordenador.keyboard_buffer[1][1]= 0;
+		if (ordenador.mode128k==4) //Spanish 128k
+			{
+			ordenador.keyboard_buffer[0][8]= SDLK_l;		
+			ordenador.keyboard_buffer[1][8]= 0;
+			ordenador.keyboard_buffer[0][7]= SDLK_o;		
+			ordenador.keyboard_buffer[1][7]= 0;
+			ordenador.keyboard_buffer[0][6]= SDLK_a;		
+			ordenador.keyboard_buffer[1][6]= 0;
+			ordenador.keyboard_buffer[0][5]= SDLK_d;		
+			ordenador.keyboard_buffer[1][5]= 0;
+			ordenador.keyboard_buffer[0][4]= SDLK_p;		//"	
+			ordenador.keyboard_buffer[1][4]= SDLK_LCTRL;
+			ordenador.keyboard_buffer[0][3]= SDLK_p;		//"	
+			ordenador.keyboard_buffer[1][3]= SDLK_LCTRL;
+			ordenador.keyboard_buffer[0][2]= SDLK_RETURN;	// Return
+			ordenador.keyboard_buffer[1][2]= 0;
+			ordenador.keyboard_buffer[0][1]= SDLK_F6;		//F6 - play
+			ordenador.keyboard_buffer[1][1]= 0;
+			ordenador.kbd_buffer_pointer=8;
+			}
+			else
+			{
+			ordenador.keyboard_buffer[0][5]= SDLK_j;		//Load
+			ordenador.keyboard_buffer[1][5]= 0;
+			ordenador.keyboard_buffer[0][4]= SDLK_p;		//"
+			ordenador.keyboard_buffer[1][4]= SDLK_LCTRL;
+			ordenador.keyboard_buffer[0][3]= SDLK_p;		//"
+			ordenador.keyboard_buffer[1][3]= SDLK_LCTRL;
+			ordenador.keyboard_buffer[0][2]= SDLK_RETURN;	// Return
+			ordenador.keyboard_buffer[1][2]= 0;
+			ordenador.keyboard_buffer[0][1]= SDLK_F6;		//F6
+			ordenador.keyboard_buffer[1][1]= 0;
+			ordenador.kbd_buffer_pointer=5;
+			}
+		
 		break;
 	case 2: //Play
 		if ((ordenador.tape_fast_load == 0) || (ordenador.tape_file_type==TAP_TZX))
@@ -324,7 +409,8 @@ static void manage_tape(int which)
 		break;
 	case 5: //Create
 		// Create tape 
-		msgInfo("Not yet implemented",3000,NULL);
+		create_tapfile_sdl();
+		//msgInfo("Not yet implemented",3000,NULL);
 		break;	
 	case 6: //Delete
 		delete_tape();
@@ -612,6 +698,71 @@ static void delete_mdr()
 	free((void *)filename);
 }
 
+void create_mdrfile_sdl() {
+
+	unsigned char *videomem;
+	int ancho,retorno,bucle,retval;
+	unsigned char nombre2[1024];
+
+	videomem=screen->pixels;
+	ancho=screen->w;
+
+	clean_screen();
+
+	print_string(videomem,"Choose a name for the MDR file",-1,32,14,0,ancho);
+	print_string(videomem,"(up to 30 characters)",-1,52,14,0,ancho);
+
+	print_string(videomem,"MDR file will be saved in:",-1,112,12,0,ancho);
+	print_string(videomem,path_mdrs,0,132,12,0,ancho);
+
+	retorno=ask_filename_sdl(nombre2,82,"mdr",path_mdrs, NULL);
+
+	clean_screen();
+
+	if(retorno==2) // abort
+		return;
+
+	ordenador.mdr_file=fopen(nombre2,"r"); // test if it exists
+	if(ordenador.mdr_file==NULL)
+		retorno=0;
+	else
+		retorno=-1;
+	
+	if(!retorno) {
+		ordenador.mdr_file=fopen(nombre2,"wb"); // create for write
+		if(ordenador.mdr_file==NULL)
+			retorno=-2;
+		else {
+			for(bucle=0;bucle<137921;bucle++)
+				ordenador.mdr_cartridge[bucle]=0xFF; // erase cartridge
+			ordenador.mdr_cartridge[137922]=0;
+			retval=fwrite(ordenador.mdr_cartridge,137923,1,ordenador.mdr_file); // save cartridge
+			fclose(ordenador.mdr_file);
+			ordenador.mdr_file=NULL;
+			ordenador.mdr_modified=0;
+			retorno=0;
+		}
+	}	
+	strcpy(ordenador.mdr_current_mdr,nombre2);	
+	switch(retorno) {
+	case 0:
+	break;
+	case -1:
+		print_string(videomem,"File already exists",-1,80,10,0,ancho);
+		ordenador.mdr_current_mdr[0]=0;
+		SDL_Flip(screen);
+		SDL_Delay(3000);
+	break;
+	case -2:
+		print_string(videomem,"Can't create file",-1,80,10,0,ancho);
+		ordenador.mdr_current_mdr[0]=0;
+		SDL_Flip(screen);
+		SDL_Delay(3000);
+	break;
+	}
+	clean_screen();
+}
+
 static void microdrive()
 {
 	
@@ -657,7 +808,8 @@ static void microdrive()
 			break;
 		case 1: // Create microdrive file
 			// Create microdrive file ;
-			msgInfo("Not yet implemented",3000,NULL);
+			create_mdrfile_sdl();
+			//msgInfo("Not yet implemented",3000,NULL);
 			break;
 		case 2: // Delete microdrive file
 			delete_mdr();
@@ -836,6 +988,95 @@ static void set_port(int which)
 	}	
 }
 
+// shows the POKE menu
+
+void do_poke_sdl() {
+
+	unsigned char *videomem,string[80];
+	int ancho,retorno,address,old_value,new_value;
+
+	videomem=screen->pixels;
+	ancho=screen->w;
+
+	clean_screen();
+
+	while(1) {
+		print_string(videomem,"Type address to POKE",-1,32,15,0,ancho);
+		//print_string(videomem,"(ESC to exit)",-1,52,12,0,ancho);
+
+		retorno=ask_value_sdl(&address,84,65535);
+
+		clean_screen();
+
+		if (retorno==2) {
+			return;
+		}
+
+		if ((address<16384) && ((ordenador.mode128k != 3) || (1 != (ordenador.mport2 & 0x01)))) {
+			print_string(videomem,"That address is ROM memory.",-1,13,15,0,ancho);
+			continue;
+		}
+
+		switch (address & 0x0C000) {
+		case 0x0000:
+			old_value= (*(ordenador.block0 + address));
+		break;
+
+		case 0x4000:
+			old_value= (*(ordenador.block1 + address));
+		break;
+
+		case 0x8000:
+			old_value= (*(ordenador.block2 + address));
+		break;
+
+		case 0xC000:
+			old_value= (*(ordenador.block3 + address));
+		break;
+		default:
+			old_value=0;
+		break;
+		}
+
+		print_string(videomem,"Type new value to POKE",-1,32,15,0,ancho);
+		//print_string(videomem,"(ESC to cancel)",-1,52,12,0,ancho);
+		sprintf(string,"Address: %d; old value: %d\n",address,old_value);
+		print_string(videomem,string,-1,130,14,0,ancho);
+
+		retorno=ask_value_sdl(&new_value,84,255);
+
+		clean_screen();
+
+		if (retorno==2) {
+			continue;
+		}
+
+		switch (address & 0x0C000) {
+		case 0x0000:
+			(*(ordenador.block0 + address))=new_value;
+		break;
+
+		case 0x4000:
+			(*(ordenador.block1 + address))=new_value;
+		break;
+
+		case 0x8000:
+			(*(ordenador.block2 + address))=new_value;
+		break;
+
+		case 0xC000:
+			(*(ordenador.block3 + address))=new_value;
+		break;
+		default:
+		break;
+		}
+
+		sprintf(string,"Set address %d from %d to %d\n",address,old_value,new_value);
+		print_string(videomem,string,-1,130,14,0,ancho);
+
+	}
+}
+
 static void tools()
 {
 	int opt ;
@@ -865,7 +1106,8 @@ static void tools()
 			break;
 		case 6: // Insert poke
 			// Insert poke ;
-			msgInfo("Not yet implemented",3000,NULL);
+			do_poke_sdl();
+			//msgInfo("Not yet implemented",3000,NULL);
 			break;
 		default:
 			break;

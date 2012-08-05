@@ -70,7 +70,7 @@ void draw()
 	int key_w = 54/RATIO;
 	int key_h = 36/RATIO;
 	int border_x = (screen_w - (key_w * KEY_COLS)) / 2;
-	int border_y = (screen_h - (key_h * KEY_ROWS)) / 2;
+	int border_y = (screen_h - (key_h * KEY_ROWS)) / 2 + 50/RATIO;
 	SDL_Rect bg_rect = {border_x, border_y,
 			key_w * KEY_COLS, key_h * KEY_ROWS};
 
@@ -170,7 +170,7 @@ struct virtkey *get_key_internal()
 struct virtkey* get_key()
 {
 	virtkey_t *key;
-	SDL_Rect rect = {32/RATIO, 120/RATIO, FULL_DISPLAY_X-64/RATIO, FULL_DISPLAY_Y-250/RATIO};
+	SDL_Rect rect = {32/RATIO, (120+50)/RATIO, FULL_DISPLAY_X-64/RATIO, FULL_DISPLAY_Y-250/RATIO};
 	
 	keys[3 * KEY_COLS + 0 ].is_done = 0; //Caps Shit
 	keys[3 * KEY_COLS + 8 ].is_done = 0; //Sym Shift
@@ -179,7 +179,7 @@ struct virtkey* get_key()
 	
 	key = get_key_internal();
 	
-	clean_screen();
+	//clean_screen();
 
 	return key;
 }

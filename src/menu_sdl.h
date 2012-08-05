@@ -55,10 +55,10 @@ const char *menu_select_file_start(const char *dir_path, const char **d64_name);
 
 uint32_t menu_wait_key_press(void);
 
-extern void msgKill(SDL_Rect *rc);
-extern int msgInfo(char *text, int duration, SDL_Rect *rc);
+void msgKill(SDL_Rect *rc);
+int msgInfo(char *text, int duration, SDL_Rect *rc);
 
-extern int msgYesNo(char *text, int def,int x, int y);
+int msgYesNo(char *text, int def,int x, int y);
 
 void font_init();
 
@@ -68,5 +68,8 @@ int menu_is_inited(void);
 
 int ext_matches(const char *name, const char *ext);
 
+int ask_value_sdl(int *final_value,int y_coord,int max_value);
+
+int ask_filename_sdl(char *nombre_final,int y_coord,char *extension, char *path, char *name);
 
 #endif /* !__MENU_H__ */

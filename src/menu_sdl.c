@@ -38,6 +38,7 @@
 #include "emulator.h"
 #include "VirtualKeyboard.h"
 
+#include "characters.h"
 
 
 typedef struct
@@ -1022,4 +1023,437 @@ void menu_init(SDL_Surface *screen)
 int menu_is_inited(void)
 {
 	return is_inited;
+}
+
+int ask_value_sdl(int *final_value,int y_coord,int max_value) {
+
+	unsigned char nombre2[50];
+	unsigned char *videomem;
+	int ancho,value,tmp,retorno;
+	struct virtkey *virtualkey;
+	unsigned int sdl_key;
+
+	videomem=screen->pixels;
+	ancho=screen->w;
+
+	retorno=0;
+	value=0;
+	do {
+		sprintf (nombre2, " %d\177 ", value);
+		print_string (videomem, nombre2, -1, y_coord, 15, 0, ancho);
+		
+		virtualkey = get_key();
+		if (virtualkey == NULL) return(2);
+		sdl_key = virtualkey->sdl_code;
+		
+		switch (sdl_key) {
+		case SDLK_BACKSPACE:
+			value/=10;
+		break;
+		case SDLK_ESCAPE:
+			retorno=2;
+		break;
+		case SDLK_RETURN:
+			retorno=1;
+		break;
+		case SDLK_0:
+			tmp=value * 10;
+			if (tmp <= max_value) {
+				value=tmp;
+			}
+		break;
+		case SDLK_1:
+			tmp=1+value * 10;
+			if (tmp <= max_value) {
+				value=tmp;
+			}
+		break;
+		case SDLK_2:
+			tmp=2+value * 10;
+			if (tmp <= max_value) {
+				value=tmp;
+			}
+		break;
+		case SDLK_3:
+			tmp=3+value * 10;
+			if (tmp <= max_value) {
+				value=tmp;
+			}
+		break;
+		case SDLK_4:
+			tmp=4+value * 10;
+			if (tmp <= max_value) {
+				value=tmp;
+			}
+		break;
+		case SDLK_5:
+			tmp=5+value * 10;
+			if (tmp <= max_value) {
+				value=tmp;
+			}
+		break;
+		case SDLK_6:
+			tmp=6+value * 10;
+			if (tmp <= max_value) {
+				value=tmp;
+			}
+		break;
+		case SDLK_7:
+			tmp=7+value * 10;
+			if (tmp <= max_value) {
+				value=tmp;
+			}
+		break;
+		case SDLK_8:
+			tmp=8+value * 10;
+			if (tmp <= max_value) {
+				value=tmp;
+			}
+		break;
+		case SDLK_9:
+			tmp=9+value * 10;
+			if (tmp <= max_value) {
+				value=tmp;
+			}
+		break;
+		}
+	} while (!retorno);
+
+	*final_value=value;
+
+	return (retorno);
+}
+
+int ask_filename_sdl(char *nombre_final,int y_coord,char *extension, char *path, char *name) {
+
+	int longitud,retorno;
+	unsigned char nombre[37],nombre2[38];
+	char *ptr;
+
+	unsigned char *videomem;
+	int ancho;
+	
+	struct virtkey *virtualkey;
+	unsigned int sdl_key;
+
+	videomem=screen->pixels;
+	ancho=screen->w;
+
+	retorno=0;
+	
+	if (!name||(strlen(name)>36)) 
+		{
+		nombre[0]=127;
+		nombre[1]=0;
+		}
+	else
+		{
+		strcpy(nombre,name);
+		ptr = strrchr (nombre, '.');
+		if (ptr) //remove the extension 
+			{
+			*ptr = 127;
+			*(ptr+1) = 0;
+			}
+		else
+		nombre[strlen(nombre)-1]=127;
+		nombre[strlen(nombre)]=0;
+		}
+	
+	longitud=strlen(nombre)-1;
+	
+
+	do {
+		sprintf (nombre2, " %s.%s ", nombre,extension);
+		print_string (videomem, nombre2, -1, y_coord, 15, 0, ancho);
+		
+		virtualkey = get_key();
+		if (virtualkey == NULL) return(2);
+		sdl_key = virtualkey->sdl_code;
+		
+		switch (sdl_key) {
+		case SDLK_BACKSPACE:
+			if (longitud > 0) {
+				nombre[longitud]=0;
+				longitud--;
+				nombre[longitud]=127;
+			}
+		break;
+		case SDLK_ESCAPE:
+			retorno=2;
+		break;
+		case SDLK_RETURN:
+			retorno=1;
+		break;
+		case SDLK_a:
+			if (longitud < 30) {
+				nombre[longitud++]='a';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_b:
+			if (longitud < 30) {
+				nombre[longitud++]='b';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_c:
+			if (longitud < 30) {
+				nombre[longitud++]='c';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_d:
+			if (longitud < 30) {
+				nombre[longitud++]='d';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_e:
+			if (longitud < 30) {
+				nombre[longitud++]='e';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_f:
+			if (longitud < 30) {
+				nombre[longitud++]='f';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_g:
+			if (longitud < 30) {
+				nombre[longitud++]='g';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_h:
+			if (longitud < 30) {
+				nombre[longitud++]='h';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_i:
+			if (longitud < 30) {
+				nombre[longitud++]='i';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_j:
+			if (longitud < 30) {
+				nombre[longitud++]='j';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_k:
+			if (longitud < 30) {
+				nombre[longitud++]='k';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_l:
+			if (longitud < 30) {
+				nombre[longitud++]='l';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_m:
+			if (longitud < 30) {
+				nombre[longitud++]='m';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_n:
+			if (longitud < 30) {
+				nombre[longitud++]='n';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_o:
+			if (longitud < 30) {
+				nombre[longitud++]='o';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_p:
+			if (longitud < 30) {
+				nombre[longitud++]='p';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_q:
+			if (longitud < 30) {
+				nombre[longitud++]='q';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_r:
+			if (longitud < 30) {
+				nombre[longitud++]='r';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_s:
+			if (longitud < 30) {
+				nombre[longitud++]='s';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_t:
+			if (longitud < 30) {
+				nombre[longitud++]='t';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_u:
+			if (longitud < 30) {
+				nombre[longitud++]='u';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_v:
+			if (longitud < 30) {
+				nombre[longitud++]='v';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_w:
+			if (longitud < 30) {
+				nombre[longitud++]='w';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_x:
+			if (longitud < 30) {
+				nombre[longitud++]='x';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_y:
+			if (longitud < 30) {
+				nombre[longitud++]='y';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_z:
+			if (longitud < 30) {
+				nombre[longitud++]='z';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_0:
+			if (longitud < 30) {
+				nombre[longitud++]='0';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_1:
+			if (longitud < 30) {
+				nombre[longitud++]='1';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_2:
+			if (longitud < 30) {
+				nombre[longitud++]='2';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_3:
+			if (longitud < 30) {
+				nombre[longitud++]='3';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_4:
+			if (longitud < 30) {
+				nombre[longitud++]='4';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_5:
+			if (longitud < 30) {
+				nombre[longitud++]='5';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_6:
+			if (longitud < 30) {
+				nombre[longitud++]='6';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_7:
+			if (longitud < 30) {
+				nombre[longitud++]='7';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_8:
+			if (longitud < 30) {
+				nombre[longitud++]='8';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_9:
+			if (longitud < 30) {
+				nombre[longitud++]='9';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		case SDLK_MINUS:
+			if (longitud < 30) {
+				nombre[longitud++]='-';
+				nombre[longitud]=127;
+				nombre[longitud + 1]=0;
+			}
+		break;
+		}
+	} while (!retorno);
+
+	nombre[longitud]=0; // erase cursor
+
+	longitud=strlen(path);
+	if((path[longitud-1]!='/')&&(longitud>1))
+		sprintf(nombre_final,"%s/%s.%s",path,nombre,extension); // name
+	else
+		sprintf(nombre_final,"%s%s.%s",path,nombre,extension);
+
+	return (retorno);
 }

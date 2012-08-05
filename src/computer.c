@@ -63,8 +63,8 @@ inline byte bus_empty () {
    tstates */
 
 inline void emulate_screen (int tstados) {
-
-	if((procesador.I & 0xC0) == 0x40) { // (procesador.I>=0x40)&&(procesador.I<=0x7F)
+	
+	if(((procesador.I & 0xC0) == 0x40)&&(ordenador.mode128k!=3)) { // (procesador.I>=0x40)&&(procesador.I<=0x7F)
 		ordenador.screen_snow=1;
 	} else
 		ordenador.screen_snow=0;
@@ -160,6 +160,7 @@ void computer_init () {
 	ordenador.autoconf=0;
 	
 	ordenador.cpufreq = 3500000; // values for 48K mode
+	ordenador.fetch_state =0;
 }
 
 void computer_set_palete() {
@@ -592,7 +593,7 @@ inline void show_screen (int tstados) {
 			// Snow Effect
 
 			if(ordenador.screen_snow) {
-				temporal3 = ordenador.memoria[(((*ordenador.p_translt) + (ordenador.video_offset))&0xFFFFFF00)+(procesador.R)];	// data with snow
+				temporal3 = ordenador.memoria[(((*ordenador.p_translt) + (ordenador.video_offset))&0xFFFFFF80)+(procesador.R&0x7F)];	// data with snow
 				ordenador.screen_snow=0; // no more snow for now
 			} else
 				temporal3 = ordenador.memoria[(*ordenador.p_translt) + ordenador.video_offset];	// bitmap	// bitmap
@@ -716,13 +717,19 @@ inline void show_screen_precision (int tstados) {
 			if ((ordenador.currline == ordenador.upper_border_line) && (ordenador.currpix == 46))
 			{
 			
-				temporal = ordenador.memoria[(*ordenador.p_translt2) + ordenador.video_offset];	// attributes
-				temporal2 = ordenador.memoria[(*ordenador.p_translt) + ordenador.video_offset];	// bitmap
-				temporal_1 = ordenador.memoria[(*(ordenador.p_translt2+1)) + ordenador.video_offset];	// attributes
-				temporal2_1 = ordenador.memoria[((*ordenador.p_translt+1)) + ordenador.video_offset];	// bitmap
+				temporal = ordenador.memoria[(*ordenador.p_translt2) + ordenador.video_offset];	// attributes first byte
+				temporal2 = ordenador.memoria[(*ordenador.p_translt) + ordenador.video_offset];	// bitmap first byte
+				temporal_1 = ordenador.memoria[(*(ordenador.p_translt2+1)) + ordenador.video_offset];	// attributes second byte
+				temporal2_1 = ordenador.memoria[(*(ordenador.p_translt+1)) + ordenador.video_offset];	// bitmap second byte
+				
+				if((ordenador.fetch_state==2)&&((procesador.I & 0xC0) == 0x40))  {
+					temporal2 = ordenador.memoria[(((*(ordenador.p_translt)) + (ordenador.video_offset))&0xFFFFFF80)+(procesador.R&0x7F)];	// bitmap with snow first byte
+					temporal = ordenador.memoria[(((*(ordenador.p_translt2)) + (ordenador.video_offset))&0xFFFFFF80)+(procesador.R&0x7F)];	// attributes with snow first byte
+				}
 				
 				ordenador.p_translt+=2;
 				ordenador.p_translt2+=2;
+				
 				ordenador.bus_value = temporal2;
 			}
 
@@ -748,12 +755,6 @@ inline void show_screen_precision (int tstados) {
 					fflash = temporal & 0x80;	// flash flag
 					}
 
-				// Snow Effect
-
-				if(ordenador.screen_snow) {
-					temporal3 = ordenador.memoria[(((*ordenador.p_translt) + (ordenador.video_offset))&0xFFFFFF00)+(procesador.R)];	// data with snow
-					ordenador.screen_snow=0; // no more snow for now
-				} else
 					temporal3 = temporal2;	// bitmap
 				
 			break;
@@ -780,10 +781,10 @@ inline void show_screen_precision (int tstados) {
 			
 			case 14: //sample the memory 
 			
-				temporal = ordenador.memoria[(*ordenador.p_translt2) + ordenador.video_offset];	// attributes
-				temporal2 = ordenador.memoria[(*ordenador.p_translt) + ordenador.video_offset];	// bitmap
-				temporal_1 = ordenador.memoria[(*(ordenador.p_translt2+1)) + ordenador.video_offset];	// attributes
-				temporal2_1 = ordenador.memoria[((*ordenador.p_translt+1)) + ordenador.video_offset];	// bitmap
+				temporal = ordenador.memoria[(*ordenador.p_translt2) + ordenador.video_offset];	// attributes first byte
+				temporal2 = ordenador.memoria[(*ordenador.p_translt) + ordenador.video_offset];	// bitmap first byte
+				temporal_1 = ordenador.memoria[(*(ordenador.p_translt2+1)) + ordenador.video_offset];	// attributes second byte
+				temporal2_1 = ordenador.memoria[(*(ordenador.p_translt+1)) + ordenador.video_offset];	// bitmap second byte
 				
 				ordenador.p_translt+=2;
 				ordenador.p_translt2+=2;
@@ -792,23 +793,32 @@ inline void show_screen_precision (int tstados) {
 			}
 		
 			//Floating bus
-			if (ordenador.currpix < 295)
+			if ((ordenador.currpix < 295) && (ordenador.mode128k != 3)) //no floating bus and snow effect in +3
 			switch (ordenador.pixels_word)
 			{
 			case 14:
-				// bitmap
+				if((ordenador.fetch_state==2)&&((procesador.I & 0xC0) == 0x40))  {
+					temporal2 = ordenador.memoria[(((*(ordenador.p_translt-2)) + (ordenador.video_offset))&0xFFFFFF80)+(procesador.R&0x7F)];	// bitmap with snow second byte
+					temporal = ordenador.memoria[(((*(ordenador.p_translt2-2)) + (ordenador.video_offset))&0xFFFFFF80)+(procesador.R&0x7F)];	// attributes with snow second byte
+				}
+				// bitmap first byte
 				ordenador.bus_value = temporal2; 
 				break;
 			case 0:
-				// attributes
+				// attributes first byte
 				ordenador.bus_value = temporal; 
 				break;	
 			case 2:
-				// bitmap
+				// Snow Effect
+				if((ordenador.fetch_state==2)&&((procesador.I & 0xC0) == 0x40))  {
+					temporal2_1 = ordenador.memoria[(((*(ordenador.p_translt-1)) + (ordenador.video_offset))&0xFFFFFF80)+(((*(ordenador.p_translt-2)) + (ordenador.video_offset))&0x7F)];	// bitmap with snow second byte
+					temporal_1 = ordenador.memoria[(((*(ordenador.p_translt2-1)) + (ordenador.video_offset))&0xFFFFFF80)+(((*(ordenador.p_translt2-2)) + (ordenador.video_offset))&0x7F)];	// attributes with snow second byte
+				}
+				// bitmap second byte
 				ordenador.bus_value = temporal2_1;
 				break;
 			case 4:	
-				// attributes
+				// attributes second byte
 				ordenador.bus_value = temporal_1;
 				break;
 			default:
@@ -827,6 +837,7 @@ inline void show_screen_precision (int tstados) {
 		//Update pixel position
 		ordenador.cicles_counter++;
 		ordenador.currpix += 2;
+		if (ordenador.fetch_state) ordenador.fetch_state--;
 		if (ordenador.currpix > ordenador.pixancho) {
 			ordenador.currpix = 0;
 			ordenador.currline++;
@@ -1085,8 +1096,28 @@ inline void read_keyboard () {
 
 		case SDLK_F9:
 			//Emulate load ""
-			ordenador.keyboard_buffer[0][6]= SDLK_1;		//Edit
-			ordenador.keyboard_buffer[1][6]= SDLK_LSHIFT;
+			if (ordenador.mode128k==4) //Spanish 128k
+			{
+			ordenador.keyboard_buffer[0][8]= SDLK_l;		
+			ordenador.keyboard_buffer[1][8]= 0;
+			ordenador.keyboard_buffer[0][7]= SDLK_o;		
+			ordenador.keyboard_buffer[1][7]= 0;
+			ordenador.keyboard_buffer[0][6]= SDLK_a;		
+			ordenador.keyboard_buffer[1][6]= 0;
+			ordenador.keyboard_buffer[0][5]= SDLK_d;		
+			ordenador.keyboard_buffer[1][5]= 0;
+			ordenador.keyboard_buffer[0][4]= SDLK_p;		//"	
+			ordenador.keyboard_buffer[1][4]= SDLK_LCTRL;
+			ordenador.keyboard_buffer[0][3]= SDLK_p;		//"	
+			ordenador.keyboard_buffer[1][3]= SDLK_LCTRL;
+			ordenador.keyboard_buffer[0][2]= SDLK_RETURN;	// Return
+			ordenador.keyboard_buffer[1][2]= 0;
+			ordenador.keyboard_buffer[0][1]= SDLK_F6;		//F6 - play
+			ordenador.keyboard_buffer[1][1]= 0;
+			ordenador.kbd_buffer_pointer=8;
+			}
+			else
+			{
 			ordenador.keyboard_buffer[0][5]= SDLK_j;		//Load
 			ordenador.keyboard_buffer[1][5]= 0;
 			ordenador.keyboard_buffer[0][4]= SDLK_p;		//"
@@ -1097,7 +1128,10 @@ inline void read_keyboard () {
 			ordenador.keyboard_buffer[1][2]= 0;
 			ordenador.keyboard_buffer[0][1]= SDLK_F6;		//F6
 			ordenador.keyboard_buffer[1][1]= 0;
-			ordenador.kbd_buffer_pointer=6;
+			ordenador.kbd_buffer_pointer=5;
+			}
+			
+			
 			countdown=8;
 			break;
 
@@ -1541,24 +1575,25 @@ byte Z80free_Rd_fetch (register word Addr) {
 	ordenador.r_fetch+=4;	
 		switch (Addr & 0xC000) {
 		case 0x0000:
-			if (ordenador.precision) emulate_screen (4);
+			if (ordenador.precision) {ordenador.fetch_state=4;emulate_screen (4);}
 			return ((byte) (*(ordenador.block0 + Addr)));
 		break;
 
 		case 0x4000:
 			do_contention();
-			if (ordenador.precision) emulate_screen (4);
+			if (ordenador.precision) {ordenador.fetch_state=4;emulate_screen (4);}
 			return ((byte) (*(ordenador.block1 + Addr)));
 		break;
 
 		case 0x8000:
-			if (ordenador.precision) emulate_screen (4);
+			if (ordenador.precision) {ordenador.fetch_state=4;emulate_screen (4);}
 			return ((byte) (*(ordenador.block2 + Addr)));
 		break;
 
 		case 0xC000:
 			if (ordenador.precision) {
 			if (((ordenador.mode128k==1)||(ordenador.mode128k==2)||(ordenador.mode128k==4))&&(ordenador.mport1 & 0x01)) do_contention();
+			ordenador.fetch_state=4;
 			emulate_screen (4);
 			}
 			return ((byte) (*(ordenador.block3 + Addr)));
