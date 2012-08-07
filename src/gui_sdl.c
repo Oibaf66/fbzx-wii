@@ -303,8 +303,6 @@ void create_tapfile_sdl() {
 
 	retorno=ask_filename_sdl(nombre2,82,"tap",path_taps,NULL);
 
-	clean_screen();
-
 	if(retorno==2) // abort
 		return;
 
@@ -331,16 +329,12 @@ void create_tapfile_sdl() {
 	case 0:
 	break;
 	case -1:
-		print_string(videomem,"File already exists",-1,80,10,0,ancho);
-		SDL_Flip(screen);
+		msgInfo("File already exists",3000,NULL);
 		ordenador.current_tap[0]=0;
-		SDL_Delay(3000);
 	break;
 	case -2:
-		print_string(videomem,"Can't create file",-1,80,10,0,ancho);
+		msgInfo("Can't create file",3000,NULL);
 		ordenador.current_tap[0]=0;
-		SDL_Flip(screen);
-		SDL_Delay(3000);
 	break;
 	}
 	clean_screen();
@@ -717,8 +711,6 @@ void create_mdrfile_sdl() {
 
 	retorno=ask_filename_sdl(nombre2,82,"mdr",path_mdrs, NULL);
 
-	clean_screen();
-
 	if(retorno==2) // abort
 		return;
 
@@ -748,16 +740,12 @@ void create_mdrfile_sdl() {
 	case 0:
 	break;
 	case -1:
-		print_string(videomem,"File already exists",-1,80,10,0,ancho);
+		msgInfo("File already exists",3000,NULL);
 		ordenador.mdr_current_mdr[0]=0;
-		SDL_Flip(screen);
-		SDL_Delay(3000);
 	break;
 	case -2:
-		print_string(videomem,"Can't create file",-1,80,10,0,ancho);
+		msgInfo("Can't create file",3000,NULL);
 		ordenador.mdr_current_mdr[0]=0;
-		SDL_Flip(screen);
-		SDL_Delay(3000);
 	break;
 	}
 	clean_screen();

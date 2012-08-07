@@ -659,7 +659,7 @@ void save_file(FILE *fichero) {
 		if (procesador.Rm.wr.DE == 0)
 			salir = 2;
 		if (!salir) {
-			dato=Z80free_Rd(procesador.Rm.wr.IX); // read data
+			dato=Z80free_Rd_fake(procesador.Rm.wr.IX); // read data
 			fprintf(fichero,"%c",dato);
 			xor^=dato;
 			procesador.Rm.wr.IX++;			

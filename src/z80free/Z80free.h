@@ -139,6 +139,7 @@ int Z80free_ustep(Z80FREE *);
 void Z80free_INT(Z80FREE *,byte);
 
 byte Z80free_Rd (register word Addr);
+byte Z80free_Rd_fake (register word Addr);
 byte Z80free_Rd_fetch (register word Addr);
 void Z80free_Wr (register word Addr, register byte Value);
 void Z80free_Wr_fake (register word Addr, register byte Value);

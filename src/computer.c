@@ -723,8 +723,8 @@ inline void show_screen_precision (int tstados) {
 				temporal2_1 = ordenador.memoria[(*(ordenador.p_translt+1)) + ordenador.video_offset];	// bitmap second byte
 				
 				if((ordenador.fetch_state==2)&&((procesador.I & 0xC0) == 0x40))  {
-					temporal2 = ordenador.memoria[(((*(ordenador.p_translt)) + (ordenador.video_offset))&0xFFFFFF80)+(procesador.R&0x7F)];	// bitmap with snow first byte
-					temporal = ordenador.memoria[(((*(ordenador.p_translt2)) + (ordenador.video_offset))&0xFFFFFF80)+(procesador.R&0x7F)];	// attributes with snow first byte
+					temporal2 = ordenador.memoria[(((*ordenador.p_translt) + ordenador.video_offset)&0xFFFFFF80)+(procesador.R&0x7F)];	// bitmap with snow first byte
+					temporal = ordenador.memoria[(((*ordenador.p_translt2) + ordenador.video_offset)&0xFFFFFF80)+(procesador.R&0x7F)];	// attributes with snow first byte
 				}
 				
 				ordenador.p_translt+=2;
@@ -797,9 +797,10 @@ inline void show_screen_precision (int tstados) {
 			switch (ordenador.pixels_word)
 			{
 			case 14:
+				// Snow Effect
 				if((ordenador.fetch_state==2)&&((procesador.I & 0xC0) == 0x40))  {
-					temporal2 = ordenador.memoria[(((*(ordenador.p_translt-2)) + (ordenador.video_offset))&0xFFFFFF80)+(procesador.R&0x7F)];	// bitmap with snow second byte
-					temporal = ordenador.memoria[(((*(ordenador.p_translt2-2)) + (ordenador.video_offset))&0xFFFFFF80)+(procesador.R&0x7F)];	// attributes with snow second byte
+					temporal2 = ordenador.memoria[(((*(ordenador.p_translt-2)) + (ordenador.video_offset))&0xFFFFFF80)+(procesador.R&0x7F)];	// bitmap with snow first byte
+					temporal = ordenador.memoria[(((*(ordenador.p_translt2-2)) + (ordenador.video_offset))&0xFFFFFF80)+(procesador.R&0x7F)];	// attributes with snow first byte
 				}
 				// bitmap first byte
 				ordenador.bus_value = temporal2; 
@@ -811,8 +812,8 @@ inline void show_screen_precision (int tstados) {
 			case 2:
 				// Snow Effect
 				if((ordenador.fetch_state==2)&&((procesador.I & 0xC0) == 0x40))  {
-					temporal2_1 = ordenador.memoria[(((*(ordenador.p_translt-1)) + (ordenador.video_offset))&0xFFFFFF80)+(((*(ordenador.p_translt-2)) + (ordenador.video_offset))&0x7F)];	// bitmap with snow second byte
-					temporal_1 = ordenador.memoria[(((*(ordenador.p_translt2-1)) + (ordenador.video_offset))&0xFFFFFF80)+(((*(ordenador.p_translt2-2)) + (ordenador.video_offset))&0x7F)];	// attributes with snow second byte
+					temporal2_1 = ordenador.memoria[((*(ordenador.p_translt-1) + ordenador.video_offset)&0xFFFFFF80)+(((*(ordenador.p_translt-2)) + ordenador.video_offset)&0x7F)];	// bitmap with snow second byte
+					temporal_1 = ordenador.memoria[((*(ordenador.p_translt2-1) + ordenador.video_offset)&0xFFFFFF80)+(((*(ordenador.p_translt2-2)) + ordenador.video_offset)&0x7F)];	// attributes with snow second byte
 				}
 				// bitmap second byte
 				ordenador.bus_value = temporal2_1;
@@ -1654,6 +1655,42 @@ byte Z80free_Rd (register word Addr) {
 		}
 		break;
 	}
+}
+
+byte Z80free_Rd_fake (register word Addr) {
+	
+switch (ordenador.other_ret) {
+	case 1:
+		ordenador.other_ret = 0;
+		return (201);	// RET instruction
+	break;
+
+	default:
+		switch (Addr & 0xC000) {
+		case 0x0000:
+			return ((byte) (*(ordenador.block0 + Addr)));
+		break;
+
+		case 0x4000:
+			return ((byte) (*(ordenador.block1 + Addr)));
+		break;
+
+		case 0x8000:
+			return ((byte) (*(ordenador.block2 + Addr)));
+		break;
+
+		case 0xC000:
+			return ((byte) (*(ordenador.block3 + Addr)));
+		break;
+
+		default:
+			printf ("Memory error\n");
+			exit (1);
+			return 0;
+		}
+		break;
+	}
+	
 }
 
 void set_palete_entry(unsigned char entry, byte Value) {
