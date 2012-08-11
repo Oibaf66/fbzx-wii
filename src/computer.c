@@ -48,6 +48,14 @@ extern FILE *fdebug;
  #endif
 #endif
 
+void update_npixels()
+{
+ordenador.npixels= 1;
+
+if ((ordenador.zaurus_mini!=1)&&(ordenador.zaurus_mini!=3)) 
+ {if (ordenador.dblscan) ordenador.npixels= 4; else ordenador.npixels= 2;}
+
+}
 
 /* Returns the bus value when reading a port without a periferial */
 
@@ -87,7 +95,7 @@ inline void emulate (int tstados) {
 	}
 }
 
-void computer_init () {
+void computer_init () { //Called only on start-up
 
 	int bucle;
 
@@ -161,6 +169,8 @@ void computer_init () {
 	
 	ordenador.cpufreq = 3500000; // values for 48K mode
 	ordenador.fetch_state =0;
+	ordenador.last_selected_poke_file[0]='\0';
+	ordenador.npixels=4;
 }
 
 void computer_set_palete() {
@@ -377,7 +387,7 @@ void register_screen (SDL_Surface * pantalla) {
 	ordenador.screen = pantalla;
 
 	ordenador.border = 0;
-	ordenador.border_p = 0;
+	ordenador.border_sampled = 0;
 	ordenador.currline = 0;
 	ordenador.currpix = 0;
 	ordenador.flash = 0;
@@ -450,6 +460,8 @@ void register_screen (SDL_Surface * pantalla) {
 	ordenador.num_buff = 0;	// first buffer
 	ordenador.sound_cuantity = 0;
 	ordenador.sound_current_value = 0;
+	
+	update_npixels();
 }
 
 void set_memory_pointers () {
@@ -562,9 +574,9 @@ inline void show_screen (int tstados) {
 			// is border
 				
 			if (ordenador.ulaplus) {
-				paint_pixels (255, ordenador.border+24, 0, 8);	// paint 8 pixels with BORDER color
+				paint_pixels (255, ordenador.border+24, 0);	// paint 8 pixels with BORDER color
 			} else {
-				paint_pixels (255, ordenador.border, 0, 8);	// paint 8 pixels with BORDER color
+				paint_pixels (255, ordenador.border, 0);	// paint 8 pixels with BORDER color
 			}
 
 			ordenador.bus_value = 255;
@@ -602,9 +614,9 @@ inline void show_screen (int tstados) {
 			ordenador.p_translt2++;
 			
 			if ((fflash) && (ordenador.flash))
-				paint_pixels (temporal3, paper, ink, 8);	// if FLASH, invert PAPER and INK
+				paint_pixels (temporal3, paper, ink);	// if FLASH, invert PAPER and INK
 			else
-				paint_pixels (temporal3, ink, paper, 8);
+				paint_pixels (temporal3, ink, paper);
 				
 		}
 		}
@@ -695,7 +707,7 @@ inline void show_screen_precision (int tstados) {
 
 		
 		ordenador.pixels_word = ordenador.currpix%16;
-		ordenador.pixels_octect = ordenador.currpix%8;
+		ordenador.pixels_octect = ordenador.pixels_word&0x7;
 		
 		// test if current pixel is for border or for user area
 
@@ -704,12 +716,12 @@ inline void show_screen_precision (int tstados) {
 			
 			// is border
 			
-			if (ordenador.pixels_octect==0) ordenador.border_p = ordenador.border;  
+			if (ordenador.pixels_octect==0) ordenador.border_sampled = ordenador.border;  
 				
 			if (ordenador.ulaplus) {
-				paint_pixels (255, ordenador.border_p+24, 0, 2);	// paint 2 pixels with BORDER color
+				paint_pixels_precision (255, ordenador.border_sampled+24, 0);	// paint 2 pixels with BORDER color
 			} else {
-				paint_pixels (255, ordenador.border_p, 0, 2);	// paint 2 pixels with BORDER color
+				paint_pixels_precision (255, ordenador.border_sampled, 0);	// paint 2 pixels with BORDER color
 			}
 
 			ordenador.bus_value = 255;
@@ -741,8 +753,8 @@ inline void show_screen_precision (int tstados) {
 			{
 			case 0: //start of first byte
 			
-				ink = temporal & 0x07;	// ink colour
-				paper = (temporal >> 3) & 0x07;	// paper colour
+			ink = temporal & 0x07;	// ink colour
+			paper = (temporal >> 3) & 0x07;	// paper colour
 				if (ordenador.ulaplus) {
 					tmp2=0x10+((temporal>>2)&0x30);
 					ink+=tmp2;
@@ -757,8 +769,43 @@ inline void show_screen_precision (int tstados) {
 
 					temporal3 = temporal2;	// bitmap
 				
+			//Floating bus
+			if ((ordenador.currpix < 295) && (ordenador.mode128k != 3)) //no floating bus and snow effect in +3
+			{
+			// attributes first byte
+			ordenador.bus_value = temporal; 
+			}	
+				
 			break;
 			
+			case 2:
+			
+			//Floating bus
+			if ((ordenador.currpix < 295) && (ordenador.mode128k != 3)) //no floating bus and snow effect in +3
+			{
+				// Snow Effect
+				if((ordenador.fetch_state==2)&&((procesador.I & 0xC0) == 0x40))  {
+					temporal2_1 = ordenador.memoria[((*(ordenador.p_translt-1) + ordenador.video_offset)&0xFFFFFF80)+(((*(ordenador.p_translt-2)) + ordenador.video_offset)&0x7F)];	// bitmap with snow second byte
+					temporal_1 = ordenador.memoria[((*(ordenador.p_translt2-1) + ordenador.video_offset)&0xFFFFFF80)+(((*(ordenador.p_translt2-2)) + ordenador.video_offset)&0x7F)];	// attributes with snow second byte
+				}
+				// bitmap second byte
+				ordenador.bus_value = temporal2_1;
+			}
+			break;
+			
+			case 4:	
+			//Floating bus
+			if ((ordenador.currpix < 295) && (ordenador.mode128k != 3)) //no floating bus and snow effect in +3
+			{
+			
+				// attributes second byte
+				ordenador.bus_value = temporal_1;
+			}
+			break;
+			
+			case 6:	
+			ordenador.bus_value = 255;
+			break;
 			
 			case 8: //start of second byte
 			
@@ -786,51 +833,29 @@ inline void show_screen_precision (int tstados) {
 				temporal_1 = ordenador.memoria[(*(ordenador.p_translt2+1)) + ordenador.video_offset];	// attributes second byte
 				temporal2_1 = ordenador.memoria[(*(ordenador.p_translt+1)) + ordenador.video_offset];	// bitmap second byte
 				
+				//Floating bus
+				if ((ordenador.currpix < 295) && (ordenador.mode128k != 3)) //no floating bus and snow effect in +3
+				{	
+				// Snow Effect
+				if((ordenador.fetch_state==2)&&((procesador.I & 0xC0) == 0x40))  {
+					temporal2 = ordenador.memoria[(((*(ordenador.p_translt)) + (ordenador.video_offset))&0xFFFFFF80)+(procesador.R&0x7F)];	// bitmap with snow first byte
+					temporal = ordenador.memoria[(((*(ordenador.p_translt2)) + (ordenador.video_offset))&0xFFFFFF80)+(procesador.R&0x7F)];	// attributes with snow first byte
+					}
+				// bitmap first byte
+				ordenador.bus_value = temporal2;
+				}
+				
 				ordenador.p_translt+=2;
 				ordenador.p_translt2+=2;
-				
+					
 			break;
 			}
-		
-			//Floating bus
-			if ((ordenador.currpix < 295) && (ordenador.mode128k != 3)) //no floating bus and snow effect in +3
-			switch (ordenador.pixels_word)
-			{
-			case 14:
-				// Snow Effect
-				if((ordenador.fetch_state==2)&&((procesador.I & 0xC0) == 0x40))  {
-					temporal2 = ordenador.memoria[(((*(ordenador.p_translt-2)) + (ordenador.video_offset))&0xFFFFFF80)+(procesador.R&0x7F)];	// bitmap with snow first byte
-					temporal = ordenador.memoria[(((*(ordenador.p_translt2-2)) + (ordenador.video_offset))&0xFFFFFF80)+(procesador.R&0x7F)];	// attributes with snow first byte
-				}
-				// bitmap first byte
-				ordenador.bus_value = temporal2; 
-				break;
-			case 0:
-				// attributes first byte
-				ordenador.bus_value = temporal; 
-				break;	
-			case 2:
-				// Snow Effect
-				if((ordenador.fetch_state==2)&&((procesador.I & 0xC0) == 0x40))  {
-					temporal2_1 = ordenador.memoria[((*(ordenador.p_translt-1) + ordenador.video_offset)&0xFFFFFF80)+(((*(ordenador.p_translt-2)) + ordenador.video_offset)&0x7F)];	// bitmap with snow second byte
-					temporal_1 = ordenador.memoria[((*(ordenador.p_translt2-1) + ordenador.video_offset)&0xFFFFFF80)+(((*(ordenador.p_translt2-2)) + ordenador.video_offset)&0x7F)];	// attributes with snow second byte
-				}
-				// bitmap second byte
-				ordenador.bus_value = temporal2_1;
-				break;
-			case 4:	
-				// attributes second byte
-				ordenador.bus_value = temporal_1;
-				break;
-			default:
-				ordenador.bus_value = 255;
-				break;
-			}
+
 			
 			if ((fflash) && (ordenador.flash))
-				paint_pixels (temporal3, paper, ink, 2);	// if FLASH, invert PAPER and INK
+				paint_pixels_precision (temporal3, paper, ink);	// if FLASH, invert PAPER and INK
 			else
-				paint_pixels (temporal3, ink, paper ,2);
+				paint_pixels_precision (temporal3, ink, paper);
 				
 		}
 		}
@@ -895,35 +920,85 @@ inline void show_screen_precision (int tstados) {
 	}
 }
 
-/* PAINT_PIXELS paints bits with INK color for 1 bits and PAPER color
-for 0 bits, and increment acordingly the pointer PIXEL */
 
-inline void paint_pixels (unsigned char octet,unsigned char ink, unsigned char paper, unsigned char bit) {
+inline void paint_pixels (unsigned char octet,unsigned char ink, unsigned char paper) {
 
 	static int bucle,valor,*p;
 	static unsigned char mask;
 	
-	if (ordenador.pixels_octect==0 ||bit == 8) mask = 0x80;
+	mask = 0x80;
 	 
-	for (bucle = 0; bucle < bit; bucle++) {
+	for (bucle = 0; bucle < 8; bucle++) {
 		valor = (octet & mask) ? (int) ink : (int) paper;
 		p=(colors+valor);
 		
 		paint_one_pixel((unsigned char *)p,ordenador.pixel);
-		if ((ordenador.zaurus_mini!=1)&&(ordenador.zaurus_mini!=3)&&(ordenador.dblscan)) {
-			paint_one_pixel((unsigned char *)p,ordenador.pixel+ordenador.next_scanline);
-		}
+		
+		switch (ordenador.npixels)
+		{
+		case 2:
 		ordenador.pixel+=ordenador.next_pixel;
-		if ((ordenador.zaurus_mini!=1)&&(ordenador.zaurus_mini!=3)) {
-			paint_one_pixel((unsigned char *)p,ordenador.pixel);
-			if (ordenador.dblscan) {
-				paint_one_pixel((unsigned char *)p,ordenador.pixel+ordenador.next_scanline);
-			}
-			ordenador.pixel+=ordenador.next_pixel;
+		paint_one_pixel((unsigned char *)p,ordenador.pixel);
+		break;
+		case 4:
+		paint_one_pixel((unsigned char *)p,ordenador.pixel+ordenador.next_scanline);
+		ordenador.pixel+=ordenador.next_pixel;
+		paint_one_pixel((unsigned char *)p,ordenador.pixel);
+		paint_one_pixel((unsigned char *)p,ordenador.pixel+ordenador.next_scanline);
+		break;
+		default:
+		break;
 		}
+		
+		ordenador.pixel+=ordenador.next_pixel;
 		mask = ((mask >> 1) & 0x7F);
 	}
 }
+
+
+inline void paint_pixels_precision (unsigned char octet,unsigned char ink, unsigned char paper) {
+
+	static int bucle,valor,*p;
+	static unsigned char mask;
+	
+	if (ordenador.pixels_octect==0) mask = 0x80;
+	 
+	for (bucle = 0; bucle < 2; bucle++) {
+		valor = (octet & mask) ? (int) ink : (int) paper;
+		p=(colors+valor);
+		
+		paint_one_pixel((unsigned char *)p,ordenador.pixel);
+		
+		switch (ordenador.npixels)
+		{
+		case 2:
+		ordenador.pixel+=ordenador.next_pixel;
+		paint_one_pixel((unsigned char *)p,ordenador.pixel);
+		break;
+		case 4:
+		paint_one_pixel((unsigned char *)p,ordenador.pixel+ordenador.next_scanline);
+		ordenador.pixel+=ordenador.next_pixel;
+		paint_one_pixel((unsigned char *)p,ordenador.pixel);
+		paint_one_pixel((unsigned char *)p,ordenador.pixel+ordenador.next_scanline);
+		break;
+		default:
+		break;
+		}
+		
+		ordenador.pixel+=ordenador.next_pixel;
+		
+		mask = ((mask >> 1) & 0x7F);
+	}
+}
+
+
+#ifdef GEKKO
+inline void paint_one_pixel(unsigned char *colour,unsigned char *address) 
+{
+ *(address++)=*(colour+2);
+ *(address++)=*(colour+3);	
+}
+#else
 
 inline void paint_one_pixel(unsigned char *colour,unsigned char *address) {
 
@@ -960,6 +1035,8 @@ inline void paint_one_pixel(unsigned char *colour,unsigned char *address) {
 	#endif
 	
 }
+#endif
+
 
 // Read the keyboard and stores the flags
 
@@ -1472,6 +1549,8 @@ void ResetComputer () {
 		ordenador.start_screen=45;
 	break;
 	}
+	
+	ordenador.last_selected_poke_file[0]='\0';
 	
 	microdrive_reset();
 }

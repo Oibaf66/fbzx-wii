@@ -579,6 +579,7 @@ void load_snap(struct z80snapshot *snap) {
   int bucle;
 
 	printf("Loading SnapShot\n");
+	ordenador.last_selected_poke_file[0]='\0';
 
   switch(snap->type) {
   case 0: // 48k

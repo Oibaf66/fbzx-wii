@@ -282,7 +282,7 @@ static const char **get_file_list(const char *base_dir)
 	{
 		char buf[255];
 		const char *exts[] = {".tap", ".TAP", ".tzx", ".TZX", ".z80",".Z80",".sna", ".SNA",
-				".mdr", ".MDR", ".scr", ".SCR", ".conf", ".CONF",NULL};
+				".mdr", ".MDR", ".scr", ".SCR", ".conf", ".CONF",".pok", ".POK", NULL};
 		struct stat st;
 
 		snprintf(buf, 255, "%s/%s", base_dir, de->d_name);
@@ -364,6 +364,46 @@ void menu_print_font(SDL_Surface *screen, int r, int g, int b,
 		if (buf[i] == '^' || buf[i] == '|')
 			buf[i] = ' ';
 	}
+
+	if (FULL_DISPLAY_X == 640)
+		{
+		if (font_size == 16) font_surf = TTF_RenderUTF8_Blended(menu_font16, buf, color);
+		else font_surf = TTF_RenderUTF8_Blended(menu_font20, buf, color);
+		}
+	else 	
+		{
+		if (font_size == 16) font_surf = TTF_RenderUTF8_Blended(menu_font8, buf, color);
+		else font_surf = TTF_RenderUTF8_Blended(menu_font10, buf, color);
+		}
+		
+	if (!font_surf)
+	{
+		fprintf(stderr, "%s\n", TTF_GetError());
+		exit(1);
+	}
+
+	SDL_BlitSurface(font_surf, NULL, screen, &dst);
+	SDL_FreeSurface(font_surf);
+}
+
+void print_font(SDL_Surface *screen, int r, int g, int b,
+		int x, int y, const char *msg, int font_size)
+{
+#define _MAX_STRING 64
+	SDL_Surface *font_surf;
+	SDL_Rect dst = {x, y,  0, 0};
+	SDL_Color color = {r, g, b};
+	char buf[255];
+
+	memset(buf, 0, sizeof(buf));
+	strncpy(buf, msg, 254);
+	
+	
+		if (strlen(buf)>_MAX_STRING)
+		{
+			buf[_MAX_STRING] = '\0';
+		}
+
 
 	if (FULL_DISPLAY_X == 640)
 		{

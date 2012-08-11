@@ -46,6 +46,7 @@ int RATIO;
 
 void menu_print_font(SDL_Surface *screen, int r, int g, int b, int x, int y, const char *msg, int font_size);
 
+void print_font(SDL_Surface *screen, int r, int g, int b, int x, int y, const char *msg, int font_size);
 
 /* Various option selects */
 int menu_select_title(const char *title, const char **pp_msgs, int *p_submenus);

@@ -37,6 +37,7 @@ extern char path_taps[2049];
 extern char path_mdrs[2049];
 extern char path_scr[2049];
 extern char path_confs[2049];
+extern char path_poke[2049];
 extern unsigned int colors[80];
 extern unsigned int jump_frames,curr_frames;
 

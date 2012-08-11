@@ -277,6 +277,7 @@ void settings_menu() {
 		break;
 		case SDLK_d:
 			ordenador.dblscan=1-ordenador.dblscan;
+			update_npixels();
 		break;
 		case SDLK_a:
 			ordenador.ay_emul=1-ordenador.ay_emul;

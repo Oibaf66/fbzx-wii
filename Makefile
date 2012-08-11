@@ -119,6 +119,7 @@ dist: $(BUILD)
 	mkdir -p $@/fbzx-wii/microdrives
 	mkdir -p $@/fbzx-wii/scr
 	mkdir -p $@/fbzx-wii/configurations
+	mkdir -p $@/fbzx-wii/poke
 	mkdir -p $@/apps/fbzx-wii/doc
 	cp fbzx.dol $@/apps/fbzx-wii/boot.dol
 	cp meta.xml $@/apps/fbzx-wii/meta.xml
@@ -134,6 +135,7 @@ dist: $(BUILD)
 	touch $@/fbzx-wii/microdrives/dummy
 	touch $@/fbzx-wii/scr/dummy
 	touch $@/fbzx-wii/configurations/dummy
+	touch $@/fbzx-wii/poke/dummy
 	cd $@ && tar -czf ../fbzx-wii-vx-bin.tar.gz *
 
 distsource:

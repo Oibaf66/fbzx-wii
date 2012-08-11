@@ -37,6 +37,7 @@ int countdown;
 struct computer {
 
 	unsigned char precision; //If set 1 emulate with more precision
+	unsigned char npixels; //1, 2 or 4 depending on dblscan and zaurus_mini
 	unsigned int temporal_io;
 
 	// screen private global variables
@@ -48,12 +49,13 @@ struct computer {
 	unsigned char text_mini;
 	unsigned char dblscan;
 	unsigned char bw;
+	
 
 	int contador_flash;
 
 	unsigned int *p_translt,*p_translt2;
 	unsigned char *pixel; // current address
-	char border,flash, border_p;
+	char border,flash, border_sampled;
 	int currline,currpix;
 
 	int tstados_counter; // counts tstates leaved to the next call
@@ -166,6 +168,7 @@ struct computer {
 	unsigned char tape_fast_load; // 0 normal load; 1 fast load
 	unsigned char current_tap[2049];
 	unsigned char last_selected_file[2049];
+	unsigned char last_selected_poke_file[2049];
 
 	unsigned char tape_current_bit;
 	unsigned int tape_block_level;
@@ -238,7 +241,8 @@ void computer_init();
 void register_screen(SDL_Surface *);
 inline void show_screen(int);
 inline void show_screen_precision(int);
-inline void paint_pixels(unsigned char, unsigned char, unsigned char, unsigned char);
+inline void paint_pixels(unsigned char, unsigned char, unsigned char);
+inline void paint_pixels_precision(unsigned char, unsigned char, unsigned char);
 inline void read_keyboard();
 void fill_audio(void *udata,Uint8 *,int);
 void set_volume(unsigned char);
@@ -253,5 +257,6 @@ inline void paint_one_pixel(unsigned char *colour,unsigned char *address);
 void computer_set_palete();
 void set_palete_entry(unsigned char entry, byte Value);
 void restart_video();
+void update_npixels();
 
 #endif

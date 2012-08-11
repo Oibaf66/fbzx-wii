@@ -68,6 +68,7 @@ char path_taps[2049];
 char path_mdrs[2049];
 char path_scr[2049];
 char path_confs[2049];
+char path_poke[2049];
 unsigned int colors[80];
 unsigned int jump_frames,curr_frames;
 char *filenames[5];
@@ -1087,11 +1088,13 @@ int main(int argc,char *argv[]) {
 	strcpy(path_mdrs,path_snaps);
 	strcpy(path_scr,path_snaps);
 	strcpy(path_confs,path_snaps);
+	strcpy(path_poke,path_snaps);
 	strcat(path_snaps,"snapshots");
 	strcat(path_taps,"tapes");
 	strcat(path_mdrs,"microdrives");
 	strcat(path_scr,"scr");
 	strcat(path_confs,"configurations");
+	strcat(path_poke,"poke");
 	
 	#ifdef GEKKO
 	if ((ordenador.port==1)&&usbismount) {
