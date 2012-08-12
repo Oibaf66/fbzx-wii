@@ -51,5 +51,6 @@ FILE *myfopen(char *filename,char *mode);
 void init_sdl();
 void init_sound();
 void init_screen(int resx,int resy,int depth,int fullscreen,int dblbuffer,int hwsurface);
+int set_video_mode();
 
 #endif

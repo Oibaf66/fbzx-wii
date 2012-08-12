@@ -101,8 +101,11 @@ static const char *screen_messages[] = {
 		/*03*/		"TV mode",
 		/*04*/		"^|Color|B&W",
 		/*05*/		"  ",
-		/*06*/		"Resolution",
-		/*07*/		"^|640X480|320X240",		
+		/*06*/		"Buffer resolution",
+		/*07*/		"^|640X480|320X240",
+		/*08*/		"  ",
+		/*09*/		"576p video mode",
+		/*10*/		"^|on|off",
 		NULL
 };
 
@@ -409,7 +412,6 @@ static void manage_tape(int which)
 	case 5: //Create
 		// Create tape 
 		create_tapfile_sdl();
-		//msgInfo("Not yet implemented",3000,NULL);
 		break;	
 	case 6: //Delete
 		delete_tape();
@@ -541,7 +543,7 @@ static void save_load_general_configurations(int);
 
 static void screen_settings(void)
 {
-	unsigned int submenus[3],submenus_old[3];
+	unsigned int submenus[4],submenus_old[4];
 	int opt, i;
 	
 	memset(submenus, 0, sizeof(submenus));
@@ -549,8 +551,9 @@ static void screen_settings(void)
 	submenus[0] = !ordenador.dblscan;
 	submenus[1] = ordenador.bw;
 	submenus[2] = ordenador.zaurus_mini?1:0;
+	submenus[3] = !ordenador.progressive;
 	
-	for (i=0; i<3; i++) submenus_old[i] = submenus[i];
+	for (i=0; i<4; i++) submenus_old[i] = submenus[i];
 	
 	
 	opt = menu_select_title("Screen settings menu",
@@ -560,6 +563,7 @@ static void screen_settings(void)
 	
 	ordenador.dblscan = !submenus[0];
 	ordenador.bw = submenus[1]; 
+	ordenador.progressive = !submenus[3];
 	
 	if (submenus[0] != submenus_old[0]) update_npixels();
 	
@@ -571,7 +575,15 @@ static void screen_settings(void)
 		else {ordenador.zaurus_mini = 3; ordenador.text_mini=1;}
 		update_npixels();
 	    restart_video();
-	}	
+	}
+	if (submenus[3] != submenus_old[3])
+	{
+		if (set_video_mode()) 
+		{
+		msgInfo("Only avalaible from 576i PAL",3000,NULL);
+		ordenador.progressive = 0;
+		}
+	}
 }
 
 static void setup_joystick(int joy, unsigned int sdl_key, int joy_key)

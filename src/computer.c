@@ -171,6 +171,7 @@ void computer_init () { //Called only on start-up
 	ordenador.fetch_state =0;
 	ordenador.last_selected_poke_file[0]='\0';
 	ordenador.npixels=4;
+	ordenador.progressive=0;
 }
 
 void computer_set_palete() {

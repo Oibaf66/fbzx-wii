@@ -45,6 +45,8 @@
 #include <ogc/usbstorage.h>
 #include <network.h>
 #include <smb.h>
+#include <stdio.h>
+#include <stdlib.h>
 #endif
 
 #ifdef DEBUG
@@ -352,6 +354,38 @@ void load_rom(char type) {
 	size=fread(ordenador.shadowrom,8192,1,fichero);
   	fclose(fichero);
 }
+
+int set_video_mode()
+{
+#ifdef GEKKO
+		GXRModeObj *rmode;
+	
+		rmode = VIDEO_GetPreferredMode(NULL);
+		
+		if ((rmode->viTVMode)!=VI_TVMODE_PAL_INT) return -1; 
+
+		switch(ordenador.progressive)
+		{
+		case 0: //interlace
+		rmode=&TVPal576IntDfScale;
+		break;
+		case 1: //progressive
+		rmode=&TVPal576ProgScale;
+		break;
+		default:
+		rmode=&TVPal576IntDfScale;
+		break;
+		}
+		VIDEO_Configure(rmode);
+		VIDEO_Flush();
+		VIDEO_WaitVSync();
+		
+		return 0;
+	
+
+		#endif 
+}		
+
 void init_sdl()
 {
 int retorno, bucle; 
