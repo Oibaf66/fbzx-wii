@@ -578,10 +578,16 @@ static void screen_settings(void)
 	}
 	if (submenus[3] != submenus_old[3])
 	{
-		if (set_video_mode()) 
+		switch (set_video_mode()) 
 		{
+		case 1:
+		msgInfo("Necessary component cable",3000,NULL);
+		ordenador.progressive = 0;
+		break;
+		case 2:
 		msgInfo("Only avalaible from 576i PAL",3000,NULL);
 		ordenador.progressive = 0;
+		break;
 		}
 	}
 }

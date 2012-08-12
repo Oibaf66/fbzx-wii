@@ -362,7 +362,8 @@ int set_video_mode()
 	
 		rmode = VIDEO_GetPreferredMode(NULL);
 		
-		if ((rmode->viTVMode)!=VI_TVMODE_PAL_INT) return -1; 
+		if (!VIDEO_HaveComponentCable()) return 1;
+		if ((rmode->viTVMode)!=VI_TVMODE_PAL_INT) return 2; 
 
 		switch(ordenador.progressive)
 		{
