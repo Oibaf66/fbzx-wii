@@ -172,6 +172,7 @@ void computer_init () { //Called only on start-up
 	ordenador.last_selected_poke_file[0]='\0';
 	ordenador.npixels=4;
 	ordenador.progressive=0;
+	ordenador.audio_mode=2; //ACB
 }
 
 void computer_set_palete() {
@@ -460,7 +461,7 @@ void register_screen (SDL_Surface * pantalla) {
 	ordenador.current_buffer = sound[0];
 	ordenador.num_buff = 0;	// first buffer
 	ordenador.sound_cuantity = 0;
-	ordenador.sound_current_value = 0;
+	//ordenador.sound_current_value = 0;
 	
 	update_npixels();
 }
@@ -1552,6 +1553,8 @@ void ResetComputer () {
 	}
 	
 	ordenador.last_selected_poke_file[0]='\0';
+	
+	ordenador.tst_sample=ordenador.cpufreq/ordenador.freq;
 	
 	microdrive_reset();
 }

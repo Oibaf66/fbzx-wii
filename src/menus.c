@@ -2002,9 +2002,9 @@ if (freq == 0)
 		if (ordenador.videosystem==0) ordenador.cpufreq = 3500000;
 		else ordenador.cpufreq = 3527500;
 	break;
-	case 3:		// +2A/+3
 	case 1:		// 128K
 	case 2:		// +2
+	case 3:		// +2A/+3
 	case 4:		// spanish 128K
 		ordenador.cpufreq = 3546900;
 	break;

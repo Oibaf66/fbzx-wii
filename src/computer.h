@@ -129,13 +129,14 @@ struct computer {
 	unsigned int aych_a,aych_b,aych_c,aych_n,aych_envel; // counters for AY emulation
 	unsigned char ayval_a,ayval_b,ayval_c,ayval_n;
 	unsigned char ay_emul; // 0: no AY emulation; 1: AY emulation
+	unsigned char audio_mode; //mono, ABC, ACB, BAC
 	unsigned char vol_a,vol_b,vol_c;
 	unsigned int tst_ay;
 	unsigned int tst_ay2;
 	unsigned int ay_latch;
 	signed char ay_envel_value;
 	unsigned char ay_envel_way;
-	unsigned char sound_current_value;
+	//unsigned char sound_current_value;
 	unsigned int wr;
 	unsigned int r_fetch;
 	unsigned int io;

@@ -67,11 +67,11 @@ static const char *main_menu_messages[] = {
 		/*06*/		"^|Wiimote1|Wiimote2",
 		/*07*/		"Emulation settings",
 		/*08*/		"Screen settings",
-		/*09*/		"Confs files",
-		/*10*/		"Microdrive",
-		/*11*/		"Tools",
-		/*12*/		"Reset",
-		/*13*/		"Help",
+		/*09*/		"Audio settings",
+		/*10*/		"Config files",
+		/*11*/		"Microdrive",
+		/*12*/		"Tools",
+		/*13*/		"Reset",
 		/*14*/		"Quit",
 		NULL
 };
@@ -79,18 +79,27 @@ static const char *main_menu_messages[] = {
 static const char *emulation_messages[] = {
 		/*00*/		"Emulated machine",
 		/*01*/		"^|48k_2|48K_3|128k|+2|+2A/+3|128K_Sp|NTSC",
-		/*02*/		"Volume",
-		/*03*/		"^|0|1|2|3|4|5|6|7|max",
-		/*04*/		"Frame rate",
-		/*05*/		"^|100%|50%|33%|25%|20%",
-		/*06*/		"Tap fast speed",
-		/*07*/		"^|on|off",
-		/*08*/		"Turbo mode",
-		/*09*/		"^|off|speed|ultraspeed",
-		/*10*/		"Precision",
-		/*11*/		"^|on|off",
-		/*12*/		"AY-3-8912 Emulation",
-		/*13*/		"^|on|off",		
+		/*02*/		"Frame rate",
+		/*03*/		"^|100%|50%|33%|25%|20%",
+		/*04*/		"Tap fast speed",
+		/*05*/		"^|on|off",
+		/*06*/		"Turbo mode",
+		/*07*/		"^|off|speed|ultraspeed",
+		/*08*/		"Precision",
+		/*09*/		"^|on|off",	
+		NULL
+};
+
+static const char *audio_messages[] = {
+		/*00*/		"Volume",
+		/*01*/		"^|0|1|2|3|4|5|6|7|max",
+		/*02*/		"  ",
+		/*03*/		"AY-3-8912 Emulation",
+		/*04*/		"^|on|off",	
+		/*05*/		"  ",
+		/*06*/		"Audio mode",
+		/*07*/		"^|mono|ABC|ACB|BAC",	
+
 		NULL
 };
 
@@ -152,6 +161,8 @@ static const char *tools_messages[] = {
 		/*09*/		"  ",
 		/*10*/		"Port",
 		/*11*/		"^|sd|usb|smb",
+		/*12*/		"  ",
+		/*13*/		"Help",
 		NULL
 };
 
@@ -480,21 +491,20 @@ static void set_machine_model(int which)
 
 static void emulation_settings(void)
 {
-	unsigned int submenus[7],submenus_old[7];
+	unsigned int submenus[5],submenus_old[5];
 	int opt, i;
 	unsigned char old_mode, old_videosystem;
 	
 	memset(submenus, 0, sizeof(submenus));
 	
 	submenus[0] = get_machine_model();
-	submenus[1] = ordenador.volume/2;
-	submenus[2] = jump_frames;
-	submenus[3] = !ordenador.tape_fast_load;
-	submenus[4] = ordenador.turbo;
-	submenus[5] = !ordenador.precision;
-	submenus[6] = !ordenador.ay_emul;
+	submenus[1] = jump_frames;
+	submenus[2] = !ordenador.tape_fast_load;
+	submenus[3] = ordenador.turbo;
+	submenus[4] = !ordenador.precision;
+
 	
-	for (i=0; i<7; i++) submenus_old[i] = submenus[i];
+	for (i=0; i<5; i++) submenus_old[i] = submenus[i];
 	old_mode=ordenador.mode128k;
 	old_videosystem = ordenador.videosystem;
 	
@@ -504,16 +514,14 @@ static void emulation_settings(void)
 		return;
 	
 	set_machine_model(submenus[0]);
-	if ((old_mode!=ordenador.mode128k)||(old_videosystem!=ordenador.videosystem)) ResetComputer(); else 
-	ordenador.ay_emul = !submenus[6];
+	if ((old_mode!=ordenador.mode128k)||(old_videosystem!=ordenador.videosystem)) ResetComputer(); 
 	
-	ordenador.volume = submenus[1]*2; //I should use set_volume() ?
-	jump_frames = submenus[2];
-	ordenador.tape_fast_load = !submenus[3];
-	ordenador.turbo = submenus[4];
+	jump_frames = submenus[1];
+	ordenador.tape_fast_load = !submenus[2];
+	ordenador.turbo = submenus[3];
 	
 	curr_frames=0;
-	if (submenus[4] != submenus_old[4])
+	if (submenus[3] != submenus_old[3])
 	{
 	switch(ordenador.turbo)
 	{
@@ -536,7 +544,34 @@ static void emulation_settings(void)
 	}
 	}
 	
-	if (ordenador.turbo==0) ordenador.precision = !submenus[5];
+	if (ordenador.turbo==0) ordenador.precision = !submenus[4];
+}
+
+static void audio_settings(void)
+{
+	unsigned int submenus[3];
+	int opt;
+
+	
+	memset(submenus, 0, sizeof(submenus));
+	
+	
+	submenus[0] = ordenador.volume/2;
+	submenus[1] = !ordenador.ay_emul;
+	submenus[2] = ordenador.audio_mode;
+	
+	
+	opt = menu_select_title("Audio settings menu",
+			audio_messages, submenus);
+	if (opt < 0)
+		return;
+
+	
+	ordenador.volume = submenus[0]*2; 
+	ordenador.ay_emul = !submenus[1];
+	ordenador.audio_mode = submenus[2];
+	
+	
 }
 
 static void save_load_general_configurations(int);
@@ -1251,6 +1286,11 @@ void load_poke_file()
 	
 }
 
+static void help(void)
+{
+	menu_select_title("FBZX-WII help",
+			help_messages, NULL);
+}
 
 static void tools()
 {
@@ -1268,6 +1308,8 @@ static void tools()
 		
 	set_port(submenus[0]);
 	
+	do
+	{
 	switch(opt)
 		{
 		case 0: // Show keyboard 
@@ -1284,10 +1326,14 @@ static void tools()
 			break;
 		case 8: // Load poke file
 			load_poke_file();
-			break;	
+			break;
+		case 10:
+			help();
+			break;
 		default:
 			break;
-		}		
+		}
+	} while (opt == 10);		
 }
 
 
@@ -1548,12 +1594,6 @@ static void manage_configurations()
 		}		
 }
 
-	
-static void help(void)
-{
-	menu_select_title("FBZX-WII help",
-			help_messages, NULL);
-}
 
 void main_menu()
 {
@@ -1586,15 +1626,18 @@ void main_menu()
 			screen_settings();
 			break;
 		case 9:
+			audio_settings();
+			break;	
+		case 10:
 			manage_configurations();
 			break;
-		case 10:
+		case 11:
 			microdrive();
 			break;	
-		case 11:
+		case 12:
 			tools();
 			break;
-		case 12:
+		case 13:
 			ResetComputer ();
 			ordenador.pause = 1;
 			if (ordenador.tap_file != NULL) {
@@ -1602,9 +1645,6 @@ void main_menu()
 				rewind_tape (ordenador.tap_file,1);				
 			}
 			break;	
-		case 13:
-			help();
-			break;
 		case 14:
 			if (msgYesNo("Are you sure to quit?", 0, FULL_DISPLAY_X /2-138/RATIO, FULL_DISPLAY_Y /2-48/RATIO)) 
 				{salir = 0;}	
@@ -1612,7 +1652,7 @@ void main_menu()
 		default:
 			break;
 		}
-	} while (opt == 5 || opt == 7 || opt == 10 || opt == 13);
+	} while (opt == 4 || opt == 7 || opt == 11);
 	
 	clean_screen();
 	

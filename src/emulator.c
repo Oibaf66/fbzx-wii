@@ -486,7 +486,6 @@ int bucle, bucle2,ret2;
 		ordenador.increment=ordenador.channels;
 	
 	for(bucle2=0;bucle2<NUM_SNDBUF;bucle2++) {
-		//sound[bucle2]=(unsigned char *)malloc(ordenador.buffer_len*ordenador.increment+8);
 		//ASND Required alligned memory with padding
 		sound[bucle2]=(unsigned char *)memalign(32,ordenador.buffer_len*ordenador.increment+32);
 		for(bucle=0;bucle<ordenador.buffer_len*ordenador.increment+4;bucle++)
@@ -495,8 +494,6 @@ int bucle, bucle2,ret2;
 
 	printf("Init sound 2\n");
 	ordenador.tst_sample=ordenador.cpufreq/ordenador.freq;
-	//printf("Set volume\n");
-	//set_volume(70);
 }
 
 void end_system() {
@@ -564,6 +561,7 @@ int save_config(struct computer *object, char *filename) {
 	fprintf(fconfig,"joystick1=%c%c",48+object->joystick[0],10);
 	fprintf(fconfig,"joystick2=%c%c",48+object->joystick[1],10);
 	fprintf(fconfig,"ay_sound=%c%c",48+object->ay_emul,10);
+	fprintf(fconfig,"audio_mode=%c%c",48+object->audio_mode,10);
 	fprintf(fconfig,"interface1=%c%c",48+object->mdr_active,10);
 	fprintf(fconfig,"doublescan=%c%c",48+object->dblscan,10);
 	fprintf(fconfig,"framerate=%c%c",48+jump_frames,10);
@@ -699,7 +697,7 @@ int load_config(struct computer *object, char *filename) {
 	int pos, key_sdl=0;
 	FILE *fconfig;
 	unsigned char volume=255,mode128k=255,issue=255,ntsc=255, joystick1=255,joystick2=255,ay_emul=255,mdr_active=255,
-	dblscan=255,framerate =255, screen =255, text=255, precision=255, bw=255, tap_fast=255,
+	dblscan=255,framerate =255, screen =255, text=255, precision=255, bw=255, tap_fast=255, audio_mode=255,
 	joypad1=255, joypad2=255, rumble1=255, rumble2=255, joy_n=255, key_n=255, port=255, autoconf=255;
 	
 	if (filename) strcpy(config_path,filename); 
@@ -756,6 +754,10 @@ int load_config(struct computer *object, char *filename) {
 		}
 		if (!strncmp(line,"ay_sound=",9)) {
 			ay_emul=line[9]-'0';
+			continue;
+		}
+		if (!strncmp(line,"audio_mode=",11)) {
+			audio_mode=line[11]-'0';
 			continue;
 		}
 		if (!strncmp(line,"interface1=",11)) {
@@ -843,6 +845,9 @@ int load_config(struct computer *object, char *filename) {
 	}
 	if (ay_emul<2) {
 		object->ay_emul=ay_emul;
+	}
+	if (audio_mode<4) {
+		object->audio_mode=audio_mode;
 	}
 	if (mdr_active<2) {
 		object->mdr_active=mdr_active;

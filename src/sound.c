@@ -183,7 +183,7 @@ int sound_init_asnd() {
 	ASND_Pause(0);
 	ordenador.sign=0;
 	ordenador.format=0; //8 bit
-	ordenador.channels=1; //mono
+	ordenador.channels=2; //stereo
 	ordenador.freq=48000;
 	ordenador.buffer_len=4096;
 	started_sound_asnd = 0;
@@ -495,17 +495,17 @@ void sound_play() {
 #ifdef GEKKO
 	case SOUND_ASND: // ASND
 		if (!started_sound_asnd) {
-		ASND_SetVoice(1,VOICE_MONO_8BIT_U,48000,0,sound[0],ordenador.buffer_len,
+		ASND_SetVoice(1,VOICE_STEREO_8BIT_U,ordenador.freq,0,sound[0],ordenador.buffer_len*ordenador.increment,
 		MID_VOLUME, MID_VOLUME, callback);
 		started_sound_asnd = 1;
 		}
 		//Double buffer
 		while (!ASND_TestVoiceBufferReady(1)){}; //Wait for one buffer to be free
 		if (!ASND_TestPointer (1, sound[0])) 
-			{ASND_AddVoice(1,sound[0],ordenador.buffer_len);
+			{ASND_AddVoice(1,sound[0],ordenador.buffer_len*ordenador.increment);
 			ordenador.current_buffer = sound[0]; }
 		else 
-			{ASND_AddVoice(1,sound[1],ordenador.buffer_len);
+			{ASND_AddVoice(1,sound[1],ordenador.buffer_len*ordenador.increment);
 			ordenador.current_buffer = sound[1]; }
 	
 		return;

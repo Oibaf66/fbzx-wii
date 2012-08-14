@@ -506,15 +506,11 @@ int load_sna(char *filename) {
 	snap->IY=((word)tempo[15])+256*((word)tempo[16]);
 	snap->IX=((word)tempo[17])+256*((word)tempo[18]);
 	
-	if (tempo[19]&0x01) {
+	if (tempo[19]&0x04) {
 		snap->IFF1=1;
-	} else {
-		snap->IFF1=0;
-	}
-	
-	if (tempo[19]&0x02) {
 		snap->IFF2=1;
 	} else {
+		snap->IFF1=0;
 		snap->IFF2=0;
 	}
 	
@@ -525,7 +521,7 @@ int load_sna(char *filename) {
 	snap->Imode=tempo[25];
 	snap->border=tempo[26];
 	
-	if (type==0) {
+	if (type==0) {	//48k
 			
 		v1=tempo[23];
 		v2=tempo[24];
@@ -547,7 +543,7 @@ int load_sna(char *filename) {
 		memcpy(snap->page[0],tempo+27,16384);
 		memcpy(snap->page[1],tempo+16411,16384);
 		memcpy(snap->page[2],tempo+32795,16384);
-	} else {
+	} else { 	//128k
 		snap->PC=((word)tempo2[0])+256*((word)tempo2[1]);
 		memcpy(snap->page[5],tempo+27,16384);
 		memcpy(snap->page[2],tempo+16411,16384);

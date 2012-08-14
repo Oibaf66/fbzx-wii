@@ -187,8 +187,8 @@ inline void play_ay (unsigned int tstados) {
 		
 		if (!noise_period) noise_period = 1;
 	
-		if (tone_period_a*ordenador.freq<110841)  //Freq_camp > cpufreq/(2*16*tone_period)
-			ordenador.aych_a =1;
+		if (tone_period_a<6)  //max 20KHz
+			ordenador.ayval_a =1;
 		else
 		{
 			if (ordenador.aych_a<tone_period_a)
@@ -200,8 +200,8 @@ inline void play_ay (unsigned int tstados) {
 			}
 		}
 
-		if (tone_period_b*ordenador.freq<110841)  //Freq_camp > cpufreq/(2*16*tone_period)
-			ordenador.aych_b =1;
+		if (tone_period_b<6)  //max 20KHz
+			ordenador.ayval_b =1;
 		else
 		{
 			if (ordenador.aych_b<tone_period_b)
@@ -213,8 +213,8 @@ inline void play_ay (unsigned int tstados) {
 			}
 		}
 		
-		if (tone_period_c*ordenador.freq<110841)  //Freq_camp > cpufreq/(2*16*tone_period)
-			ordenador.aych_c =1;
+		if (tone_period_c<6)  //max 20KHz
+			ordenador.ayval_c =1;
 		else
 		{
 		if (ordenador.aych_c<tone_period_c)
@@ -262,61 +262,11 @@ inline void play_ay (unsigned int tstados) {
 			noise >>= 1 ; 
 			
 			ordenador.aych_n =0;
+			
+
 		}	
 
-		// Volume
-		//Each channel max 51
-		
-		if (ordenador.ay_registers[8] & 0x10)
-			ordenador.vol_a =
-				(unsigned char) (levels[ordenador.ay_envel_value]*(unsigned int) ordenador.volume/80);
-		else
-			ordenador.vol_a =
-				(unsigned char) (levels[ordenador.ay_registers[8] &0x0F]*(unsigned int) ordenador.volume/80);
-
-		if (ordenador.ay_registers[10] & 0x10)
-			ordenador.vol_c =
-				(unsigned char) (levels[ordenador.ay_envel_value] *(unsigned int) ordenador.volume/80);
-		else
-			ordenador.vol_c =
-				(unsigned char) (levels[ordenador.ay_registers[10] & 0x0F] *(unsigned int) ordenador.volume/80);		
-
-		if (ordenador.ay_registers[9] & 0x10)
-			ordenador.vol_b =
-				(unsigned char) (levels[ordenador.ay_envel_value] *(unsigned int) ordenador.volume/80);
-		else
-			ordenador.vol_b =
-				(unsigned char)(levels[ordenador.ay_registers[9] &0x0F] *(unsigned int) ordenador.volume/80);
-					
-
-	}
-}
-
-
-/* Creates the sound buffer during the TSTADOS tstate that the Z80 used to
-   execute last instruction */
-
-inline void play_sound (unsigned int tstados) {
-
-	int bucle;
-	int value;
-	unsigned char sample_v;
-
-	ordenador.tstados_counter_sound += tstados;
-
-	while (ordenador.tstados_counter_sound >= ordenador.tst_sample)	{
-
-		ordenador.tstados_counter_sound -= ordenador.tst_sample;
-		if (sound_type!=1) //!SOUND_OSS
-			for (bucle = 0; bucle < ordenador.increment; bucle++) {
-				sample_v = ordenador.sample1b[bucle];
-				if (ordenador.sound_bit && sample_v) 
-					//Sound bit volume max 96
-					ordenador.sound_current_value=ordenador.volume*6;
-					else ordenador.sound_current_value=0;
-				value = ordenador.sound_current_value;
-				
-				//Mixer
+		//Mixer
 				
 				// The 8912 has three outputs, each output is the mix of one of the three
 				// tone generators and of the (single) noise generator. The two are mixed
@@ -330,23 +280,99 @@ inline void play_sound (unsigned int tstados) {
 				// Setting the output to 1 is necessary because a disabled channel is locked
 				// into the ON state (see above); and it has no effect if the volume is 0.
 				// If the volume is 0, increase the counter, but don't touch the output.
-				
-				if (ordenador.ay_emul) {	// if emulation is ON, emulate it
-				//ordenador.ayval_n = 1;
-					if (sample_v &&((ordenador.ayval_a || (ordenador.ay_registers[7] & 0x01))&&(ordenador.ayval_n || (ordenador.ay_registers[7] & 0x08))))
-						value += (int) ordenador.vol_a;
-					if (sample_v &&((ordenador.ayval_b || (ordenador.ay_registers[7] & 0x02))&&(ordenador.ayval_n || (ordenador.ay_registers[7] & 0x10))))
-						value += (int) ordenador.vol_b;
-					if (sample_v &&((ordenador.ayval_c || (ordenador.ay_registers[7] & 0x04))&&(ordenador.ayval_n || (ordenador.ay_registers[7] & 0x20))))
-						value += (int) ordenador.vol_c;
+		
+		if ((ordenador.ayval_a || (ordenador.ay_registers[7] & 0x01))&&(ordenador.ayval_n || (ordenador.ay_registers[7] & 0x08)))
+		{
+			if (ordenador.ay_registers[8] & 0x10)
+				ordenador.vol_a = levels[ordenador.ay_envel_value];
+			else
+				ordenador.vol_a = levels[ordenador.ay_registers[8] &0x0F];
+		}
+		else ordenador.vol_a = 0;
+		
+		
+		if ((ordenador.ayval_b || (ordenador.ay_registers[7] & 0x02))&&(ordenador.ayval_n || (ordenador.ay_registers[7] & 0x10)))
+		{				
+			if (ordenador.ay_registers[9] & 0x10)
+				ordenador.vol_b = levels[ordenador.ay_envel_value];
+			else
+				ordenador.vol_b = levels[ordenador.ay_registers[9] &0x0F];
+		}
+		else ordenador.vol_b = 0;
 
-				}
-				if (value > 255)
-					value = 255;
-				sample_v = (unsigned char)(value - (unsigned int)ordenador.sign);
-				*ordenador.current_buffer =	sample_v;	
-				ordenador.current_buffer++;
+		if ((ordenador.ayval_c || (ordenador.ay_registers[7] & 0x04))&&(ordenador.ayval_n || (ordenador.ay_registers[7] & 0x20)))
+		{
+			if (ordenador.ay_registers[10] & 0x10)
+				ordenador.vol_c = levels[ordenador.ay_envel_value];
+			else
+				ordenador.vol_c = levels[ordenador.ay_registers[10] & 0x0F];		
+		}
+		else ordenador.vol_c = 0;
+	}
+}
+
+
+/* Creates the sound buffer during the TSTADOS tstate that the Z80 used to
+   execute last instruction */
+
+inline void play_sound (unsigned int tstados) {
+
+	int value, lvalue, rvalue;
+	
+
+	ordenador.tstados_counter_sound += tstados;
+
+	while (ordenador.tstados_counter_sound >= ordenador.tst_sample)	{
+
+		ordenador.tstados_counter_sound -= ordenador.tst_sample;
+		
+		if (ordenador.sound_bit) value=ordenador.volume*6; //Sound bit volume max 96
+		else value=0;
+					
+				//Each channel max 51
+					
+		if (ordenador.ay_emul)
+		{
+			switch (ordenador.audio_mode)
+			{
+				case 0: //Mono
+				lvalue = value + (ordenador.vol_a  + ordenador.vol_b +ordenador.vol_c)*ordenador.volume/80;	
+				rvalue = value + (ordenador.vol_a  + ordenador.vol_b +ordenador.vol_c)*ordenador.volume/80;
+				break;
+				case 1: //ABC
+				lvalue = value + (ordenador.vol_a*2  + ordenador.vol_b)*ordenador.volume/80;	
+				rvalue = value + (ordenador.vol_b + ordenador.vol_c*2)*ordenador.volume/80;
+				break;
+				case 2: //ACB
+				lvalue = value + (ordenador.vol_a*2  + ordenador.vol_c)*ordenador.volume/80;	
+				rvalue = value + (ordenador.vol_c + ordenador.vol_b*2)*ordenador.volume/80;
+				break;
+				case 3: //BAC
+				lvalue = value + (ordenador.vol_b*2  + ordenador.vol_a)*ordenador.volume/80;	
+				rvalue = value + (ordenador.vol_a + ordenador.vol_c*2)*ordenador.volume/80;
+				break;
+				default: //No emulation
+				rvalue = value;
+				lvalue = value;
+				break;
 			}
+		}
+		else
+		{
+			rvalue = value;
+			lvalue = value;
+		}
+				
+		/*
+		if (rvalue > 255) rvalue = 255;
+		if (lvalue > 255) lvalue = 255;
+		*/
+				
+		*ordenador.current_buffer =	(unsigned char)(rvalue - (unsigned int)ordenador.sign);	
+		ordenador.current_buffer++;
+		*ordenador.current_buffer =	(unsigned char)(lvalue - (unsigned int)ordenador.sign);	
+		ordenador.current_buffer++;
+		
 		ordenador.sound_cuantity++;
 
 		if (ordenador.sound_cuantity == ordenador.buffer_len) {		// buffer filled
