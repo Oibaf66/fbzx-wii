@@ -179,7 +179,7 @@ struct virtkey* get_key()
 	
 	key = get_key_internal();
 	
-	//clean_screen();
+	SDL_FillRect(VirtualKeyboard.screen, &rect, SDL_MapRGB(ordenador.screen->format, 0, 0, 0));
 
 	return key;
 }

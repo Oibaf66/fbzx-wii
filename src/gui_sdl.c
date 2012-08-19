@@ -51,7 +51,7 @@ extern FILE *fdebug;
 #endif
 
 #define MAX_POKE 20
-#define MAX_TRAINER 40
+#define MAX_TRAINER 50
 
 extern int countdown;
 void clean_screen();
@@ -1135,19 +1135,23 @@ void do_poke_sdl() {
 }
 
 
-
 int parse_poke (const char *filename)
 {
-static unsigned char old_poke[MAX_TRAINER][MAX_POKE]; //Max 19 Pokes per trainer and max 40 trainer
+static unsigned char old_poke[MAX_TRAINER][MAX_POKE]; //Max 19 Pokes per trainer and max 50 trainer
 FILE* fpoke;
 unsigned char title[128], flag, newfile, restore, old_mport1;
 int bank, address, value, original_value, ritorno,y,k, trainer, poke;
-SDL_Rect src;
+SDL_Rect src, banner;
 
 src.x=0;
-src.y=0;
-src.w=640/RATIO;
-src.h=20/RATIO;
+src.y=30/RATIO;
+src.w=FULL_DISPLAY_X;
+src.h=FULL_DISPLAY_Y-60/RATIO;
+
+banner.x=0;
+banner.y=30/RATIO;
+banner.w=FULL_DISPLAY_X;
+banner.h=20/RATIO;
 
 y=60/RATIO;
 
@@ -1165,7 +1169,9 @@ if (fpoke==NULL)
 
 clean_screen();
 
-print_font(screen, 0xd0, 0xd0, 0xd0,0, 30/RATIO, "Press 1 to deselect, 2 to select", 16);
+SDL_FillRect(screen, &src, SDL_MapRGB(screen->format, 0xff, 0xff, 0xff));
+
+print_font(screen, 0x0, 0x0, 0x0,0, 30/RATIO, "Press 1 to deselect, 2 to select", 16);
 
 ritorno=0;
 do
@@ -1180,7 +1186,7 @@ do
 
 	if (strlen(title)>1) title[strlen(title)-2]='\0'; //cancel new line and line feed
 
-	if (y>450/RATIO) {clean_screen();y=40/RATIO;}
+	if (y>420/RATIO) {SDL_FillRect(screen, &src, SDL_MapRGB(screen->format, 0xff, 0xff, 0xff));y=40/RATIO;}
 	
 	if (newfile) print_font(screen, 0x80, 0x80, 0x80,0, y, title+1, 16);
 	else {if (old_poke[trainer][0]==0) print_font(screen, 0xd0, 0, 0,0, y, title+1, 16); //In row 0 information on trainer selection 
@@ -1192,13 +1198,13 @@ do
 	while (!((k & KEY_ESCAPE)||(k & KEY_SELECT)))
 	{k = menu_wait_key_press();}
 	
-	src.y=y;
+	banner.y=y;
 	
-	SDL_FillRect(screen, &src, SDL_MapRGB(screen->format, 0, 0, 0));
+	SDL_FillRect(screen, &banner, SDL_MapRGB(screen->format, 0xff, 0xff, 0xff));
 	
 	if (k & KEY_SELECT) 
 	{
-		print_font(screen, 0, 0x80, 0,0, y, title+1, 16);
+		print_font(screen, 0, 0x40, 0,0, y, title+1, 16);
 		old_poke[trainer][0]=1;
 	}
 	else 
@@ -1260,7 +1266,7 @@ while (ritorno==0);
 
 k=0;
 
-while (!(k & KEY_ESCAPE))
+while (!(k & KEY_ESCAPE)&&(ritorno==0))
 {k = menu_wait_key_press();}
 
 fclose(fpoke);
@@ -1317,8 +1323,6 @@ static void tools()
 		
 	set_port(submenus[0]);
 	
-	do
-	{
 	switch(opt)
 		{
 		case 0: // Show keyboard 
@@ -1336,13 +1340,12 @@ static void tools()
 		case 8: // Load poke file
 			load_poke_file();
 			break;
-		case 10:
+		case 13:
 			help();
 			break;
 		default:
 			break;
-		}
-	} while (opt == 10);		
+		}	
 }
 
 
