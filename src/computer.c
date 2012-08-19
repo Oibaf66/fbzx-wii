@@ -1554,7 +1554,7 @@ void ResetComputer () {
 	
 	ordenador.last_selected_poke_file[0]='\0';
 	
-	ordenador.tst_sample=ordenador.cpufreq/ordenador.freq;
+	ordenador.tst_sample=(ordenador.cpufreq + ordenador.freq/2)/ordenador.freq;
 	
 	microdrive_reset();
 }

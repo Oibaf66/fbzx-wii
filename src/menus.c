@@ -2014,6 +2014,6 @@ if (freq == 0)
 	}
 else ordenador.cpufreq = freq;
 
-ordenador.tst_sample=ordenador.cpufreq/ordenador.freq;
+ordenador.tst_sample=(ordenador.cpufreq + ordenador.freq/2)/ordenador.freq;
 
 }

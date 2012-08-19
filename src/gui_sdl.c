@@ -544,7 +544,16 @@ static void emulation_settings(void)
 	}
 	}
 	
-	if (ordenador.turbo==0) ordenador.precision = !submenus[4];
+	if (submenus[4] != submenus_old[4])
+	{
+	ordenador.precision = !submenus[4];
+		if (ordenador.precision)
+		{
+		update_frequency(0);
+		jump_frames=0;
+		ordenador.turbo =0;
+		}
+	}
 }
 
 static void audio_settings(void)

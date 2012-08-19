@@ -183,9 +183,7 @@ inline void play_ay (unsigned int tstados) {
 		tone_period_a= ((unsigned int) ordenador.ay_registers[0]) + 256 * ((unsigned int) ((ordenador.ay_registers[1]) & 0x0F));
 		tone_period_b= ((unsigned int) ordenador.ay_registers[2]) + 256 * ((unsigned int) ((ordenador.ay_registers[3]) & 0x0F));
 		tone_period_c= ((unsigned int) ordenador.ay_registers[4]) + 256 * ((unsigned int) ((ordenador.ay_registers[5]) & 0x0F));
-		noise_period= ((unsigned int) ordenador.ay_registers[6]) & 0x1F;
 		
-		if (!noise_period) noise_period = 1;
 	
 		if (tone_period_a<6)  //max 20KHz
 			ordenador.ayval_a =1;
@@ -263,6 +261,10 @@ inline void play_ay (unsigned int tstados) {
 			
 			ordenador.aych_n =0;
 			
+			 // Changes to R6 take effect only when internal counter reaches 0
+			noise_period= ((unsigned int) ordenador.ay_registers[6]) & 0x1F;
+		
+			if (!noise_period) noise_period = 1;
 
 		}	
 

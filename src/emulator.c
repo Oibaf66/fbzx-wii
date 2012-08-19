@@ -493,7 +493,7 @@ int bucle, bucle2,ret2;
 	}
 
 	printf("Init sound 2\n");
-	ordenador.tst_sample=ordenador.cpufreq/ordenador.freq;
+	ordenador.tst_sample=(ordenador.cpufreq + ordenador.freq/2)/ordenador.freq;
 }
 
 void end_system() {
