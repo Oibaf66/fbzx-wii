@@ -141,7 +141,6 @@ void computer_init () { //Called only on start-up
 	ordenador.vol_b = 0;
 	ordenador.vol_c = 0;
 	ordenador.tst_ay = 0;
-	ordenador.tst_ay2 = 0;
 	ordenador.wr = 0;
 	ordenador.r_fetch = 0;
 	ordenador.io = 0;

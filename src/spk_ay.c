@@ -49,7 +49,6 @@ inline void play_ay (unsigned int tstados) {
 		return;
 
 	ordenador.tst_ay += tstados;
-	ordenador.tst_ay2 += tstados;
 	
 	// A note about the period of tones, noise and envelope: careful studies of the chip
     // output prove that it counts up from 0 until the counter becomes
@@ -61,16 +60,17 @@ inline void play_ay (unsigned int tstados) {
 	
 	//The frequency of AY-3-8912 is half the ZX Spectrum frequency
 	
-	//Envelope
-	//Envelope frequency is 1/(256*envelop_period) of AY-3-8912 frequency
 	
-	if (ordenador.tst_ay2 > 127) {
-		ordenador.tst_ay2 -= 128;
+	if (ordenador.tst_ay > 16) {
+		ordenador.tst_ay -= 16;
 		
-		env_period=2*((unsigned int) ordenador.ay_registers[11]) + 256 * ((unsigned int) (ordenador.ay_registers[12]));
-		if (!env_period) env_period = 1;
+	//Envelope
+	//Envelope frequency is 1/(256*envelop_period) of AY-3-8912 frequency	
 		
-			if (ordenador.aych_envel<env_period) // to check
+		env_period=((unsigned int) ordenador.ay_registers[11]) + 256 * ((unsigned int) ordenador.ay_registers[12]);
+		if (!env_period) env_period = 1; //It should be the half period
+		
+			if (ordenador.aych_envel<env_period)
 				ordenador.aych_envel++;
 			else {
 				ordenador.aych_envel = 0;
@@ -169,22 +169,15 @@ inline void play_ay (unsigned int tstados) {
 					}
 				}
 			}
-		
-	}
 
 	//Tone and noise
 	//Tone frequency is 1/(16*tone_period) of AY-3-8912 frequency
 	//Noise frequency is 1/(16*noise_period) of AY-3-8912 frequency
-	
-	while (ordenador.tst_ay > 15)
-	{
-		ordenador.tst_ay -= 16;
 		
 		tone_period_a= ((unsigned int) ordenador.ay_registers[0]) + 256 * ((unsigned int) ((ordenador.ay_registers[1]) & 0x0F));
 		tone_period_b= ((unsigned int) ordenador.ay_registers[2]) + 256 * ((unsigned int) ((ordenador.ay_registers[3]) & 0x0F));
 		tone_period_c= ((unsigned int) ordenador.ay_registers[4]) + 256 * ((unsigned int) ((ordenador.ay_registers[5]) & 0x0F));
 		
-	
 		if (tone_period_a<6)  //max 20KHz
 			ordenador.ayval_a =1;
 		else

@@ -132,7 +132,6 @@ struct computer {
 	unsigned char audio_mode; //mono, ABC, ACB, BAC
 	unsigned char vol_a,vol_b,vol_c;
 	unsigned int tst_ay;
-	unsigned int tst_ay2;
 	unsigned int ay_latch;
 	signed char ay_envel_value;
 	unsigned char ay_envel_way;
