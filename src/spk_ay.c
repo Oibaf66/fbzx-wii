@@ -61,7 +61,7 @@ inline void play_ay (unsigned int tstados) {
 	//The frequency of AY-3-8912 is half the ZX Spectrum frequency
 	
 	
-	if (ordenador.tst_ay > 16) {
+	if (ordenador.tst_ay > 15) {
 		ordenador.tst_ay -= 16;
 		
 	//Envelope
