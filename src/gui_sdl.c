@@ -1137,141 +1137,141 @@ void do_poke_sdl() {
 
 int parse_poke (const char *filename)
 {
-static unsigned char old_poke[MAX_TRAINER][MAX_POKE]; //Max 19 Pokes per trainer and max 50 trainer
-FILE* fpoke;
-unsigned char title[128], flag, newfile, restore, old_mport1;
-int bank, address, value, original_value, ritorno,y,k, trainer, poke;
-SDL_Rect src, banner;
+	static unsigned char old_poke[MAX_TRAINER][MAX_POKE]; //Max 19 Pokes per trainer and max 50 trainer
+	FILE* fpoke;
+	unsigned char title[128], flag, newfile, restore, old_mport1;
+	int bank, address, value, original_value, ritorno,y,k, trainer, poke;
+	SDL_Rect src, banner;
 
-src.x=0;
-src.y=30/RATIO;
-src.w=FULL_DISPLAY_X;
-src.h=FULL_DISPLAY_Y-60/RATIO;
+	src.x=0;
+	src.y=30/RATIO;
+	src.w=FULL_DISPLAY_X;
+	src.h=FULL_DISPLAY_Y-60/RATIO;
 
-banner.x=0;
-banner.y=30/RATIO;
-banner.w=FULL_DISPLAY_X;
-banner.h=20/RATIO;
+	banner.x=0;
+	banner.y=30/RATIO;
+	banner.w=FULL_DISPLAY_X;
+	banner.h=20/RATIO;
 
-y=60/RATIO;
+	y=60/RATIO;
 
-if (strcmp(ordenador.last_selected_poke_file,filename)) newfile=1; else newfile=0;
+	if (strcmp(ordenador.last_selected_poke_file,filename)) newfile=1; else newfile=0;
 
-trainer=0;
+	trainer=0;
 
-fpoke = fopen(filename,"r");
+	fpoke = fopen(filename,"r");
 
-if (fpoke==NULL) 
-{
-	msgInfo("Can not access the file",3000,NULL);	
-	return (0);
-}
-
-clean_screen();
-
-SDL_FillRect(screen, &src, SDL_MapRGB(screen->format, 0xff, 0xff, 0xff));
-
-print_font(screen, 0x0, 0x0, 0x0,0, 30/RATIO, "Press 1 to deselect, 2 to select", 16);
-
-ritorno=0;
-do
-{
-	if (trainer==MAX_TRAINER) {ritorno=2;break;}
-	
-	poke=1;
-	restore=0;
-	if (!fgets(title,128,fpoke)) {ritorno=1;break;}
-	if (title[0]=='Y') break;
-	if (title[0]!='N') {ritorno=1;break;}
-
-	if (strlen(title)>1) title[strlen(title)-2]='\0'; //cancel new line and line feed
-
-	if (y>420/RATIO) {SDL_FillRect(screen, &src, SDL_MapRGB(screen->format, 0xff, 0xff, 0xff));y=40/RATIO;}
-	
-	if (newfile) print_font(screen, 0x80, 0x80, 0x80,0, y, title+1, 16);
-	else {if (old_poke[trainer][0]==0) print_font(screen, 0xd0, 0, 0,0, y, title+1, 16); //In row 0 information on trainer selection 
-			else print_font(screen, 0, 0xd0, 0,0, y, title+1, 16);}
-
-	SDL_Flip(screen);
-	k=0;
-
-	while (!((k & KEY_ESCAPE)||(k & KEY_SELECT)))
-	{k = menu_wait_key_press();}
-	
-	banner.y=y;
-	
-	SDL_FillRect(screen, &banner, SDL_MapRGB(screen->format, 0xff, 0xff, 0xff));
-	
-	if (k & KEY_SELECT) 
+	if (fpoke==NULL) 
 	{
-		print_font(screen, 0, 0x40, 0,0, y, title+1, 16);
-		old_poke[trainer][0]=1;
+		msgInfo("Can not access the file",3000,NULL);	
+		return (0);
 	}
-	else 
-	{
-		if ((!newfile)&&(old_poke[trainer][0]==1)) restore=1;
-		print_font(screen, 0x80, 0, 0,0, y, title+1, 16);
-		old_poke[trainer][0]=0;
-	}	
-	
-	SDL_Flip(screen);
 
-	y+=20/RATIO;
-					
-	do 
+	clean_screen();
+
+	SDL_FillRect(screen, &src, SDL_MapRGB(screen->format, 0xff, 0xff, 0xff));
+
+	print_font(screen, 0x0, 0x0, 0x0,0, 30/RATIO, "Press 1 to deselect, 2 to select", 16);
+
+	ritorno=0;
+	do
 	{
-		if (poke==MAX_POKE) old_poke[trainer][0]=0; //in order not to restore the old_value
-		
-		fscanf(fpoke, "%1s %d %d %d %d", &flag, &bank, &address, &value, &original_value);
-		if (((flag!='M')&&(flag!='Z'))||(bank>8)||(bank<0)||(address>0xFFFF)||(address<0x4000)||(value>256)||(value<0)||(original_value>255)||(original_value<0)) {ritorno=1;break;}
-		if (feof(fpoke)) {ritorno=1;break;}
-		if ((!(bank&0x8))&&((ordenador.mode128k==1)||(ordenador.mode128k==2)||(ordenador.mode128k==4))) //+3?
+		if (trainer==MAX_TRAINER) {ritorno=2;break;}
+	
+		poke=1;
+		restore=0;
+		if (!fgets(title,128,fpoke)) {ritorno=1;break;}
+		if (title[0]=='Y') break;
+		if (title[0]!='N') {ritorno=1;break;}
+
+		if (strlen(title)>1) title[strlen(title)-2]='\0'; //cancel new line and line feed
+
+		if (y>420/RATIO) {SDL_FillRect(screen, &src, SDL_MapRGB(screen->format, 0xff, 0xff, 0xff));y=40/RATIO;}
+	
+		if (newfile) print_font(screen, 0x80, 0x80, 0x80,0, y, title+1, 16);
+		else {if (old_poke[trainer][0]==0) print_font(screen, 0xd0, 0, 0,0, y, title+1, 16); //In row 0 information on trainer selection 
+				else print_font(screen, 0, 0xd0, 0,0, y, title+1, 16);}
+
+		SDL_Flip(screen);
+		k=0;
+
+		while (!((k & KEY_ESCAPE)||(k & KEY_SELECT)))
+		{k = menu_wait_key_press();}
+	
+		banner.y=y;
+	
+		SDL_FillRect(screen, &banner, SDL_MapRGB(screen->format, 0xff, 0xff, 0xff));
+	
+		if (k & KEY_SELECT) 
 		{
-			old_mport1 = ordenador.mport1;
-			ordenador.mport1 = (unsigned char) (bank&0x7);
-			set_memory_pointers ();	// set the pointers
-			
-			if (poke<MAX_POKE)
-			{
-				if(newfile)
-					{if (original_value) old_poke[trainer][poke]=(unsigned char) original_value; else old_poke[trainer][poke]= Z80free_Rd_fake ((word) address);}
-				if (restore) value = (int) old_poke[trainer][poke]; 
-			}
-			
-			if (((value < 256) && (k & KEY_SELECT))||(restore)) Z80free_Wr_fake ((word)address, (unsigned char) value);
-			ordenador.mport1 = old_mport1;
-			set_memory_pointers ();	// set the pointers
+			print_font(screen, 0, 0x40, 0,0, y, title+1, 16);
+			old_poke[trainer][0]=1;
 		}
 		else 
 		{
-			if (poke<MAX_POKE)
-			{
-				if(newfile)
-					{if (original_value) old_poke[trainer][poke]=(unsigned char) original_value; else old_poke[trainer][poke]= Z80free_Rd_fake ((word) address);}
-				if (restore) value = (int) old_poke[trainer][poke];
-			}
-			if (((value < 256) && (k & KEY_SELECT))||(restore)) Z80free_Wr_fake ((word)address, (unsigned char) value);
-		}
-		poke++;
+			if ((!newfile)&&(old_poke[trainer][0]==1)) restore=1;
+			print_font(screen, 0x80, 0, 0,0, y, title+1, 16);
+			old_poke[trainer][0]=0;
+		}	
+	
+		SDL_Flip(screen);
+
+		y+=20/RATIO;
+					
+		do 
+		{
+			if (poke==MAX_POKE) old_poke[trainer][0]=0; //in order not to restore the old_value
 		
-	}
-	while (flag!='Z');
+			fscanf(fpoke, "%1s %d %d %d %d", &flag, &bank, &address, &value, &original_value);
+			if (((flag!='M')&&(flag!='Z'))||(bank>8)||(bank<0)||(address>0xFFFF)||(address<0x4000)||(value>256)||(value<0)||(original_value>255)||(original_value<0)) {ritorno=1;break;}
+			if (feof(fpoke)) {ritorno=1;break;}
+			if ((!(bank&0x8))&&(ordenador.mode128k)) //128k,+2,+3,SP
+			{
+				old_mport1 = ordenador.mport1;
+				ordenador.mport1 = (unsigned char) (bank&0x7);
+				set_memory_pointers ();	// set the pointers
+			
+				if (poke<MAX_POKE)
+				{
+					if(newfile)
+						{if (original_value) old_poke[trainer][poke]=(unsigned char) original_value; else old_poke[trainer][poke]= Z80free_Rd_fake ((word) address);}
+					if (restore) value = (int) old_poke[trainer][poke]; 
+				}
+				//if ((value == 256) && (k & KEY_SELECT)) {value = choice_value(); Z80free_Wr_fake ((word)address, (unsigned char) value);} TODO
+				if (((value < 256) && (k & KEY_SELECT))||(restore)) Z80free_Wr_fake ((word)address, (unsigned char) value);
+				ordenador.mport1 = old_mport1;
+				set_memory_pointers ();	// set the pointers
+			}
+			else 
+			{
+				if (poke<MAX_POKE)
+				{
+					if(newfile)
+						{if (original_value) old_poke[trainer][poke]=(unsigned char) original_value; else old_poke[trainer][poke]= Z80free_Rd_fake ((word) address);}
+					if (restore) value = (int) old_poke[trainer][poke];
+				}
+				//if ((value == 256) && (k & KEY_SELECT)) {value = choice_value(); Z80free_Wr_fake ((word)address, (unsigned char) value);} TODO
+				if (((value < 256) && (k & KEY_SELECT))||(restore)) Z80free_Wr_fake ((word)address, (unsigned char) value);
+			}
+			poke++;
+		}
+		while (flag!='Z');
 	
-	trainer++;
+		trainer++;
 	
-	if (!fgets(title,128,fpoke)) {ritorno=1;break;} //line feed reading
+		if (!fgets(title,128,fpoke)) {ritorno=1;break;} //line feed reading
 	
-} 
-while (ritorno==0);
+	} 
+	while (ritorno==0);
 
-k=0;
+	k=0;
 
-while (!(k & KEY_ESCAPE)&&(ritorno==0))
-{k = menu_wait_key_press();}
+	while (!(k & KEY_ESCAPE)&&(ritorno==0))
+	{k = menu_wait_key_press();}
 
-fclose(fpoke);
-if (ritorno==0) strcpy(ordenador.last_selected_poke_file,filename);		
-return (ritorno);
+	fclose(fpoke);
+	if (ritorno==0) strcpy(ordenador.last_selected_poke_file,filename);		
+	return (ritorno);
 }
 
 void load_poke_file()
