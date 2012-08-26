@@ -40,6 +40,16 @@
 
 #include "characters.h"
 
+#include "minizip/unzip.h"
+
+#ifdef DEBUG
+extern FILE *fdebug;
+#define printf(...) fprintf(fdebug,__VA_ARGS__)
+#else
+ #ifdef GEKKO
+ #define printf(...)
+ #endif
+#endif
 
 typedef struct
 {
@@ -261,6 +271,67 @@ static int ext_matches_list(const char *name, const char **exts)
 	return 0;
 }
 
+static const char **get_file_list_zip(const char *path)
+{
+	unzFile uf = unzOpen(path);
+	unz_global_info gi;
+	const char **file_list;
+	int err, cur=0;
+	
+	if (!uf) return NULL;
+
+	err = unzGetGlobalInfo (uf,&gi);
+    if (err!=UNZ_OK) printf("error %d with zipfile in unzGetGlobalInfo \n",err);
+	
+	file_list = (const char**)malloc((gi.number_entry +3) * sizeof(char*));
+	file_list[cur++] = strdup("None");
+	file_list[cur++] = strdup("[..]");
+	file_list[cur] = NULL;
+
+	for (cur=2;cur<gi.number_entry+2;cur++)
+    {
+        char filename_inzip[1024];
+        unz_file_info file_info;
+   
+        err = unzGetCurrentFileInfo(uf,&file_info,filename_inzip,sizeof(filename_inzip),NULL,0,NULL,0);
+        if (err!=UNZ_OK)
+        {
+            printf("Error %d with zipfile in unzGetCurrentFileInfo\n",err);
+            break;
+        }
+		
+		const char *exts[] = {".tap", ".TAP", ".tzx", ".TZX", ".z80",".Z80",".sna", ".SNA",
+				".mdr", ".MDR", ".scr", ".SCR", ".conf", ".CONF",".pok", ".POK" ,NULL};
+
+		if (ext_matches_list(filename_inzip, exts))
+		{
+			char *p;
+
+			p = strdup(filename_inzip);
+			file_list[cur] = p;
+			file_list[cur+1] = NULL;
+		}
+		
+		if (cur<gi.number_entry+1)
+        {
+            err = unzGoToNextFile(uf);
+            if (err!=UNZ_OK)
+            {
+                printf("error %d with zipfile in unzGoToNextFile\n",err);
+                break;
+            }
+        }
+
+	}
+	
+	unzClose(uf);
+
+    //qsort(&file_list[2], gi.number_entry, sizeof(const char *), cmpstringp);
+
+    return file_list;
+}
+
+
 static const char **get_file_list(const char *base_dir)
 {
 	DIR *d = opendir(base_dir);
@@ -282,7 +353,7 @@ static const char **get_file_list(const char *base_dir)
 	{
 		char buf[255];
 		const char *exts[] = {".tap", ".TAP", ".tzx", ".TZX", ".z80",".Z80",".sna", ".SNA",
-				".mdr", ".MDR", ".scr", ".SCR", ".conf", ".CONF",".pok", ".POK", NULL};
+				".mdr", ".MDR", ".scr", ".SCR", ".conf", ".CONF",".pok", ".POK", ".zip", ".ZIP",NULL};
 		struct stat st;
 
 		snprintf(buf, 255, "%s/%s", base_dir, de->d_name);
@@ -927,12 +998,129 @@ int menu_select(const char **msgs, int *submenus)
 	return menu_select_title("", msgs, submenus);
 }
 
+static const char *menu_select_file_internal_zip(char *path,
+		int x, int y, int x2, int y2, const char *selected_file, int which)
+{
+	const char **file_list = get_file_list_zip(path);
+	char *sel;
+	const char *ptr_selected_file;
+	int opt;
+	int i;
+	int err;
+	char buf[64];
+	
+	if (file_list == NULL) {free(path); return NULL;}
+
+	if (selected_file) 
+	{
+		ptr_selected_file= strrchr(selected_file,'/');
+		if (ptr_selected_file) ptr_selected_file++;
+		else ptr_selected_file = selected_file;
+		snprintf(buf,64,"file:%s",ptr_selected_file);
+		opt = menu_select_sized(buf, file_list, NULL, 0, x, y, x2, y2, NULL, NULL, 16);
+	}
+	else opt = menu_select_sized("Select file", file_list, NULL, 0, x, y, x2, y2, NULL, NULL ,16);
+	
+	if (opt < 0) {free(path); return NULL;}
+			
+	sel = strdup(file_list[opt]);
+
+	/* Cleanup everything - file_list is NULL-terminated */
+        for ( i = 0; file_list[i]; i++ )
+        	free((void*)file_list[i]);
+        free(file_list);
+
+	if (!sel) {free(path); return NULL;}
+	
+	if (opt==0||opt==1) {free(path); return sel;} //"None" or "[..]"
+		
+  	unzFile uf = unzOpen(path);
+	
+	if (unzLocateFile (uf, sel, 1)!= UNZ_OK) {printf ("File not found in zip/n"); unzClose(path); free(path);free (sel);return NULL;}
+	
+	free(path); //It does need anymore
+	
+	char* filename_withoutpath;
+	char* write_filename;
+    char* p;
+	
+	p = filename_withoutpath = sel;
+    while ((*p) != '\0')
+    {
+        if (((*p)=='/') || ((*p)=='\\'))
+            filename_withoutpath = p+1;
+        p++;
+    }
+	
+	if ((*filename_withoutpath)=='\0') filename_withoutpath = sel;
+	
+	write_filename = (char*)malloc(strlen(path_tmp) + strlen(filename_withoutpath) + 4);
+	
+	snprintf(write_filename, strlen(path_tmp) + strlen(filename_withoutpath) + 4, "%s/%s", path_tmp, filename_withoutpath);
+	
+	err = unzOpenCurrentFile(uf);
+        if (err!=UNZ_OK)
+        {
+            printf("error %d with zipfile in unzOpenCurrentFile\n",err);
+        }
+
+	void* buf2;
+    unsigned int size_buf = 8192;
+	FILE *fout=NULL;
+	
+    buf2 = (void*)malloc(size_buf);
+    if (buf2==NULL)
+    {
+        printf("Error allocating memory\n");
+		free(sel);
+		free(write_filename);
+        return NULL;
+    }
+
+	//unlink(write_filename);
+	
+	fout=fopen(write_filename,"wb"); 
+
+	if (fout!=NULL)
+        {
+            printf("Extracting: %s in %s\n",sel, write_filename);
+
+            do
+            {
+                err = unzReadCurrentFile(uf,buf2,size_buf);
+                if (err<0)
+                {
+                    printf("Error %d with zipfile in unzReadCurrentFile\n",err);
+                    break;
+                }
+                if (err>0)
+                    if (fwrite(buf2,err,1,fout)!=1)
+                    {
+                        printf("Error in writing extracted file\n");
+                        err=UNZ_ERRNO;
+                        break;
+                    }
+            }
+            while (err>0);
+            
+			if (fout) fclose(fout);
+        }
+	
+	unzCloseCurrentFile(uf); 
+	free(buf2);
+	free(sel);
+	
+	
+	return write_filename;
+}
+
 static const char *menu_select_file_internal(const char *dir_path,
 		int x, int y, int x2, int y2, const char *selected_file, int which)
 {
 	const char **file_list = get_file_list(dir_path);
 	char *sel;
 	char *out;
+	char *out_zip;
 	const char *ptr_selected_file;
 	int opt;
 	int i;
@@ -980,13 +1168,26 @@ static const char *menu_select_file_internal(const char *dir_path,
         		return NULL;
         	return menu_select_file(buf, selected_file, which);
         }
+		
+		
 
 	out = (char*)malloc(strlen(dir_path) + strlen(sel) + 4);
 	snprintf(out, strlen(dir_path) + strlen(sel) + 4,
 			"%s/%s", dir_path, sel);
 
 	free(sel);
-        return out;
+	
+	if ((ext_matches(out, ".zip")||ext_matches(out, ".ZIP"))&&(tmpismade))
+	{out_zip = (char *) menu_select_file_internal_zip (out, x, y, x2, y2, selected_file, which);
+	if (!out_zip) return NULL;
+	if(!strcmp(out_zip,"[..]")) 
+		{
+		free(out_zip);
+		return menu_select_file_internal (dir_path, x, y, x2, y2, selected_file, which);
+		}
+	else return out_zip;
+	}
+    else return out;
 }
 
 /*

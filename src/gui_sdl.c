@@ -39,8 +39,6 @@
 #define ID_BUTTON_OFFSET 0
 #define ID_AXIS_OFFSET 32
 
-extern int usbismount, smbismount;
-
 #ifdef DEBUG
 extern FILE *fdebug;
 #define printf(...) fprintf(fdebug,__VA_ARGS__)

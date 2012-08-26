@@ -38,6 +38,8 @@
 #include "tape.h"
 #include "microdrive.h"
 #include "menu_sdl.h"
+#include <dirent.h>
+
 
 #ifdef GEKKO
 #include <gccore.h>
@@ -71,14 +73,16 @@ char path_mdrs[2049];
 char path_scr[2049];
 char path_confs[2049];
 char path_poke[2049];
+char path_tmp[2049];
 unsigned int colors[80];
 unsigned int jump_frames,curr_frames;
 char *filenames[5];
 static SDL_Surface *image;
 
-bool usbismount = false;
-bool networkisinit = false;
-bool smbismount = false; 
+unsigned char usbismount = 0;
+unsigned char networkisinit = 0;
+unsigned char smbismount = 0;
+unsigned char tmpismade = 0; 
 
 extern int FULL_DISPLAY_X; //640
 extern int FULL_DISPLAY_Y; //480
@@ -90,11 +94,11 @@ extern int RATIO;
  * Mount SMB Share
  ****************************************************************************/
 
-bool ConnectShare ()
+unsigned char ConnectShare ()
 {
 	
 	if(smbismount)
-		return true;
+		return 1;
 		printf("user:  %s\n", ordenador.SmbUser);
 		printf("pass:  %s\n", ordenador.SmbPwd);
 		printf("share: %s\n", ordenador.SmbShare);
@@ -103,7 +107,7 @@ bool ConnectShare ()
 		int a;
 		for (a=0;a<3;a++)
 		if(smbInit(ordenador.SmbUser, ordenador.SmbPwd,ordenador.SmbShare, ordenador.SmbIp))
-			{smbismount = true;	break;}
+			{smbismount = 1;	break;}
 			
 		
 		if(!smbismount) printf("Failed to connect to SMB share\n");
@@ -121,26 +125,26 @@ void CloseShare()
 	printf("Disconnected from SMB share\n");
 	smbClose("smb");
 	}
-	smbismount = false;
+	smbismount = 0;
 }
 
 /****************************************************************************
  * init and deinit USB device functions
  ****************************************************************************/
  
-bool InitUSB()
+unsigned char InitUSB()
 { 
 	printf("Initializing USB FAT subsytem ...\n");
 	fatUnmount("usb:");
 	
 	// This should wake up the drive
-	bool isMounted = fatMountSimple("usb", &__io_usbstorage);
+	unsigned char isMounted = fatMountSimple("usb", &__io_usbstorage);
 	
-	bool isInserted = __io_usbstorage.isInserted();
+	unsigned char isInserted = __io_usbstorage.isInserted();
 	if (!isInserted) 
 	{
 	printf("USB device not found\n");
-	return false;
+	return 0;
 	}
  
 	// USB Drive may be "sleeeeping" 
@@ -165,19 +169,19 @@ bool InitUSB()
 	__io_usbstorage.shutdown(); 
 }
 
-bool InitNetwork()
+unsigned char InitNetwork()
 {
         char myIP[16];
 
         memset(myIP, 0, sizeof(myIP));
 	printf("Getting IP address via DHCP...\n");
 
-	if (if_config(myIP, NULL, NULL, true) < 0) {
+	if (if_config(myIP, NULL, NULL, 1) < 0) {
 	        	printf("No DHCP reply\n");
-	        	return false;
+	        	return 0;
         }
 	printf("Got an address: %s\n",myIP);
-	return true;
+	return 1;
 }
 
 #endif
@@ -201,6 +205,41 @@ if (ordenador.mustlock) {
 
 return 1;
 } 
+
+int remove_dir(char *dir)
+{
+	DIR *dp;
+    struct dirent *ep;
+	struct stat st;
+
+    dp = opendir (dir);
+	char str[2049];
+	
+    if (dp != NULL) 
+		{
+          while ((ep = readdir (dp)))
+			{
+				if (!strcmp(".", ep->d_name)||!strcmp("..", ep->d_name)) continue;
+				strcpy (str,dir);
+				strcat (str,"/");
+				strcat (str,ep->d_name);
+				if (stat(str, &st) < 0) continue;
+				if (S_ISDIR(st.st_mode)) remove_dir (str); //recursive call
+				else unlink (str); //remove file
+			}
+			(void) closedir(dp);
+		}
+    else
+		{
+          printf("can't access the directory\n");
+		}
+
+	if (rmdir(dir)) {printf("Can't remove the directory\n"); return (-1);} 
+	
+	return 0; 
+		  
+} 		  
+
 
 void SDL_Fullscreen_Switch()
 {
@@ -1129,12 +1168,22 @@ int main(int argc,char *argv[]) {
 	strcpy(path_scr,path_snaps);
 	strcpy(path_confs,path_snaps);
 	strcpy(path_poke,path_snaps);
+	strcpy(path_tmp,path_snaps);
 	strcat(path_snaps,"snapshots");
 	strcat(path_taps,"tapes");
 	strcat(path_mdrs,"microdrives");
 	strcat(path_scr,"scr");
 	strcat(path_confs,"configurations");
 	strcat(path_poke,"poke");
+	strcat(path_tmp,"tmp");
+	
+	//Remove and make tmp dir
+	
+	if (!chdir(path_tmp)) remove_dir(path_tmp); //remove the tmp directory if it exists
+	
+	if (!mkdir(path_tmp,0777)){printf("Making tmp directory\n"); tmpismade=1;} 
+	else {printf("Can't make tmp directory\n"); tmpismade=0;}
+
 	
 	#ifdef GEKKO
 	if ((ordenador.port==1)&&usbismount) {
@@ -1282,6 +1331,8 @@ int main(int argc,char *argv[]) {
 			if (ordenador.precision==0) ordenador.interr=0;
 		}
 	}
+	
+	if (!chdir(path_tmp)) remove_dir(path_tmp); //remove the tmp directory if it exists
 	
 	#ifdef GEKKO
 	if (smbismount) CloseShare ();
