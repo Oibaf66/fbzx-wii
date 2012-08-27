@@ -49,6 +49,7 @@
 #include <smb.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "tinyFTP/ftp_devoptab.h"
 #endif
 
 #ifdef DEBUG
@@ -82,6 +83,7 @@ static SDL_Surface *image;
 unsigned char usbismount = 0;
 unsigned char networkisinit = 0;
 unsigned char smbismount = 0;
+unsigned char ftpismount = 0;
 unsigned char tmpismade = 0; 
 
 extern int FULL_DISPLAY_X; //640
@@ -89,6 +91,48 @@ extern int FULL_DISPLAY_Y; //480
 extern int RATIO; 
 
 #if defined(GEKKO)
+
+
+/****************************************************************************
+ * Connect FTP Server
+ ****************************************************************************/
+
+unsigned char ConnectFTP ()
+{
+	
+	if (ftpismount) return 1;
+		
+		printf("FTPuser:  %s\n", ordenador.FTPUser);
+		printf("FTPpass:  %s\n", ordenador.FTPPwd);
+		printf("FTPpath:  %s\n", ordenador.FTPPath);
+		printf("FTPip:    %s\n", ordenador.FTPIp);
+		printf("FTPPort:    %d\n", ordenador.FTPPort);
+		printf("FTPpassive: %d\n", ordenador.FTPPassive);
+		
+		int a;
+		for (a=0;a<3;a++)
+		if(ftpInitDevice("ftp", ordenador.FTPUser, ordenador.FTPPwd,ordenador.FTPPath, ordenador.FTPIp, ordenador.FTPPort, ordenador.FTPPassive))
+			{ftpismount = 1;	break;}
+			
+		
+		if(!ftpismount) printf("Failed to connect to Server %s\n", ordenador.FTPIp);
+		else {
+		printf("Established connection to Server %s\n", ordenador.FTPIp);
+		}
+
+	return smbismount;
+}
+
+void CloseFTP()
+{
+
+	if(ftpismount) {
+	printf("Disconnected from FTP Server  %s\n", ordenador.FTPIp);
+	ftpClose("ftp");
+	}
+	ftpismount = 0;
+}
+
 
 /****************************************************************************
  * Mount SMB Share
@@ -660,14 +704,15 @@ int save_config_game(struct computer *object, char *filename, int overwrite) {
 	
 }
 
-void load_config_smb(struct computer *object) {
+void load_config_network(struct computer *object) {
 	
 	char line[1024],carac,done;
 	int pos;
 	FILE *fconfig;
-	unsigned char smb_enable=0;
+	unsigned char smb_enable=0, ftp_enable=0, FTPPassive=0;
+	unsigned int FTPPort=21;
 	
-	fconfig = fopen("/fbzx-wii/fbzx.smb","r");
+	fconfig = fopen("/fbzx-wii/fbzx.net","r");
 	if (fconfig==NULL) {
 		return;
 	}
@@ -723,6 +768,52 @@ void load_config_smb(struct computer *object) {
 		
 		if (smb_enable<2) {
 		object->smb_enable=smb_enable;}
+		
+		
+		
+		if (!strncmp(line,"ftp_enable=",11)) {
+			ftp_enable=line[11]-'0';
+			continue;
+		}
+		if (!strncmp(line,"FTPUser=",8)) {
+			if (line[8])
+			strcpy (object->FTPUser,line+8);
+			continue;
+		}
+		if (!strncmp(line,"FTPPassword=",12)) {
+			if (line[12])
+			strcpy (object->FTPPwd,line+12);
+			continue;
+		}
+		if (!strncmp(line,"FTPPath=",8)) {
+			if (line[8])
+			strcpy (object->FTPPath,line+8);
+			continue;
+		}
+		
+		if (!strncmp(line,"FTPIp=",6)) {
+			if (line[6])
+			strcpy (object->FTPIp,line+6);
+			continue;
+		}
+		
+		if (!strncmp(line,"FTPPassive=",10)) {
+			FTPPassive=line[10]-'0';
+			continue;
+		}
+		
+		if (!strncmp(line,"FTPPort=",7)) {
+			sscanf(line, "FTPPort=%d",&FTPPort);
+			if ((FTPPort<1024) && (FTPPort>0))
+			object->FTPPort=FTPPort;
+			continue;
+		}
+		
+		if (ftp_enable<2) {
+		object->ftp_enable=ftp_enable;}
+		if (FTPPassive<2) {
+		object->FTPPassive=FTPPassive;}
+		
 	}
 		
 		
@@ -1149,11 +1240,13 @@ int main(int argc,char *argv[]) {
 	#ifdef GEKKO
 	usbismount = InitUSB();
 	
-	load_config_smb(&ordenador);
+	load_config_network(&ordenador);
 	
-	if (ordenador.smb_enable) networkisinit = InitNetwork();
+	if (ordenador.smb_enable||ordenador.ftp_enable) networkisinit = InitNetwork();
 	
-	if (networkisinit && ordenador.smb_enable) ConnectShare(); 
+	if (networkisinit && ordenador.smb_enable) ConnectShare();
+
+	if (networkisinit && ordenador.ftp_enable) ConnectFTP();
 	
 	#endif
 
@@ -1335,7 +1428,8 @@ int main(int argc,char *argv[]) {
 	if (!chdir(path_tmp)) remove_dir(path_tmp); //remove the tmp directory if it exists
 	
 	#ifdef GEKKO
-	if (smbismount) CloseShare ();
+	if (smbismount) CloseShare();
+	if (ftpismount) CloseFTP();
 	DeInitUSB();
 	fatUnmount(0);
 	#endif

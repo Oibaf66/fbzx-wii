@@ -229,12 +229,19 @@ struct computer {
 	unsigned int joybuttonkey[2][22];
 	unsigned char joypad_as_joystick[2];
 	unsigned char rumble[2];
-	unsigned char port; //SD, USB or SMB
+	unsigned char port; //SD, USB, SMB or FTP
 	unsigned char smb_enable;
 	unsigned char SmbUser[32]; 
 	unsigned char SmbPwd[32];
 	unsigned char SmbShare[32]; 
 	unsigned char SmbIp[32];
+	unsigned char ftp_enable;
+	unsigned char FTPUser[32]; 
+	unsigned char FTPPwd[32];
+	unsigned char FTPPath[512]; 
+	unsigned char FTPIp[32];
+	unsigned char FTPPassive;
+	unsigned short FTPPort;
 	unsigned char autoconf;
 };
 

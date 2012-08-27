@@ -17,7 +17,7 @@ include $(DEVKITPPC)/wii_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	fbzx
 BUILD		:=	build
-SOURCES		:=	src src/z80free src/minizip
+SOURCES		:=	src src/z80free src/minizip src/tinyFTP
 DATA		:=	 
 INCLUDES	:=	
 
@@ -128,7 +128,7 @@ dist: $(BUILD)
 	cp keymap.bmp $@/fbzx-wii/fbzx
 	cp ZXSpectrum48k.png $@/fbzx-wii/fbzx
 	cp FreeMono.ttf $@/fbzx-wii/fbzx
-	cp fbzx.smb $@/fbzx-wii
+	cp fbzx.net $@/fbzx-wii
 	cp AMSTRAD CAPABILITIES COPYING FAQ README README.TZX VERSIONS VERSIONS.wii $@/apps/fbzx-wii/doc
 	touch $@/fbzx-wii/tapes/dummy
 	touch $@/fbzx-wii/snapshots/dummy

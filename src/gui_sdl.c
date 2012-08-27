@@ -158,7 +158,7 @@ static const char *tools_messages[] = {
 		/*08*/		"Load poke file",
 		/*09*/		"  ",
 		/*10*/		"Port",
-		/*11*/		"^|sd|usb|smb",
+		/*11*/		"^|sd|usb|smb|ftp",
 		/*12*/		"  ",
 		/*13*/		"Help",
 		NULL
@@ -939,6 +939,7 @@ static void load_scr()
 
 	switch(retorno) {
 	case 0: // all right
+		strcpy(ordenador.last_selected_file,filename);
 		break;
 	case -1:
 		msgInfo("Error: Can't load that file",3000,NULL);
@@ -971,8 +972,21 @@ static void save_scr()
 	ptr = strrchr (fb, '.');
 		if (ptr) *ptr = 0;
 					
+	//If file is taken from FTP, saves file on SD card
+	if (ordenador.port==3)  
+		{
+			int length;
+			strcpy(path_scr,getenv("HOME"));
+			length=strlen(path_scr);
+			if ((length>0)&&(path_scr[length-1]!='/')) strcat(path_scr,"/");
+			strcat(path_scr,"scr");
+			dir=path_scr;
+		}
+	
 	// Save SCR file		
-	snprintf(db, 255, "%s/%s.scr", dir, fb);	
+	snprintf(db, 255, "%s/%s.scr", dir, fb);
+	
+	if (ordenador.port==3) strcpy(path_scr,"ftp:");
 		
 	fichero=fopen(db,"r");
 	
@@ -1017,17 +1031,22 @@ static void set_port(int which)
 	case 0: //PORT_SD
 		strcpy(path_snaps,getenv("HOME"));
 		length=strlen(path_snaps);
-		if ((length>0)&&(path_snaps[length-1]!='/'))
-		strcat(path_snaps,"/");
+		if ((length>0)&&(path_snaps[length-1]!='/')) strcat(path_snaps,"/");
 		strcpy(path_taps,path_snaps);
+		strcpy(path_poke,path_snaps);
+		strcpy(path_scr,path_snaps);
 		strcat(path_snaps,"snapshots");
 		strcat(path_taps,"tapes");
+		strcat(path_poke,"poke");
+		strcat(path_scr,"scr");
 		ordenador.port = which;
 		break;
 	case 1: //PORT_USB
 		if (usbismount) {
 			strcpy(path_snaps,"usb:/");
 			strcpy(path_taps,"usb:/");
+			strcpy(path_poke,"usb:/");
+			strcpy(path_scr,"usb:/");
 			ordenador.port = which;}
 		else
 			msgInfo("USB is not mounted",3000,NULL);
@@ -1036,10 +1055,22 @@ static void set_port(int which)
 		if (smbismount) {
 			strcpy(path_snaps,"smb:/");
 			strcpy(path_taps,"smb:/");
+			strcpy(path_poke,"smb:/");
+			strcpy(path_scr,"smb:/");
 			ordenador.port = which;}
 		else
 			msgInfo("SMB is not mounted",3000,NULL);
 		break;
+	case 3: //PORT_FTP
+		if (ftpismount) {
+			strcpy(path_snaps,"ftp:");
+			strcpy(path_taps,"ftp:");
+			strcpy(path_poke,"ftp:");
+			strcpy(path_scr,"ftp:");
+			ordenador.port = which;}
+		else
+			msgInfo("FTP is not connected",3000,NULL);
+		break;	
 	default:
 		break;		
 	}	
@@ -1421,7 +1452,17 @@ static void save_load_snapshot(int which)
 		free((void*)filename);
 	} break;
 	case 1: // Save snapshot file
+		if (ordenador.port==3)  //If file is taken from FTP, saves file on SD card
+		{
+			int length;
+			strcpy(path_snaps,getenv("HOME"));
+			length=strlen(path_snaps);
+			if ((length>0)&&(path_snaps[length-1]!='/')) strcat(path_snaps,"/");
+			strcat(path_snaps,"snapshots");
+			dir=path_snaps;
+		}
 		snprintf(db, 255, "%s/%s.z80", dir, fb);
+		if (ordenador.port==3) strcpy(path_snaps,"ftp:"); 
 		retorno=save_z80(db,0);
 		switch(retorno) 
 			{
