@@ -77,7 +77,7 @@ char path_poke[2049];
 char path_tmp[2049];
 unsigned int colors[80];
 unsigned int jump_frames,curr_frames;
-char *filenames[5];
+
 static SDL_Surface *image;
 
 unsigned char usbismount = 0;
@@ -350,6 +350,7 @@ void load_rom(char type) {
 	char *retval;
 	FILE *fichero;
 	int size;
+	char *filenames[5];
 
 	switch(type) {
 	case 0:
@@ -1019,7 +1020,7 @@ int load_config(struct computer *object, char *filename) {
 	if (rumble2<2) {
 		object->rumble[1]=rumble2;
 	}
-	if (port<3) {
+	if (port<4) {
 		object->port=port;
 	}
 	if (autoconf<2) {
@@ -1274,9 +1275,23 @@ int main(int argc,char *argv[]) {
 	
 	if (!chdir(path_tmp)) remove_dir(path_tmp); //remove the tmp directory if it exists
 	
-	if (!mkdir(path_tmp,0777)){printf("Making tmp directory\n"); tmpismade=1;} 
-	else {printf("Can't make tmp directory\n"); tmpismade=0;}
+	int write_protection=0;
+	
+	#ifdef GEKKO //Work arround until the bug in makdir of libogc is solved 
+	
+	FILE *f;
 
+	f=fopen("test4783.txt", "w");
+	if (f == NULL) {printf("Impossible to open file test4783.txt in w\n");write_protection=1;}
+	
+	if (fclose(f)==EOF) {printf("Impossible to close file test4783.txt\n");write_protection=1;}
+	
+	unlink("test4783.txt");
+	
+	#endif
+	
+	if ((!write_protection)&&(!mkdir(path_tmp,0777))){printf("Making tmp directory\n"); tmpismade=1;} 
+	else {printf("Can't make tmp directory\n"); tmpismade=0;}
 	
 	#ifdef GEKKO
 	if ((ordenador.port==1)&&usbismount) {
@@ -1286,7 +1301,11 @@ int main(int argc,char *argv[]) {
 	if ((ordenador.port==2)&&smbismount) {
 	strcpy(path_snaps,"smb:/");
 	strcpy(path_taps,"smb:/");
-	}	
+	}
+	if ((ordenador.port==3)&&ftpismount) {
+	strcpy(path_snaps,"ftp:");
+	strcpy(path_taps,"ftp:");
+	}
 	#endif
 	
 	ordenador.current_tap[0]=0;
