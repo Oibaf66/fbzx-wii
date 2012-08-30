@@ -239,7 +239,7 @@ struct computer {
 	unsigned char FTPUser[32]; 
 	unsigned char FTPPwd[32];
 	unsigned char FTPPath[512]; 
-	unsigned char FTPIp[32];
+	unsigned char FTPIp[64];
 	unsigned char FTPPassive;
 	unsigned short FTPPort;
 	unsigned char autoconf;

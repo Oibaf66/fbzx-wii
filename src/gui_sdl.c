@@ -111,8 +111,8 @@ static const char *screen_messages[] = {
 		/*06*/		"Buffer resolution",
 		/*07*/		"^|640X480|320X240",
 		/*08*/		"  ",
-		/*09*/		"576p video mode",
-		/*10*/		"^|on|off",
+		/*09		"576p video mode",*/
+		/*10		"^|on|off",*/
 		NULL
 };
 

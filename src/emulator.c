@@ -1281,12 +1281,14 @@ int main(int argc,char *argv[]) {
 	
 	FILE *f;
 
-	f=fopen("test4783.txt", "w");
-	if (f == NULL) {printf("Impossible to open file test4783.txt in w\n");write_protection=1;}
+	f=fopen("/test4783.txt", "w");
+	if (f == NULL) write_protection=1; //Impossible to open file
 	
-	if (fclose(f)==EOF) {printf("Impossible to close file test4783.txt\n");write_protection=1;}
+	if (fclose(f)==EOF) write_protection=1; //Impossible to close file
 	
-	unlink("test4783.txt");
+	if (write_protection) {msgInfo("SD card is write protected. Can't continue",3000,NULL);exit(0);}
+	
+	unlink("/test4783.txt");
 	
 	#endif
 	
