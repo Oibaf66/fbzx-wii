@@ -1,3 +1,17 @@
+version 6:
+	  * Added mdr and tape file creation menu 
+	  * Added poke menu
+	  * Added poke file management
+	  * Added zip support and archive browsing
+	  * Added ftp client and browsing
+	  * Support for ABC/BAC/ACB stereo
+ 	  * Improved snow emulation
+	  * Improved speed emulation
+ 	  * Fixed bug in SNA format
+	  * Fixed bug in AY-3-8912 emulation 
+
+		-- Fabio Olimpieri <fabio.olimpieri@tin.it> Aug 19 2012
+
 version 5:
 	    * Added precision emulation setting (floating bus, contention, interrupt timing) 
 	    * Added NTSC 48K machine
@@ -10,7 +24,7 @@ version 5:
 version 4:
 	    * Fixed RETN and RETI Z80 instructions
 	    * In Joypad mode, the nunchuck works now
-	    * New code for Y-3-8912 emulation
+	    * New code for AY-3-8912 emulation
 	    * Fixed Flag emulation for many Z80 opcodes: Speedlock loader works now 		
 		
 		-- Fabio Olimpieri <fabio.olimpieri@tin.it> June 29 2012
