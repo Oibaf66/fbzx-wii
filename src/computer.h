@@ -78,8 +78,8 @@ struct computer {
 	int tstatodos_frame; //number of tstados per frame
 	int pixels_octect; //2 bits in the octect
 	int pixels_word; //2 bits in the word
-	int start_contention; //start tstados for contention
-	int end_contention; //end tstados for contention
+	//int start_contention; //start tstados for contention
+	//int end_contention; //end tstados for contention
 	
 	unsigned char screen_snow; // 0-> no emulate snow; 1-> emulate snow
 	unsigned char fetch_state;
@@ -219,6 +219,7 @@ struct computer {
 	unsigned char other_ret; // 0=no change; 1=memory returns RET (201)
 
 	unsigned char turbo;
+	unsigned char turbo_state;
 	unsigned int keyboard_buffer[2][10];
 	unsigned int kbd_buffer_pointer;
 	unsigned char *key;

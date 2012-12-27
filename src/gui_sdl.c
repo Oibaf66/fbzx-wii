@@ -79,10 +79,10 @@ static const char *emulation_messages[] = {
 		/*01*/		"^|48k_2|48K_3|128k|+2|+2A/+3|128K_Sp|NTSC",
 		/*02*/		"Frame rate",
 		/*03*/		"^|100%|50%|33%|25%|20%",
-		/*04*/		"Tap fast speed",
+		/*04*/		"Tap instant load",
 		/*05*/		"^|on|off",
 		/*06*/		"Turbo mode",
-		/*07*/		"^|off|speed|ultraspeed",
+		/*07*/		"^|off|auto|fast|ultrafast",
 		/*08*/		"Precision",
 		/*09*/		"^|on|off",	
 		NULL
@@ -523,19 +523,24 @@ static void emulation_settings(void)
 	{
 	switch(ordenador.turbo)
 	{
+	case 1: //auto
+		ordenador.precision =0;
 	case 0: //off
 		update_frequency(0); //set machine frequency
 		jump_frames=0;
-		break;	
-	case 1:	//speed	
+		ordenador.turbo_state=0;
+		break;
+	case 2:	//fast	
 		update_frequency(10000000);
 		jump_frames=4;
 		ordenador.precision =0;
+		ordenador.turbo_state=2;
 		break;
-	case 2:	//ultra speed
+	case 3:	//ultra fast
 		update_frequency(15000000);
 		jump_frames=24;
 		ordenador.precision =0;
+		ordenador.turbo_state=3;
 		break;
 	default:
 		break;	
@@ -550,6 +555,7 @@ static void emulation_settings(void)
 		update_frequency(0);
 		jump_frames=0;
 		ordenador.turbo =0;
+		ordenador.turbo_state=0;
 		}
 	}
 }

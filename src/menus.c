@@ -153,9 +153,9 @@ void settings_menu() {
 		print_string(fbuffer,texto,-1,125,12,0,ancho);
 
 		if(ordenador.turbo)
-			sprintf(texto,"TURBO mode: enabled");
+			sprintf(texto,"TURBO auto mode: enabled");
 		else
-			sprintf(texto,"TURBO mode: disabled");
+			sprintf(texto,"TURBO auto mode: disabled");
 		print_string(fbuffer,texto,-1,145,14,0,ancho);
 
 		if (ordenador.bw) {
@@ -288,14 +288,13 @@ void settings_menu() {
 		break;
 		case SDLK_t:
 			curr_frames=0;
+			update_frequency(0); //set deafult machine frequency
+			jump_frames=0;
+			ordenador.turbo_state = 0;
 			if(ordenador.turbo){
-				update_frequency(0); //set machine frequency
-				ordenador.turbo = 0;
-				jump_frames=0;
+				ordenador.turbo = 0;	
 			} else {
-				update_frequency(10000000); //5,0 MHz max emulation speed for wii at full frames
-				ordenador.turbo = 1;
-				jump_frames=4;	
+				ordenador.turbo = 1; //Auto mode	
 			}
 		break;	
 		}

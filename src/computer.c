@@ -108,6 +108,8 @@ void computer_init () { //Called only on start-up
 	ordenador.joystick[1] = 0; // Cursor
 	ordenador.rumble[0] = 0;
 	ordenador.rumble[1] = 0;
+	ordenador.turbo = 0;
+	ordenador.turbo_state = 0;
 	ordenador.precision = 0;
 
 	ordenador.tape_readed = 0;
@@ -549,7 +551,7 @@ inline void show_screen (int tstados) {
 		if (ordenador.tstados_counter>=ordenador.tstatodos_frame) {
 			ordenador.tstados_counter-=ordenador.tstatodos_frame;
 			ordenador.interr = 1;
-			if ((ordenador.turbo == 0) || (curr_frames%7 == 0)) ordenador.readkeyboard = 1;
+			if ((ordenador.turbo_state == 0) || (curr_frames%7 == 0)) ordenador.readkeyboard = 1;
 			curr_frames++;
 		}
 		return;
@@ -678,7 +680,7 @@ inline void show_screen (int tstados) {
 	}
 }
 
-//Write the screen from 14339 state
+//Write the screen from 14339 state for 48K and from 14365 for 128k
 
 inline void show_screen_precision (int tstados) {
 
@@ -1507,8 +1509,8 @@ void ResetComputer () {
 		ordenador.lower_border_line = 64 + 192;
 		ordenador.cpufreq = 3500000;
 		ordenador.tstatodos_frame= 69888;
-		ordenador.start_contention = 14335;
-		ordenador.end_contention = 14335+224*192;
+		//ordenador.start_contention = 14335;
+		//ordenador.end_contention = 14335+224*192;
 		ordenador.first_line = 40;
 		ordenador.last_line = 280;
 		}
@@ -1519,8 +1521,8 @@ void ResetComputer () {
 		ordenador.lower_border_line = 40 + 192;
 		ordenador.cpufreq = 3527500;
 		ordenador.tstatodos_frame= 59136;
-		ordenador.start_contention = 8959;
-		ordenador.end_contention = 8959+224*192;
+		//ordenador.start_contention = 8959;
+		//ordenador.end_contention = 8959+224*192;
 		ordenador.first_line = 16;
 		ordenador.last_line = 256;
 		}
@@ -1543,8 +1545,8 @@ void ResetComputer () {
 		ordenador.lower_border_line = 63 + 192;
 		ordenador.cpufreq = 3546900;
 		ordenador.tstatodos_frame= 70908;
-		ordenador.start_contention = 14361;
-		ordenador.end_contention = 14361+228*192;
+		//ordenador.start_contention = 14361;
+		//ordenador.end_contention = 14361+228*192;
 		ordenador.first_line = 40;
 		ordenador.last_line = 280;
 		ordenador.start_screen=45;

@@ -33,8 +33,25 @@ char elbit=0;
 inline void tape_read(FILE *fichero, int tstados) {
 
 	if(ordenador.pause)
-		return;
-
+	{
+		if ((ordenador.turbo_state != 0)&&(ordenador.turbo==1))
+			{
+			update_frequency(0); //set machine frequency
+			jump_frames=0;
+			ordenador.turbo_state = 0;
+			}
+	return;
+	}
+	
+	//Auto ultra fast mode
+	if ((ordenador.turbo_state != 3)&&(ordenador.turbo==1))
+	{
+		update_frequency(15000000);
+		jump_frames=24;
+		ordenador.precision =0;
+		ordenador.turbo_state = 3;
+	}
+	
 	if(ordenador.tape_file_type == TAP_TAP)
 		tape_read_tap(fichero,tstados);
 	else

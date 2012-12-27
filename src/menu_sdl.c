@@ -774,7 +774,7 @@ uint32_t menu_wait_key_press(void)
 		SDL_Joystick *joy;
 		static int joy_keys_changed;
 		static int joy_keys_last;
-		static int joy_bottons_last[2][7];
+		static int joy_bottons_last[2][8];
 		SDL_JoystickUpdate();
 		/* Wii-specific, sorry */
 		for (nr = 0; nr < ordenador.joystick_number; nr++) {
@@ -806,14 +806,16 @@ uint32_t menu_wait_key_press(void)
 			else if( axis1 > 15000 )  keys |= KEY_DOWN;	
 				
 			
-			if ((!SDL_JoystickGetButton(joy, 0) && joy_bottons_last[nr][0]) ||      /* A */
-					(!SDL_JoystickGetButton(joy, 3) && joy_bottons_last[nr][1]) ||  /* 2 */
+			if (!SDL_JoystickGetButton(joy, 0) && joy_bottons_last[nr][0])       /* A */
+				{keys |= KEY_SELECT; keys |= KEY_SELECT_A;}
+			if		((!SDL_JoystickGetButton(joy, 3) && joy_bottons_last[nr][1]) ||  /* 2 */
 					(!SDL_JoystickGetButton(joy, 9) && joy_bottons_last[nr][2]) ||  /* CA */
 					(!SDL_JoystickGetButton(joy, 10) && joy_bottons_last[nr][3]))   /* CB */
 				keys |= KEY_SELECT;
 			if ((!SDL_JoystickGetButton(joy, 2) && joy_bottons_last[nr][4]) ||      /* 1 */
 					(!SDL_JoystickGetButton(joy, 11) && joy_bottons_last[nr][5]) || /* CX */
-					(!SDL_JoystickGetButton(joy, 12) && joy_bottons_last[nr][6]))   /* CY */
+					(!SDL_JoystickGetButton(joy, 12) && joy_bottons_last[nr][6])||   /* CY */
+					(!SDL_JoystickGetButton(joy, 1) && joy_bottons_last[nr][7]))   /* B */
 				keys |= KEY_ESCAPE;
 			if (SDL_JoystickGetButton(joy, 5) != 0 ||      /* + */
 					SDL_JoystickGetButton(joy, 18) != 0)   /* C+ */
@@ -829,6 +831,7 @@ uint32_t menu_wait_key_press(void)
 		joy_bottons_last[nr][4]	=SDL_JoystickGetButton(joy, 2) ;  /* 1 */
 		joy_bottons_last[nr][5]	=SDL_JoystickGetButton(joy, 11) ; /* CX */
 		joy_bottons_last[nr][6]	=SDL_JoystickGetButton(joy, 12) ; /* CY */
+		joy_bottons_last[nr][7]	=SDL_JoystickGetButton(joy, 1) ; /* B */
 		}
 		
 		joy_keys_changed = keys != joy_keys_last;
@@ -885,7 +888,7 @@ uint32_t menu_wait_key_press(void)
 
 		if (keys != 0)
 			break;
-		SDL_Delay(100);
+		SDL_Delay(50);
 	}
 	return keys;
 }

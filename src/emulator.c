@@ -661,6 +661,7 @@ int save_config(struct computer *object, char *filename) {
 	fprintf(fconfig,"rumble2=%c%c",48+object->rumble[1],10);
 	fprintf(fconfig,"port=%c%c",48+object->port,10);
 	fprintf(fconfig,"autoconf=%c%c",48+object->autoconf,10);
+	fprintf(fconfig,"turbo=%c%c",48+object->turbo,10);
 	
 	
 	for (joy_n=0; joy_n<2; joy_n++)
@@ -829,7 +830,7 @@ int load_config(struct computer *object, char *filename) {
 	FILE *fconfig;
 	unsigned char volume=255,mode128k=255,issue=255,ntsc=255, joystick1=255,joystick2=255,ay_emul=255,mdr_active=255,
 	dblscan=255,framerate =255, screen =255, text=255, precision=255, bw=255, tap_fast=255, audio_mode=255,
-	joypad1=255, joypad2=255, rumble1=255, rumble2=255, joy_n=255, key_n=255, port=255, autoconf=255;
+	joypad1=255, joypad2=255, rumble1=255, rumble2=255, joy_n=255, key_n=255, port=255, autoconf=255, turbo=225;
 	
 	if (filename) strcpy(config_path,filename); 
 	else return -2;
@@ -951,6 +952,10 @@ int load_config(struct computer *object, char *filename) {
 			autoconf=line[9]-'0';
 			continue;
 		}
+		if (!strncmp(line,"turbo=",6)) {
+			turbo=line[6]-'0';
+			continue;
+		}
 		if (!strncmp(line,"joybutton_",10)) {
 			sscanf(line, "joybutton_%c_%c=%3d",&joy_n ,&key_n, &key_sdl);
 			if ((joy_n<50) && (joy_n>47) && (key_n<119) && (key_n>96))
@@ -1025,6 +1030,9 @@ int load_config(struct computer *object, char *filename) {
 	}
 	if (autoconf<2) {
 		object->autoconf=autoconf;
+	}
+	if (turbo<2) {
+		object->turbo=turbo;
 	}
 		
 	fclose(fconfig);

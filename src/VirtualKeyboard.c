@@ -132,11 +132,22 @@ struct virtkey *get_key_internal()
 	while(1)
 	{
 		uint32_t k;
+		int x,y,i=0;
+		int screen_w = VirtualKeyboard.screen->w;
+		int screen_h = VirtualKeyboard.screen->h;
+		int key_w = 54/RATIO;
+		int key_h = 36/RATIO;
+		int border_x = (screen_w - (key_w * KEY_COLS)) / 2;
+		int border_y = (screen_h - (key_h * KEY_ROWS)) / 2 + 50/RATIO;
 
 		draw();
 		SDL_Flip(VirtualKeyboard.screen);
+		
+		SDL_ShowCursor(SDL_ENABLE);
 
 		k = menu_wait_key_press();
+		
+		SDL_ShowCursor(SDL_DISABLE);
 
 		if (k & KEY_UP)
 			select_next_kb(0, -1);
@@ -150,7 +161,15 @@ struct virtkey *get_key_internal()
 			return NULL;
 		else if (k & KEY_SELECT)
 		{
-			virtkey_t *key = &keys[ VirtualKeyboard.sel_y * KEY_COLS + VirtualKeyboard.sel_x ];
+			if (!(k & KEY_SELECT_A)) i= VirtualKeyboard.sel_y * KEY_COLS + VirtualKeyboard.sel_x;
+			else 
+			{
+			SDL_GetMouseState(&x, &y);
+			i= (y-border_y+10/RATIO)/key_h * KEY_COLS + (x-border_x+10/RATIO)/key_w;
+			if ((i<0)||(i>=KEY_COLS * KEY_ROWS)) i=KEY_COLS * KEY_ROWS - 1; //NULL
+			}
+			
+			virtkey_t *key = &keys[i];
 			
 			if ((key->sdl_code == 304) && !keys[3 * KEY_COLS + 8 ].is_done)
 			keys[3 * KEY_COLS + 0 ].is_done = !keys[3 * KEY_COLS + 0 ].is_done; //Caps Shit
