@@ -1,3 +1,12 @@
+version 7:
+	  * Added auto turbo mode
+	  * Added graphical virtual keyboard using wii pointer
+	  * Added B button as escape
+	  * Fixed bug in file list management	
+
+		-- Fabio Olimpieri <fabio.olimpieri@tin.it> Dec 30 2012
+
+
 version 6:
 	  * Added mdr and tape file creation menu 
 	  * Added poke menu

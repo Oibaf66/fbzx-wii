@@ -38,7 +38,6 @@
 #define KEY_PAGEDOWN  64
 #define KEY_PAGEUP   128
 #define KEY_HELP     256
-#define KEY_SELECT_A     512
 
 int FULL_DISPLAY_X; //640
 int FULL_DISPLAY_Y; //480

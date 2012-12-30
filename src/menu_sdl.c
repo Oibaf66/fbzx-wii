@@ -335,10 +335,11 @@ static const char **get_file_list_zip(const char *path)
 static const char **get_file_list(const char *base_dir)
 {
 	DIR *d = opendir(base_dir);
-	const char **file_list;
+	const char **file_list, **realloc_file_list;
 	int cur = 0;
 	struct dirent *de;
 	int cnt = 16;
+	int i;
 
 	if (!d)
 		return NULL;
@@ -381,9 +382,15 @@ static const char **get_file_list(const char *base_dir)
 		if (cur > cnt - 2)
 		{
 			cnt = cnt + 32;
-			file_list = (const char**)realloc(file_list, cnt * sizeof(char*));
-			if (!file_list)
+			realloc_file_list = (const char**)realloc(file_list, cnt * sizeof(char*));
+			if (realloc_file_list) file_list = realloc_file_list; else
+				{
+				/* Cleanup everything - file_list is NULL-terminated */
+				for ( i = 0; file_list[i]; i++ )
+				free((void*)file_list[i]);
+				free(file_list);
 				return NULL;
+				}
 		}
 	}
 	closedir(d);
@@ -806,9 +813,8 @@ uint32_t menu_wait_key_press(void)
 			else if( axis1 > 15000 )  keys |= KEY_DOWN;	
 				
 			
-			if (!SDL_JoystickGetButton(joy, 0) && joy_bottons_last[nr][0])       /* A */
-				{keys |= KEY_SELECT; keys |= KEY_SELECT_A;}
-			if		((!SDL_JoystickGetButton(joy, 3) && joy_bottons_last[nr][1]) ||  /* 2 */
+			if ((!SDL_JoystickGetButton(joy, 0) && joy_bottons_last[nr][0]) ||      /* A */
+					(!SDL_JoystickGetButton(joy, 3) && joy_bottons_last[nr][1]) ||  /* 2 */
 					(!SDL_JoystickGetButton(joy, 9) && joy_bottons_last[nr][2]) ||  /* CA */
 					(!SDL_JoystickGetButton(joy, 10) && joy_bottons_last[nr][3]))   /* CB */
 				keys |= KEY_SELECT;
@@ -1259,8 +1265,8 @@ void font_init()
 void menu_init(SDL_Surface *screen)
 {
 	real_screen = screen;
-	if (FULL_DISPLAY_X == 640) VirtualKeyboard_init(screen, menu_font16); //prima c'era il font 16 alt
-	else VirtualKeyboard_init(screen, menu_font8); 
+
+	VirtualKeyboard_init(screen); 
 	is_inited = 1;
 }
 
@@ -1285,6 +1291,9 @@ int ask_value_sdl(int *final_value,int y_coord,int max_value) {
 	do {
 		sprintf (nombre2, " %d\177 ", value);
 		print_string (videomem, nombre2, -1, y_coord, 15, 0, ancho);
+		
+		VirtualKeyboard.sel_x = 64;
+		VirtualKeyboard.sel_y = 155;
 		
 		virtualkey = get_key();
 		if (virtualkey == NULL) return(2);
@@ -1410,6 +1419,9 @@ int ask_filename_sdl(char *nombre_final,int y_coord,char *extension, char *path,
 	do {
 		sprintf (nombre2, " %s.%s ", nombre,extension);
 		print_string (videomem, nombre2, -1, y_coord, 15, 0, ancho);
+		
+		VirtualKeyboard.sel_x = 64;
+		VirtualKeyboard.sel_y = 155;
 		
 		virtualkey = get_key();
 		if (virtualkey == NULL) return(2);

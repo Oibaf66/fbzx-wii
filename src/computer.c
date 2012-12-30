@@ -1382,10 +1382,10 @@ inline void read_keyboard () {
 	if (ordenador.key[SDLK_m] || joybutton_matrix[0][SDLK_m] || joybutton_matrix[1][SDLK_m]) ordenador.k15|=4;
 	if (ordenador.key[SDLK_n] || joybutton_matrix[0][SDLK_n] || joybutton_matrix[1][SDLK_n]) ordenador.k15|=8;
 	if (ordenador.key[SDLK_b] || joybutton_matrix[0][SDLK_b] || joybutton_matrix[1][SDLK_b]) ordenador.k15|=16;
-	if (ordenador.key[SDLK_PERIOD] || joybutton_matrix[0][SDLK_PERIOD] || joybutton_matrix[1][SDLK_PERIOD]) ordenador.k15|=6;
-	if (ordenador.key[SDLK_COMMA]|| joybutton_matrix[0][SDLK_COMMA] || joybutton_matrix[1][SDLK_COMMA]) ordenador.k15|=10;
-	if (ordenador.key[SDLK_SEMICOLON]|| joybutton_matrix[0][SDLK_SEMICOLON] || joybutton_matrix[1][SDLK_SEMICOLON]) {ordenador.k13|=2; ordenador.k15|=2;}
-	if (ordenador.key[SDLK_QUOTEDBL]|| joybutton_matrix[0][SDLK_QUOTEDBL] || joybutton_matrix[1][SDLK_QUOTEDBL]) {ordenador.k13|=1; ordenador.k15|=2;}		
+	if (ordenador.key[SDLK_PERIOD])  ordenador.k15|=6;
+	if (ordenador.key[SDLK_COMMA]) ordenador.k15|=10;
+	//if (ordenador.key[SDLK_SEMICOLON]|| joybutton_matrix[0][SDLK_SEMICOLON] || joybutton_matrix[1][SDLK_SEMICOLON]) {ordenador.k13|=2; ordenador.k15|=2;}
+	//if (ordenador.key[SDLK_QUOTEDBL]|| joybutton_matrix[0][SDLK_QUOTEDBL] || joybutton_matrix[1][SDLK_QUOTEDBL]) {ordenador.k13|=1; ordenador.k15|=2;}		
 					
 	if (ordenador.key[SDLK_RETURN] || joybutton_matrix[0][SDLK_RETURN] || joybutton_matrix[1][SDLK_RETURN]) ordenador.k14|=1;
 	if (ordenador.key[SDLK_l] || joybutton_matrix[0][SDLK_l] || joybutton_matrix[1][SDLK_l]) ordenador.k14|=2;
@@ -1436,6 +1436,7 @@ inline void read_keyboard () {
 	if (ordenador.key[SDLK_RIGHT]) {ordenador.k12 |=4;ordenador.k8|=1;}
 	
 	if (ordenador.key[SDLK_TAB]|| joybutton_matrix[0][SDLK_TAB] || joybutton_matrix[1][SDLK_TAB]) {ordenador.k15|=2;ordenador.k8|=1;} //Extended mode
+	if (ordenador.key[SDLK_INSERT]|| joybutton_matrix[0][SDLK_INSERT] || joybutton_matrix[1][SDLK_INSERT]) {ordenador.k11|=1;ordenador.k8|=1;} //Edit
 
 		ordenador.s8 = (ordenador.s8 & 0xE0) | (ordenador.k8 ^ 0x1F);
 		ordenador.s9 = (ordenador.s9 & 0xE0) | (ordenador.k9 ^ 0x1F);

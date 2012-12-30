@@ -147,20 +147,18 @@ static const char *microdrive_messages[] = {
 };
 
 static const char *tools_messages[] = {
-		/*00*/		"Show keyboard",
+		/*00*/		"Save SCR",
 		/*01*/		"  ",
-		/*02*/		"Save SCR",
+		/*02*/		"Load SCR",
 		/*03*/		"  ",
-		/*04*/		"Load SCR",
+		/*04*/		"Insert poke",
 		/*05*/		"  ",
-		/*06*/		"Insert poke",
+		/*06*/		"Load poke file",
 		/*07*/		"  ",
-		/*08*/		"Load poke file",
-		/*09*/		"  ",
-		/*10*/		"Port",
-		/*11*/		"^|sd|usb|smb|ftp",
-		/*12*/		"  ",
-		/*13*/		"Help",
+		/*08*/		"Port",
+		/*09*/		"^|sd|usb|smb|ftp",
+		/*10*/		"  ",
+		/*11*/		"Help",
 		NULL
 };
 
@@ -665,6 +663,7 @@ static void input_options(int joy)
 	
 	struct virtkey *virtualkey;
 
+	do {
 	memset(submenus, 0, sizeof(submenus));
 	
 	submenus[0] = ordenador.joystick[joy];
@@ -682,6 +681,9 @@ static void input_options(int joy)
 	
 	if (opt == 0 || opt == 10|| opt == 12)
 		return;
+	
+	VirtualKeyboard.sel_x = 64;
+	VirtualKeyboard.sel_y = 90;
 	
 	virtualkey = get_key();
 	if (virtualkey == NULL)
@@ -708,6 +710,8 @@ static void input_options(int joy)
 		}
 		
 	setup_joystick(joy, sdl_key, joy_key);
+	} while (opt == 2 || opt == 4 || opt == 6 || opt == 8);
+	
 	
 }
 
@@ -880,29 +884,6 @@ static void microdrive()
 		default:
 			break;
 		}		
-}
-void show_keyboard_layout() {
-	
-	FILE *fichero;
-	int bucle1,bucle2,retval;
-	unsigned char *buffer,valor;
-
-	buffer=screen->pixels;
-	
-	fichero=myfopen("fbzx/keymap.bmp","r");
-	if (fichero==NULL) {
-		msgInfo("Keymap picture not found",3000,NULL);
-		return;
-	}
-	
-	for (bucle1=0;bucle1<344;bucle1++)
-		for(bucle2=0;bucle2<640;bucle2++) {
-			retval=fscanf(fichero,"%c",&valor);
-			paint_one_pixel((unsigned char *)(colors+valor),buffer);
-			buffer+=ordenador.bpp;
-			}
-	SDL_Flip(ordenador.screen);
-	menu_wait_key_press();
 }
 	
 static void load_scr()
@@ -1360,22 +1341,19 @@ static void tools()
 	
 	switch(opt)
 		{
-		case 0: // Show keyboard 
-			if (ordenador.zaurus_mini == 0) show_keyboard_layout(); else msgInfo("No picture available in 320X240 resolution",3000,NULL);
-			break;
-		case 2: // Save SCR
+		case 0: // Save SCR
 			save_scr();
 			break;
-		case 4: // Load SCR 
+		case 2: // Load SCR 
 			load_scr();
 			break;
-		case 6: // Insert poke
+		case 4: // Insert poke
 			do_poke_sdl();
 			break;
-		case 8: // Load poke file
+		case 6: // Load poke file
 			load_poke_file();
 			break;
-		case 13:
+		case 11:
 			help();
 			break;
 		default:
@@ -1387,6 +1365,9 @@ static void tools()
 void virtual_keyboard(void)
 {
 	int key_code;
+	
+	VirtualKeyboard.sel_x = 64;
+	VirtualKeyboard.sel_y = 90;
 	
 	virtkey_t *key =get_key();  
 	if (key) {key_code = key->sdl_code;} else return;

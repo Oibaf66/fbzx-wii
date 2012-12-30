@@ -125,9 +125,15 @@ dist: $(BUILD)
 	cp meta.xml $@/apps/fbzx-wii/meta.xml
 	cp icon.png $@/apps/fbzx-wii/icon.png
 	cp spectrum-roms/* $@/fbzx-wii/spectrum-roms
-	cp keymap.bmp $@/fbzx-wii/fbzx
-	cp ZXSpectrum48k.png $@/fbzx-wii/fbzx
-	cp FreeMono.ttf $@/fbzx-wii/fbzx
+	cp images/keymap.bmp $@/fbzx-wii/fbzx
+	cp images/Spectrum_keyboard.png $@/fbzx-wii/fbzx
+	cp images/symbol_shift.png $@/fbzx-wii/fbzx
+	cp images/caps_shift.png $@/fbzx-wii/fbzx
+	cp images/Spectrum_keyboard_small.png $@/fbzx-wii/fbzx
+	cp images/symbol_shift_small.png $@/fbzx-wii/fbzx
+	cp images/caps_shift_small.png $@/fbzx-wii/fbzx
+	cp images/ZXSpectrum48k.png $@/fbzx-wii/fbzx
+	cp images/FreeMono.ttf $@/fbzx-wii/fbzx
 	cp fbzx.net $@/fbzx-wii
 	cp AMSTRAD CAPABILITIES COPYING FAQ README README.TZX VERSIONS VERSIONS.wii $@/apps/fbzx-wii/doc
 	touch $@/fbzx-wii/tapes/dummy

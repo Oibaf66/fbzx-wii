@@ -601,7 +601,7 @@ void taps_menu() {
 		print_string(fbuffer,"rewind TAP/TZX file",62,100,15,0,ancho);
 
 		print_string(fbuffer,"3:",14,140,12,0,ancho);
-		print_string(fbuffer,"fast/normal speed",62,140,15,0,ancho);
+		print_string(fbuffer,"instant/normal load",62,140,15,0,ancho);
 
 		print_string(fbuffer,"4:",14,180,12,0,ancho);
 		print_string(fbuffer,"write protection",62,180,15,0,ancho);

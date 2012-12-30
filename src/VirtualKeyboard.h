@@ -29,7 +29,7 @@ typedef struct virtkey
 {
 	const char *name;
 	int sdl_code;
-	int is_done;
+	int is_on;
 	int caps_on;
 	int sym_on;
 } virtkey_t;
@@ -38,14 +38,13 @@ typedef struct virtkey
 struct Virtual_Keyboard
 {
 	SDL_Surface *screen;
-	TTF_Font *font;
 	int sel_x;
 	int sel_y;
 	char buf[255];
 	
 } VirtualKeyboard;
 
-void VirtualKeyboard_init(SDL_Surface *screen, TTF_Font *font);
+void VirtualKeyboard_init(SDL_Surface *screen);
 struct virtkey* get_key();
 struct virtkey* get_key_internal();
 void draw();

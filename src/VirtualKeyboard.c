@@ -29,6 +29,8 @@
 #include "computer.h"
 #include "VirtualKeyboard.h"
 #include "menu_sdl.h"
+#include<SDL/SDL_image.h>
+#include <wiiuse/wpad.h>
 
 
 #define K(name, sdl_code) \
@@ -38,7 +40,19 @@
 
 
 #define KEY_COLS 10
-#define KEY_ROWS 6
+#define KEY_ROWS 5
+
+#ifdef DEBUG
+extern FILE *fdebug;
+#define printf(...) fprintf(fdebug,__VA_ARGS__)
+#else
+ #ifdef GEKKO
+ #define printf(...)
+ #endif
+#endif
+
+static SDL_Surface *image_kbd, *image_sym, *image_caps,*image_kbd_small, *image_sym_small, *image_caps_small ;
+static int vkb_is_init;
 
 extern struct computer ordenador;
 void clean_screen(); 
@@ -49,96 +63,70 @@ static virtkey_t keys[KEY_COLS * KEY_ROWS] = {
   K(" Q",SDLK_q), K(" W",SDLK_w), K(" E",SDLK_e), K(" R",SDLK_r), K(" T",SDLK_t), K(" Y",SDLK_y), K(" U",SDLK_u), K(" I",SDLK_i), K(" O",SDLK_o), K(" P",SDLK_p),
   K(" A",SDLK_a), K(" S",SDLK_s), K(" D",SDLK_d), K(" F",SDLK_f), K(" G",SDLK_g), K(" H",SDLK_h), K(" J",SDLK_j), K(" K",SDLK_k), K(" L",SDLK_l),K("Enter",SDLK_RETURN),
   K("Caps",SDLK_LSHIFT),K(" Z",SDLK_z),K(" X",SDLK_x),K(" C",SDLK_c), K(" V",SDLK_v), K(" B",SDLK_b), K(" N",SDLK_n), K(" M",SDLK_m), K("Sym",SDLK_LCTRL),K("Space",SDLK_SPACE),
-  K("Ext",SDLK_TAB),K(" ,",SDLK_COMMA),K(" .",SDLK_PERIOD), K(" ;",SDLK_SEMICOLON), K(" \"",SDLK_QUOTEDBL),KNL(),K(" Up",SDLK_UP),K("Down",SDLK_DOWN), K("Left",SDLK_LEFT),K("Right",SDLK_RIGHT),
-  K("None",0),K("Done",1),K("Fire",SDLK_LALT),K("Del",SDLK_BACKSPACE),KNL(),KNL(),KNL(),KNL(),KNL(),KNL()};
+  K("Ext",SDLK_TAB),K("Edit",SDLK_INSERT),K("Del",SDLK_BACKSPACE),K("None",0), K("Done",1), K("Fire",SDLK_LALT) ,K(" Up",SDLK_UP),K("Down",SDLK_DOWN), K("Left",SDLK_LEFT),K("Right",SDLK_RIGHT)};
 
-void VirtualKeyboard_init(SDL_Surface *screen, TTF_Font *font)
+void VirtualKeyboard_init(SDL_Surface *screen)
 {
 	VirtualKeyboard.screen = screen;
-	VirtualKeyboard.font = font;
-	VirtualKeyboard.sel_x = 0;
-	VirtualKeyboard.sel_y = 0;
+	VirtualKeyboard.sel_x = 64;
+	VirtualKeyboard.sel_y = 100;
+	vkb_is_init = -1;
+	
+	image_kbd=IMG_Load("/fbzx-wii/fbzx/Spectrum_keyboard.png");
+	image_sym=IMG_Load("/fbzx-wii/fbzx/symbol_shift.png");
+	image_caps=IMG_Load("/fbzx-wii/fbzx/caps_shift.png");
+	
+	image_kbd_small=IMG_Load("/fbzx-wii/fbzx/Spectrum_keyboard_small.png");
+	image_sym_small=IMG_Load("/fbzx-wii/fbzx/symbol_shift_small.png");
+	image_caps_small=IMG_Load("/fbzx-wii/fbzx/caps_shift_small.png");
+	
+
+	if (image_kbd == NULL) {printf("Impossible to load keyboard image\n"); return;}
+	if (image_sym == NULL) {printf("Impossible to load symbol shift image\n"); return;}
+	if (image_caps == NULL) {printf("Impossible to load caps shift image\n"); return;}
+	
+	if (image_kbd_small == NULL) {printf("Impossible to load keyboard small image\n"); return;}
+	if (image_sym_small == NULL) {printf("Impossible to load symbol small shift image\n"); return;}
+	if (image_caps_small == NULL) {printf("Impossible to load caps shift small image\n"); return;}
+	
 
 	memset(VirtualKeyboard.buf, 0, sizeof(VirtualKeyboard.buf));
+	vkb_is_init = 1;
 }
 
 void draw()
 {
-	int y,x;
-	int screen_w = VirtualKeyboard.screen->w;
-	int screen_h = VirtualKeyboard.screen->h;
-	int key_w = 54/RATIO;
-	int key_h = 36/RATIO;
-	int border_x = (screen_w - (key_w * KEY_COLS)) / 2;
-	int border_y = (screen_h - (key_h * KEY_ROWS)) / 2 + 50/RATIO;
-	SDL_Rect bg_rect = {border_x, border_y,
-			key_w * KEY_COLS, key_h * KEY_ROWS};
-
-	SDL_FillRect(VirtualKeyboard.screen, &bg_rect,
-			SDL_MapRGB(ordenador.screen->format, 0xff, 0xff, 0xff));
-
-	for (y = 0; y < KEY_ROWS; y++ )
-	{
-		for (x = 0; x < KEY_COLS; x++ )
-		{
-			int which = y * KEY_COLS + x;
-			virtkey_t key = keys[which];
-			int r = 64, g = 64, b = 64;
-			const char *what = key.name;
-
-			/* Skip empty positions */
-			if (key.name == NULL)
-				continue;
-
-			if ( key.is_done )
-				r = 255;
-			if ( (x == VirtualKeyboard.sel_x && y == VirtualKeyboard.sel_y))
-				g = 200;
-
-			menu_print_font(VirtualKeyboard.screen, r, g, b,
-					x * key_w + border_x, y * key_h + border_y,
-					what, 16);
-		}
-	}
+	
+	SDL_Rect dst_rect = {VirtualKeyboard.sel_x/RATIO, VirtualKeyboard.sel_y/RATIO, 0, 0};
+	
+	if (RATIO == 1) SDL_BlitSurface(image_kbd, NULL, ordenador.screen, &dst_rect); 
+				else SDL_BlitSurface(image_kbd_small, NULL, ordenador.screen, &dst_rect);
+	
+	dst_rect.x = (VirtualKeyboard.sel_x+10)/RATIO;
+	dst_rect.y = (VirtualKeyboard.sel_y+200)/RATIO; 
+	if (keys[3 * KEY_COLS + 0 ].is_on) 
+		{if (RATIO == 1) SDL_BlitSurface(image_caps, NULL, ordenador.screen, &dst_rect); 
+					else SDL_BlitSurface(image_caps_small, NULL, ordenador.screen, &dst_rect);}
+	
+	
+	dst_rect.x = (VirtualKeyboard.sel_x+402)/RATIO;
+	dst_rect.y = (VirtualKeyboard.sel_y+200)/RATIO; 
+	if (keys[3 * KEY_COLS + 8 ].is_on) 
+		{if (RATIO == 1) SDL_BlitSurface(image_sym, NULL, ordenador.screen, &dst_rect);
+				else SDL_BlitSurface(image_sym_small, NULL, ordenador.screen, &dst_rect);} 
 }
 
-void select_next_kb(int dx, int dy)
-{
-	int next_x = (VirtualKeyboard.sel_x + dx) % KEY_COLS;
-	int next_y = (VirtualKeyboard.sel_y + dy) % KEY_ROWS;
-	virtkey_t key;
-
-	if (next_x < 0)
-		next_x = KEY_COLS + next_x;
-	if (next_y < 0)
-		next_y = KEY_ROWS + next_y;
-	VirtualKeyboard.sel_x = next_x;
-	VirtualKeyboard.sel_y = next_y;
-
-	key = keys[ next_y * KEY_COLS + next_x ];
-
-	/* Skip the empty spots */
-	if (key.name == NULL)
-	{
-		if (dy != 0) /* Look left */
-			select_next_kb(-1, 0);
-		else
-			select_next_kb(dx, dy);
-	}
-}
 
 struct virtkey *get_key_internal()
 {
 	while(1)
 	{
 		uint32_t k;
-		int x,y,i=0;
-		int screen_w = VirtualKeyboard.screen->w;
-		int screen_h = VirtualKeyboard.screen->h;
-		int key_w = 54/RATIO;
-		int key_h = 36/RATIO;
-		int border_x = (screen_w - (key_w * KEY_COLS)) / 2;
-		int border_y = (screen_h - (key_h * KEY_ROWS)) / 2 + 50/RATIO;
+		int x,y,xm, ym, i=0;
+		int key_w = 50/RATIO;
+		int key_h = 64/RATIO;
+		int border_x = VirtualKeyboard.sel_x/RATIO;
+		int border_y = VirtualKeyboard.sel_y/RATIO;
 
 		draw();
 		SDL_Flip(VirtualKeyboard.screen);
@@ -149,35 +137,32 @@ struct virtkey *get_key_internal()
 		
 		SDL_ShowCursor(SDL_DISABLE);
 
-		if (k & KEY_UP)
-			select_next_kb(0, -1);
-		else if (k & KEY_DOWN)
-			select_next_kb(0, 1);
-		else if (k & KEY_LEFT)
-			select_next_kb(-1, 0);
-		else if (k & KEY_RIGHT)
-			select_next_kb(1, 0);
-		else if (k & KEY_ESCAPE)
-			return NULL;
+		if (k & KEY_ESCAPE) return NULL;
 		else if (k & KEY_SELECT)
 		{
-			if (!(k & KEY_SELECT_A)) i= VirtualKeyboard.sel_y * KEY_COLS + VirtualKeyboard.sel_x;
-			else 
-			{
-			SDL_GetMouseState(&x, &y);
-			i= (y-border_y+10/RATIO)/key_h * KEY_COLS + (x-border_x+10/RATIO)/key_w;
-			if ((i<0)||(i>=KEY_COLS * KEY_ROWS)) i=KEY_COLS * KEY_ROWS - 1; //NULL
-			}
+			
+			SDL_GetMouseState(&xm, &ym);
+			x = (xm-border_x);
+			y = (ym-border_y);
+			if ((x<0)||(x>= KEY_COLS*key_w)) continue;
+			if ((y<0)||(y>= KEY_ROWS*key_h)) continue;
+			
+			i = y/key_h*KEY_COLS + x/key_w;
+			
+			
+			WPAD_Rumble(0, 1);
+			SDL_Delay(50);
+			WPAD_Rumble(0, 0);
 			
 			virtkey_t *key = &keys[i];
 			
-			if ((key->sdl_code == 304) && !keys[3 * KEY_COLS + 8 ].is_done)
-			keys[3 * KEY_COLS + 0 ].is_done = !keys[3 * KEY_COLS + 0 ].is_done; //Caps Shit
-			else if ((key->sdl_code == 306) && !keys[3 * KEY_COLS + 0 ].is_done) 
-			keys[3 * KEY_COLS + 8 ].is_done = !keys[3 * KEY_COLS + 8 ].is_done; //Sym Shift
+			if ((key->sdl_code == 304) && !keys[3 * KEY_COLS + 8 ].is_on)
+			keys[3 * KEY_COLS + 0 ].is_on = !keys[3 * KEY_COLS + 0 ].is_on; //Caps Shit
+			else if ((key->sdl_code == 306) && !keys[3 * KEY_COLS + 0 ].is_on) 
+			keys[3 * KEY_COLS + 8 ].is_on = !keys[3 * KEY_COLS + 8 ].is_on; //Sym Shift
 			else {
-			key->caps_on = keys[3 * KEY_COLS + 0 ].is_done;
-			key->sym_on = keys[3 * KEY_COLS + 8 ].is_done;
+			key->caps_on = keys[3 * KEY_COLS + 0 ].is_on;
+			key->sym_on = keys[3 * KEY_COLS + 8 ].is_on;
 			return key;
 			}
 		}
@@ -189,16 +174,13 @@ struct virtkey *get_key_internal()
 struct virtkey* get_key()
 {
 	virtkey_t *key;
-	SDL_Rect rect = {32/RATIO, (120+50)/RATIO, FULL_DISPLAY_X-64/RATIO, FULL_DISPLAY_Y-250/RATIO};
 	
-	keys[3 * KEY_COLS + 0 ].is_done = 0; //Caps Shit
-	keys[3 * KEY_COLS + 8 ].is_done = 0; //Sym Shift
-
-	SDL_FillRect(VirtualKeyboard.screen, &rect, SDL_MapRGB(ordenador.screen->format, 0xff, 0xff, 0xff));
+	if (vkb_is_init != 1) return NULL;
+	
+	keys[3 * KEY_COLS + 0 ].is_on = 0; //Caps Shit
+	keys[3 * KEY_COLS + 8 ].is_on = 0; //Sym Shift
 	
 	key = get_key_internal();
-	
-	SDL_FillRect(VirtualKeyboard.screen, &rect, SDL_MapRGB(ordenador.screen->format, 0, 0, 0));
 
 	return key;
 }

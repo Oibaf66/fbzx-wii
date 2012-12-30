@@ -7,7 +7,7 @@ share_name=FOLDER
 smb_ip=192.168.0.1
 
 # FTP configuration
-
+# set to 1 to enable FTP
 ftp_enable=0
 # WOS
 FTPUser=anonymous
