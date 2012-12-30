@@ -34,7 +34,7 @@ You can also save the game preferences which can be automatically loaded with th
 
 You can also load a file from a usb disk, from your PC and from Internet via FTP using a wi-fi connection. For the wi-fi you should set the parameters in fbzx.net file.
 
-If rumble is enabled, the wiimote rumbles each time the fire button is pressed. 
+If Rumble is enabled, the wiimote rumbles each time the fire button is pressed. 
 
 See http://wiibrew.org/wiki/FBZX_Wii for more information.
 
