@@ -1510,7 +1510,7 @@ void ResetComputer () {
 		ordenador.lower_border_line = 64 + 192;
 		ordenador.cpufreq = 3500000;
 		ordenador.tstatodos_frame= 69888;
-		//ordenador.start_contention = 14335;
+		ordenador.start_contention = 14335;
 		//ordenador.end_contention = 14335+224*192;
 		ordenador.first_line = 40;
 		ordenador.last_line = 280;
@@ -1522,7 +1522,7 @@ void ResetComputer () {
 		ordenador.lower_border_line = 40 + 192;
 		ordenador.cpufreq = 3527500;
 		ordenador.tstatodos_frame= 59136;
-		//ordenador.start_contention = 8959;
+		ordenador.start_contention = 8959;
 		//ordenador.end_contention = 8959+224*192;
 		ordenador.first_line = 16;
 		ordenador.last_line = 256;
@@ -1546,7 +1546,7 @@ void ResetComputer () {
 		ordenador.lower_border_line = 63 + 192;
 		ordenador.cpufreq = 3546900;
 		ordenador.tstatodos_frame= 70908;
-		//ordenador.start_contention = 14361;
+		ordenador.start_contention = 14361;
 		//ordenador.end_contention = 14361+228*192;
 		ordenador.first_line = 40;
 		ordenador.last_line = 280;
@@ -1570,16 +1570,21 @@ void do_contention() {
 	if ((ordenador.currline < ordenador.upper_border_line ) || (ordenador.currline >= ordenador.lower_border_line)
 			|| (ordenador.currpix < 40) || (ordenador.currpix > 295)) return;
 	
+	
 	if (ordenador.mode128k==3) //+3
 		{
-		ccicles=((ordenador.currpix-28)/2)%8; //44-16
+		if (ordenador.precision) ccicles=((ordenador.currpix-28)/2)%8; //44-16
+		else ccicles=(ordenador.cicles_counter-ordenador.start_contention)%8;
+		
 		if (ccicles>6) return;
 		ordenador.contention+=7-ccicles;
 		emulate_screen(7-ccicles);
 		}
 	else //64k/128k/+2
 		{
-		ccicles=((ordenador.currpix-40)/2)%8;
+		if (ordenador.precision) ccicles=((ordenador.currpix-40)/2)%8;
+		else ccicles=(ordenador.cicles_counter-ordenador.start_contention)%8;
+		
 		if (ccicles>5) return;
 		ordenador.contention+=6-ccicles;
 		emulate_screen(6-ccicles);

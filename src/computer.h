@@ -78,7 +78,7 @@ struct computer {
 	int tstatodos_frame; //number of tstados per frame
 	int pixels_octect; //2 bits in the octect
 	int pixels_word; //2 bits in the word
-	//int start_contention; //start tstados for contention
+	int start_contention; //start tstados for contention
 	//int end_contention; //end tstados for contention
 	
 	unsigned char screen_snow; // 0-> no emulate snow; 1-> emulate snow
