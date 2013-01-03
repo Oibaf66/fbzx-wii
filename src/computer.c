@@ -111,6 +111,7 @@ void computer_init () { //Called only on start-up
 	ordenador.turbo = 0;
 	ordenador.turbo_state = 0;
 	ordenador.precision = 0;
+	ordenador.precision_old = 0;
 
 	ordenador.tape_readed = 0;
 	ordenador.pause = 1;	// tape stop

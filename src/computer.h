@@ -37,6 +37,7 @@ int countdown;
 struct computer {
 
 	unsigned char precision; //If set 1 emulate with more precision
+	unsigned char precision_old;
 	unsigned char npixels; //1, 2 or 4 depending on dblscan and zaurus_mini
 	unsigned char progressive; //interlace or progressive 576
 	unsigned int temporal_io;

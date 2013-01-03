@@ -39,6 +39,7 @@ inline void tape_read(FILE *fichero, int tstados) {
 			update_frequency(0); //set machine frequency
 			jump_frames=0;
 			ordenador.turbo_state = 0;
+			ordenador.precision=ordenador.precision_old;
 			}
 	return;
 	}
@@ -48,6 +49,7 @@ inline void tape_read(FILE *fichero, int tstados) {
 	{
 		update_frequency(15000000);
 		jump_frames=24;
+		ordenador.precision_old=ordenador.precision;
 		ordenador.precision =0;
 		ordenador.turbo_state = 3;
 	}

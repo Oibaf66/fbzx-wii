@@ -531,7 +531,7 @@ static void emulation_settings(void)
 	switch(ordenador.turbo)
 	{
 	case 1: //auto
-		ordenador.precision =0;
+		//ordenador.precision =0;
 	case 0: //off
 		update_frequency(0); //set machine frequency
 		jump_frames=0;
@@ -541,12 +541,14 @@ static void emulation_settings(void)
 		update_frequency(10000000);
 		jump_frames=4;
 		ordenador.precision =0;
+		ordenador.precision_old =0;
 		ordenador.turbo_state=2;
 		break;
 	case 3:	//ultra fast
 		update_frequency(15000000);
 		jump_frames=24;
 		ordenador.precision =0;
+		ordenador.precision_old =0;
 		ordenador.turbo_state=3;
 		break;
 	default:
@@ -557,12 +559,17 @@ static void emulation_settings(void)
 	if (submenus[4] != submenus_old[4])
 	{
 	ordenador.precision = !submenus[4];
-		if (ordenador.precision)
-		{
+	if ((ordenador.turbo==1)&&(ordenador.turbo_state==3)) ordenador.precision_old=ordenador.precision; //Tape is loading
+	else if (ordenador.precision)
+		{ 
 		update_frequency(0);
 		jump_frames=0;
-		ordenador.turbo =0;
-		ordenador.turbo_state=0;
+			if (ordenador.turbo!=1)
+			{
+			ordenador.turbo =0;
+			ordenador.turbo_state=0;
+			}
+			
 		}
 	}
 }
