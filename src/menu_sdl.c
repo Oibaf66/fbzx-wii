@@ -111,7 +111,7 @@ int msgInfo(char *text, int duration, SDL_Rect *irc)
 	rc.x = X; 
 	rc.y=Y;
 	rc.w=12*(len + 2)/RATIO;
-	rc.h=duration > 0 ? 48/RATIO : 80/RATIO;
+	rc.h=duration >= 0 ? 48/RATIO : 80/RATIO;
 
 	src.x=rc.x+4/RATIO;
 	src.y=rc.y+4/RATIO;
@@ -505,16 +505,118 @@ void print_font(SDL_Surface *screen, int r, int g, int b,
 }
 
 
-static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_size)
+#ifdef GEKKO
+inline void paint_one_pixel_scr(unsigned char *colour,unsigned char *address) 
+{
+ *(address++)=*(colour+2);
+ *(address++)=*(colour+3);	
+}
+#else
+
+inline void paint_one_pixel_scr(unsigned char *colour,unsigned char *address) {
+
+	#if BYTE_ORDER == LITTLE_ENDIAN
+	switch(ordenador.bpp) {
+	case 1:
+		*address=*colour;
+	break;
+	case 3:
+		*(address++)=*(colour++);
+	case 2:
+		*(address++)=*(colour++);
+		*(address++)=*(colour++);
+	break;
+	case 4:
+		*((unsigned int *)address)=*((unsigned int *)colour);
+	break;
+	}
+	#else //BIG ENDIAN
+	switch(ordenador.bpp) {
+	case 1:
+		*address=*(colour+3);
+	break;
+	case 3:
+		*(address++)=*(colour+1);
+	case 2:
+		*(address++)=*(colour+2);
+		*(address++)=*(colour+3);
+	break;
+	case 4:
+		*((unsigned int *)address)=*((unsigned int *)colour);
+	break;
+	}
+	#endif
+	
+}
+#endif
+
+void draw_scr_file(int x,int y, char *filename)
+{
+	FILE *fichero;
+	char screen [6912];
+	unsigned int *p_translt, *p_translt2;
+	unsigned char attribute, ink, paper, mask, octect;
+	int loop_x, loop_y,bucle,valor,*p ;
+	unsigned char *address;
+
+	
+	if (filename==NULL) // Aborted
+		return; 
+	
+	if (!(ext_matches(filename, ".scr")||ext_matches(filename, ".SCR"))) return;
+	
+	fichero=fopen(filename,"rb");
+
+	if (!fichero) return;
+	
+    if (fread(screen,1,6912,fichero)!=6912) {fclose(fichero);return;}
+	fclose(fichero);
+	
+	p_translt = ordenador.translate;
+	p_translt2 = ordenador.translate2;
+	
+	for (loop_y=0; loop_y<192;loop_y++)
+		for(loop_x=0; loop_x<32; loop_x++)
+		{
+
+		attribute = screen[(*p_translt2)-147456];	// attribute
+	
+		ink = attribute & 0x07;	// ink colour
+		paper = (attribute >> 3) & 0x07;	// paper colour
+			
+		octect = screen[(*p_translt)-147456];	// bitmap
+		mask = 0x80;
+	 
+		for (bucle = 0; bucle < 8; bucle++)
+			{
+			valor = (octect & mask) ? (int) ink : (int) paper;
+			p=(colors+valor);
+			
+			address = (unsigned char *)(ordenador.screen->pixels + (x + loop_x*8 + bucle + (y + loop_y)*640)*ordenador.bpp);
+		
+			paint_one_pixel_scr((unsigned char *)p, address);
+		
+			mask = ((mask >> 1) & 0x7F);
+			}
+		
+		p_translt++;
+		p_translt2++;
+		}
+}
+
+static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_size, int draw_scr)
 {
 	int font_height = TTF_FontHeight(p_menu->p_font);
 	int line_height = (font_height + font_height / 4);
 	int x_start = p_menu->x1;
 	int y_start = p_menu->y1 + line_height;
 	SDL_Rect r;
-	int entries_visible = (p_menu->y2 - p_menu->y1) / line_height - 1;
-
-	int i, y;
+	int entries_visible = (p_menu->y2 - p_menu->y1-5) / line_height - 1;
+	const char *selected_file = NULL;
+	char filename[2049];
+	char name[512];
+	char *ptr;
+	int i, y, length;
 
 	if ( p_menu->n_entries * line_height > p_menu->y2 )
 		y_start = p_menu->y1 + line_height;
@@ -563,8 +665,10 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_siz
 				menu_print_font(screen, 0x40,0x40,0x40,
 						x_start, y_start + y, msg, font_size);
 			else if (p_menu->cur_sel == i) /* Selected - color */
-				menu_print_font(screen, 0,200,0,
+				{menu_print_font(screen, 0,200,0,
 						x_start, y_start + y, msg, font_size);
+					selected_file = msg;	
+					}	
 			else if (IS_SUBMENU(msg))
 			{
 				if (p_menu->cur_sel == i-1)
@@ -638,6 +742,47 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_siz
 			}
 		}
 	}
+	
+	if ((draw_scr)&&(RATIO==1)) //Only in 640 mode
+	{
+	if ((!selected_file)||(selected_file[0] == '[')) return; //No dir
+	
+
+	// Select after "/"
+	if (strrchr(selected_file, '/'))
+		strcpy(name, strrchr(selected_file, '/') + 1);
+	else strcpy(name,selected_file);	
+	
+	if ((ext_matches(name, ".zip")||ext_matches(name, ".ZIP"))) 
+	{
+		//remove the zip extension
+		ptr = strrchr (name, '.');	
+		if (ptr) *ptr = 0;	
+	}
+	
+	//remove the other extensions
+	ptr = strrchr (name, '.');	
+	if (ptr) *ptr = 0;		
+	
+	//Always load from SD card
+	strcpy(filename,getenv("HOME"));
+	length=strlen(filename);
+	if ((length>0)&&(filename[length-1]!='/'))
+		strcat(filename,"/");
+	strcat(filename, "scr/");
+	strcat(filename, name);
+	strcat(filename, ".scr");
+	draw_scr_file(370,52, filename);
+	
+	strcpy(filename,getenv("HOME"));
+	length=strlen(filename);
+	if ((length>0)&&(filename[length-1]!='/'))
+		strcat(filename,"/");
+	strcat(filename, "scr2/");
+	strcat(filename, name);
+	strcat(filename, ".scr");
+	draw_scr_file(370,258, filename);
+	}	
 }
 
 static int get_next_seq_y(menu_t *p_menu, int v, int dy, int cicle)
@@ -899,17 +1044,12 @@ uint32_t menu_wait_key_press(void)
 	return keys;
 }
 
-
-extern void PicDisplay(char *name, int off_x, int off_y, int wait);
-extern const char **get_t64_list(char *t64);
-extern const char **get_prg_list(char *t64);
-
 extern char curdir[256];
 
 static int menu_select_internal(SDL_Surface *screen,
 		menu_t *p_menu, int *p_submenus, int sel,
 		void (*select_next_cb)(menu_t *p, void *data),
-		void *select_next_cb_data, int font_size)
+		void *select_next_cb_data, int font_size, int draw_scr)
 {
 	int ret = -1;
 	int i;
@@ -926,7 +1066,7 @@ static int menu_select_internal(SDL_Surface *screen,
 
 		SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 0xff, 0xff, 0xff));
 
-		menu_draw(screen, p_menu, 0, font_size);
+		menu_draw(screen, p_menu, 0, font_size, draw_scr);
 		SDL_Flip(screen);
 
 		keys = menu_wait_key_press();
@@ -967,7 +1107,7 @@ static int menu_select_internal(SDL_Surface *screen,
 int menu_select_sized(const char *title, const char **msgs, int *submenus, int sel,
 		int x, int y, int x2, int y2,
 		void (*select_next_cb)(menu_t *p, void *data),
-		void *select_next_cb_data, int font_size)
+		void *select_next_cb_data, int font_size, int draw_scr)
 
 {
 	menu_t menu;
@@ -987,7 +1127,7 @@ int menu_select_sized(const char *title, const char **msgs, int *submenus, int s
 	if (sel >= 0)
 		select_one(&menu, sel);
 	out = menu_select_internal(real_screen, &menu, submenus, sel,
-			select_next_cb, select_next_cb_data, font_size);
+			select_next_cb, select_next_cb_data, font_size, draw_scr);
 
 	menu_fini(&menu);
 
@@ -998,8 +1138,8 @@ int menu_select_title(const char *title, const char **msgs, int *submenus)
 {
 	SDL_FillRect(real_screen, 0, SDL_MapRGB(real_screen->format, 0, 0, 0));
 	return menu_select_sized(title, msgs, submenus, 0,
-			32/RATIO, 32/RATIO, FULL_DISPLAY_X-32/RATIO, FULL_DISPLAY_Y-32/RATIO,
-			NULL, NULL, 20);
+			28/RATIO, 28/RATIO, FULL_DISPLAY_X-28/RATIO, FULL_DISPLAY_Y-28/RATIO,
+			NULL, NULL, 20, 0);
 }
 
 int menu_select(const char **msgs, int *submenus)
@@ -1008,7 +1148,7 @@ int menu_select(const char **msgs, int *submenus)
 }
 
 static const char *menu_select_file_internal_zip(char *path,
-		int x, int y, int x2, int y2, const char *selected_file, int which)
+		int x, int y, int x2, int y2, const char *selected_file, int draw_scr)
 {
 	const char **file_list = get_file_list_zip(path);
 	char *sel;
@@ -1026,9 +1166,9 @@ static const char *menu_select_file_internal_zip(char *path,
 		if (ptr_selected_file) ptr_selected_file++;
 		else ptr_selected_file = selected_file;
 		snprintf(buf,64,"file:%s",ptr_selected_file);
-		opt = menu_select_sized(buf, file_list, NULL, 0, x, y, x2, y2, NULL, NULL, 16);
+		opt = menu_select_sized(buf, file_list, NULL, 0, x, y, x2, y2, NULL, NULL, 16, draw_scr);
 	}
-	else opt = menu_select_sized("Select file", file_list, NULL, 0, x, y, x2, y2, NULL, NULL ,16);
+	else opt = menu_select_sized("Select file", file_list, NULL, 0, x, y, x2, y2, NULL, NULL ,16, draw_scr);
 	
 	if (opt < 0) {free(path); return NULL;}
 			
@@ -1124,7 +1264,7 @@ static const char *menu_select_file_internal_zip(char *path,
 }
 
 static const char *menu_select_file_internal(const char *dir_path,
-		int x, int y, int x2, int y2, const char *selected_file, int which)
+		int x, int y, int x2, int y2, const char *selected_file, int draw_scr)
 {
 	const char **file_list = get_file_list(dir_path);
 	char *sel;
@@ -1144,9 +1284,9 @@ static const char *menu_select_file_internal(const char *dir_path,
 		if (ptr_selected_file) ptr_selected_file++;
 		else ptr_selected_file = selected_file;
 		snprintf(buf,64,"file:%s",ptr_selected_file);
-		opt = menu_select_sized(buf, file_list, NULL, 0, x, y, x2, y2, NULL, NULL, 16);
+		opt = menu_select_sized(buf, file_list, NULL, 0, x, y, x2, y2, NULL, NULL, 16, draw_scr);
 	}
-	else opt = menu_select_sized("Select file", file_list, NULL, 0, x, y, x2, y2, NULL, NULL ,16);
+	else opt = menu_select_sized("Select file", file_list, NULL, 0, x, y, x2, y2, NULL, NULL ,16, draw_scr);
 	
 	if (opt < 0)
 		return NULL;
@@ -1175,7 +1315,7 @@ static const char *menu_select_file_internal(const char *dir_path,
         	/* Too deep recursion! */
         	if (s >= sizeof(buf))
         		return NULL;
-        	return menu_select_file(buf, selected_file, which);
+        	return menu_select_file(buf, selected_file, draw_scr);
         }
 		
 		
@@ -1187,36 +1327,24 @@ static const char *menu_select_file_internal(const char *dir_path,
 	free(sel);
 	
 	if ((ext_matches(out, ".zip")||ext_matches(out, ".ZIP"))&&(tmpismade))
-	{out_zip = (char *) menu_select_file_internal_zip (out, x, y, x2, y2, selected_file, which);
+	{out_zip = (char *) menu_select_file_internal_zip (out, x, y, x2, y2, selected_file, draw_scr);
 	if (!out_zip) return NULL;
 	if(!strcmp(out_zip,"[..]")) 
 		{
 		free(out_zip);
-		return menu_select_file_internal (dir_path, x, y, x2, y2, selected_file, which);
+		return menu_select_file_internal (dir_path, x, y, x2, y2, selected_file, draw_scr);
 		}
 	else return out_zip;
 	}
     else return out;
 }
 
-/*
-const char *menu_select_file_start(const char *dir_path, const char **d64_name)
-{
-	const char *file = menu_select_file_internal(dir_path,
-			32, 32, FULL_DISPLAY_X, FULL_DISPLAY_Y - 32);
-
-	if (!file)
-		return NULL;
-
-	return file;
-}
-*/
-const char *menu_select_file(const char *dir_path,const char *selected_file, int which)
+const char *menu_select_file(const char *dir_path,const char *selected_file, int draw_scr)
 {
 	if (dir_path == NULL)
 		dir_path = "";
 	return menu_select_file_internal(dir_path,
-			0, 32/RATIO, FULL_DISPLAY_X, FULL_DISPLAY_Y - 32/RATIO, selected_file, which);
+			0, 20/RATIO, FULL_DISPLAY_X, FULL_DISPLAY_Y - 20/RATIO, selected_file, draw_scr);
 }
 
 static TTF_Font *read_font(const char *path, int font_size)

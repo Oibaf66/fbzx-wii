@@ -35,13 +35,14 @@ extern unsigned char *sound[NUM_SNDBUF];
 extern char path_snaps[2049];
 extern char path_taps[2049];
 extern char path_mdrs[2049];
-extern char path_scr[2049];
+extern char path_scr1[2049];
+extern char path_scr2[2049];
 extern char path_confs[2049];
 extern char path_poke[2049];
 extern char path_tmp[2049];
 extern unsigned int colors[80];
 extern unsigned int jump_frames,curr_frames;
-extern unsigned char usbismount, smbismount, tmpismade, ftpismount;
+extern unsigned char usbismount, smbismount, tmpismade, ftpismount,networkisinit;
 
 void SDL_Fullscreen_Switch(void);
 void load_rom(char);
@@ -55,5 +56,8 @@ void init_sound();
 void init_screen(int resx,int resy,int depth,int fullscreen,int dblbuffer,int hwsurface);
 int set_video_mode();
 int remove_dir(char *dir);
+unsigned char ConnectFTP ();
+unsigned char ConnectShare ();
+unsigned char InitNetwork();
 
 #endif

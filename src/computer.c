@@ -611,7 +611,7 @@ inline void show_screen (int tstados) {
 				temporal3 = ordenador.memoria[(((*ordenador.p_translt) + (ordenador.video_offset))&0xFFFFFF80)+(procesador.R&0x7F)];	// data with snow
 				ordenador.screen_snow=0; // no more snow for now
 			} else
-				temporal3 = ordenador.memoria[(*ordenador.p_translt) + ordenador.video_offset];	// bitmap	// bitmap
+				temporal3 = ordenador.memoria[(*ordenador.p_translt) + ordenador.video_offset];	// bitmap
 				
 			ordenador.p_translt++;
 			ordenador.p_translt2++;

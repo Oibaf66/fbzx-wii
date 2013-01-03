@@ -32,7 +32,6 @@
 #include "VirtualKeyboard.h"
 #include "tape.h"
 #include "menus.h"
-#include "emulator.h"
 #include "cargador.h"
 #include "characters.h"
 
@@ -147,18 +146,17 @@ static const char *microdrive_messages[] = {
 };
 
 static const char *tools_messages[] = {
-		/*00*/		"Save SCR",
-		/*01*/		"  ",
-		/*02*/		"Load SCR",
-		/*03*/		"  ",
-		/*04*/		"Insert poke",
-		/*05*/		"  ",
-		/*06*/		"Load poke file",
-		/*07*/		"  ",
-		/*08*/		"Port",
-		/*09*/		"^|sd|usb|smb|ftp",
-		/*10*/		"  ",
-		/*11*/		"Help",
+		/*00*/		"Screen shot",
+		/*01*/		"^|Save1|Save2|Load|Delete",
+		/*02*/		"  ",
+		/*03*/		"Insert poke",
+		/*04*/		"  ",
+		/*05*/		"Load poke file",
+		/*06*/		"  ",
+		/*07*/		"Port",
+		/*08*/		"^|sd|usb|smb|ftp",
+		/*09*/		"  ",
+		/*10*/		"Help",
 		NULL
 };
 
@@ -228,7 +226,7 @@ static void insert_tape()
 	ordenador.tape_current_bit=0;
 	ordenador.tape_current_mode=TAP_TRASH;
 	
-	const char *filename = menu_select_file(path_taps, ordenador.current_tap, 0);
+	const char *filename = menu_select_file(path_taps, ordenador.current_tap, 1);
 	
 	if (filename==NULL) // Aborted
 		return; 
@@ -286,7 +284,7 @@ static void insert_tape()
 
 static void delete_tape()
 {
-	const char *filename = menu_select_file(path_taps, NULL, -1);
+	const char *filename = menu_select_file(path_taps, NULL, 1);
 	
 	if (filename==NULL) // Aborted
 		return; 
@@ -308,6 +306,15 @@ void create_tapfile_sdl() {
 	ancho=screen->w;
 
 	clean_screen();
+	
+	if (ordenador.port==3)  //If FTP is selected, saves file on SD card
+		{
+			int length;
+			strcpy(path_taps,getenv("HOME"));
+			length=strlen(path_taps);
+			if ((length>0)&&(path_taps[length-1]!='/')) strcat(path_taps,"/");
+			strcat(path_taps,"tapes");
+		}
 
 	print_string(videomem,"Choose a name for the TAP file",-1,32,14,0,ancho);
 	print_string(videomem,"(up to 30 characters)",-1,52,14,0,ancho);
@@ -317,6 +324,8 @@ void create_tapfile_sdl() {
 
 
 	retorno=ask_filename_sdl(nombre2,82,"tap",path_taps,NULL);
+	
+	if (ordenador.port==3) strcpy(path_taps,"ftp:");
 
 	if(retorno==2) // abort
 		return;
@@ -760,7 +769,7 @@ static void select_mdr()
 
 static void delete_mdr()
 {
-	const char *filename = menu_select_file(path_mdrs, NULL, -1);
+	const char *filename = menu_select_file(path_mdrs, NULL, 0);
 	
 	if (filename==NULL) // Aborted
 		return; 
@@ -886,6 +895,19 @@ static void microdrive()
 		}		
 }
 	
+static void delete_scr()
+{
+	const char *filename = menu_select_file(getenv("HOME"), NULL, 0); //Start from Home
+	
+	if (filename==NULL) // Aborted
+		return; 
+	
+	if ((ext_matches(filename, ".scr")|ext_matches(filename, ".SCR"))
+	&& (msgYesNo("Delete the file?", 0, FULL_DISPLAY_X /2-138/RATIO, FULL_DISPLAY_Y /2-48/RATIO))) unlink(filename);
+	
+	free((void *)filename);
+}
+
 static void load_scr()
 {
 	int retorno,loop;
@@ -894,7 +916,7 @@ static void load_scr()
 	unsigned char paleta_tmp[64];
 
 
-	const char *filename = menu_select_file(path_scr, NULL, -1);
+	const char *filename = menu_select_file(path_scr1, NULL, 0); // Load from SCR1
 	
 	if (filename==NULL) // Aborted
 		return; 
@@ -939,16 +961,28 @@ static void load_scr()
 	
 }
 
-static void save_scr()
+static void save_scr(int i)
 {
-	const char *dir = path_scr;
+	const char *dir; 
 	const char *tape = ordenador.last_selected_file;
 	char *ptr;
 	FILE *fichero;
 	char db[256];
 	char fb[81];
-	int retorno,retval;
-
+	int retorno,retval, length;
+	char path_scr[2049];
+	
+	strcpy(path_scr,getenv("HOME"));
+	length=strlen(path_scr);
+	if ((length>0)&&(path_scr[length-1]!='/'))
+		strcat(path_scr,"/");
+	
+	//Save only on SD card
+	if (i==1) strcat(path_scr,"scr"); else
+	 if (i==2) strcat(path_scr,"scr2"); else return;
+	 
+	dir = path_scr; 
+	
 	// Name (for saves) - TO CHECK
 	if (tape && strrchr(tape, '/'))
 		strncpy(fb, strrchr(tape, '/') + 1, 80);
@@ -959,21 +993,10 @@ static void save_scr()
 	ptr = strrchr (fb, '.');
 		if (ptr) *ptr = 0;
 					
-	//If file is taken from FTP, saves file on SD card
-	if (ordenador.port==3)  
-		{
-			int length;
-			strcpy(path_scr,getenv("HOME"));
-			length=strlen(path_scr);
-			if ((length>0)&&(path_scr[length-1]!='/')) strcat(path_scr,"/");
-			strcat(path_scr,"scr");
-			dir=path_scr;
-		}
 	
 	// Save SCR file		
 	snprintf(db, 255, "%s/%s.scr", dir, fb);
 	
-	if (ordenador.port==3) strcpy(path_scr,"ftp:");
 		
 	fichero=fopen(db,"r");
 	
@@ -989,7 +1012,7 @@ static void save_scr()
 	if(fichero==NULL)
 		retorno=-1;
 	else {
-		retval=fwrite(ordenador.block1+0x04000,6912,1,fichero); // save screen
+		retval=fwrite(ordenador.block1+0x04000+ordenador.video_offset,6912,1,fichero); // save screen
 		if (ordenador.ulaplus!=0) {
 			retval=fwrite(ordenador.ulaplus_palete,64,1,fichero); // save ULAPlus palete
 			}
@@ -999,7 +1022,7 @@ static void save_scr()
 
 	switch(retorno) {
 	case 0:
-		msgInfo("SCR saved",3000,NULL);
+		if (i==1) msgInfo("SCR1 saved",3000,NULL); else msgInfo("SCR2 saved",3000,NULL);
 		break;
 	case -1:
 		msgInfo("Can't create file",3000,NULL);
@@ -1021,11 +1044,13 @@ static void set_port(int which)
 		if ((length>0)&&(path_snaps[length-1]!='/')) strcat(path_snaps,"/");
 		strcpy(path_taps,path_snaps);
 		strcpy(path_poke,path_snaps);
-		strcpy(path_scr,path_snaps);
+		strcpy(path_scr1,path_snaps);
+		strcpy(path_scr2,path_snaps);
 		strcat(path_snaps,"snapshots");
 		strcat(path_taps,"tapes");
 		strcat(path_poke,"poke");
-		strcat(path_scr,"scr");
+		strcat(path_scr1,"scr");
+		strcat(path_scr2,"scr2");
 		ordenador.port = which;
 		break;
 	case 1: //PORT_USB
@@ -1033,30 +1058,48 @@ static void set_port(int which)
 			strcpy(path_snaps,"usb:/");
 			strcpy(path_taps,"usb:/");
 			strcpy(path_poke,"usb:/");
-			strcpy(path_scr,"usb:/");
+			strcpy(path_scr1,"usb:/");
+			strcpy(path_scr2,"usb:/");
 			ordenador.port = which;}
 		else
 			msgInfo("USB is not mounted",3000,NULL);
 		break;
 	case 2: //PORT_SMB
+		if (!smbismount)
+		{
+			msgInfo("Try to mount SMB",0,NULL);
+			if (!networkisinit) networkisinit = InitNetwork();
+			if (networkisinit) ConnectShare();
+			if (smbismount) msgInfo("SMB is now mounted",3000,NULL);
+		}
 		if (smbismount) {
 			strcpy(path_snaps,"smb:/");
 			strcpy(path_taps,"smb:/");
 			strcpy(path_poke,"smb:/");
-			strcpy(path_scr,"smb:/");
+			strcpy(path_scr1,"smb:/");
+			strcpy(path_scr2,"smb:/");
 			ordenador.port = which;}
 		else
 			msgInfo("SMB is not mounted",3000,NULL);
 		break;
 	case 3: //PORT_FTP
+		if (!ftpismount)
+		{
+			msgInfo("Try to mount FTP",0,NULL);
+			if (!networkisinit) networkisinit = InitNetwork();
+			if (networkisinit) ConnectFTP();
+			if (ftpismount) msgInfo("FTP is now mounted",3000,NULL);
+		}
+		
 		if (ftpismount) {
 			strcpy(path_snaps,"ftp:");
 			strcpy(path_taps,"ftp:");
 			strcpy(path_poke,"ftp:");
-			strcpy(path_scr,"ftp:");
+			strcpy(path_scr1,"ftp:");
+			strcpy(path_scr2,"ftp:");
 			ordenador.port = which;}
 		else
-			msgInfo("FTP is not connected",3000,NULL);
+			msgInfo("FTP is not mounted",3000,NULL);
 		break;	
 	default:
 		break;		
@@ -1296,7 +1339,7 @@ void load_poke_file()
 	int ritorno;
 	ritorno=0;
 	
-	const char *filename = menu_select_file(dir, NULL,-1);
+	const char *filename = menu_select_file(dir, NULL,0);
 		
 	if (!filename) return;
 
@@ -1323,37 +1366,57 @@ static void help(void)
 			help_messages, NULL);
 }
 
+void manage_scr(int which)
+{
+
+switch (which) 
+		{
+		case 0: // Save SCR 1
+			save_scr(1);
+			break;
+		case 1: // Save SCR 2
+			save_scr(2);
+			break;	
+		case 2: // Load SCR 
+			load_scr();
+			break;
+		case 3: // Delete scr
+			delete_scr();
+			break;
+		default:
+			break;
+		}		
+
+}
+
 static void tools()
 {
 	int opt ;
-	int submenus[1];
+	int submenus[2];
 
 	memset(submenus, 0, sizeof(submenus));
 
-	submenus[0] = ordenador.port;
+	submenus[1] = ordenador.port;
 	
 	opt = menu_select_title("Tools menu",
 			tools_messages, submenus);
 	if (opt < 0)
 		return;
 		
-	set_port(submenus[0]);
+	set_port(submenus[1]);
 	
 	switch(opt)
 		{
-		case 0: // Save SCR
-			save_scr();
+		case 0: 
+			manage_scr(submenus[0]);
 			break;
-		case 2: // Load SCR 
-			load_scr();
-			break;
-		case 4: // Insert poke
+		case 3: // Insert poke
 			do_poke_sdl();
 			break;
-		case 6: // Load poke file
+		case 5: // Load poke file
 			load_poke_file();
 			break;
-		case 11:
+		case 10:
 			help();
 			break;
 		default:
@@ -1407,7 +1470,7 @@ static void save_load_snapshot(int which)
 	case 2:
 	case 0: // Load or delete file
 	{
-		const char *filename = menu_select_file(dir, NULL,-1);
+		const char *filename = menu_select_file(dir, NULL,1);
 
 		if (!filename)
 			return;
@@ -1487,7 +1550,7 @@ static void save_load_game_configurations(int which)
 	case 2:
 	case 0: // Load or delete file
 	{
-		const char *filename = menu_select_file(dir, NULL,-1);
+		const char *filename = menu_select_file(dir, NULL,0);
 		
 		if (!filename)
 			return;

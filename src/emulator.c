@@ -71,7 +71,8 @@ unsigned char *sound[NUM_SNDBUF];
 char path_snaps[2049];
 char path_taps[2049];
 char path_mdrs[2049];
-char path_scr[2049];
+char path_scr1[2049];
+char path_scr2[2049];
 char path_confs[2049];
 char path_poke[2049];
 char path_tmp[2049];
@@ -1267,14 +1268,16 @@ int main(int argc,char *argv[]) {
 		strcat(path_snaps,"/");
 	strcpy(path_taps,path_snaps);
 	strcpy(path_mdrs,path_snaps);
-	strcpy(path_scr,path_snaps);
+	strcpy(path_scr1,path_snaps);
+	strcpy(path_scr2,path_snaps);
 	strcpy(path_confs,path_snaps);
 	strcpy(path_poke,path_snaps);
 	strcpy(path_tmp,path_snaps);
 	strcat(path_snaps,"snapshots");
 	strcat(path_taps,"tapes");
 	strcat(path_mdrs,"microdrives");
-	strcat(path_scr,"scr");
+	strcat(path_scr1,"scr"); //left scr for retrocompatibility
+	strcat(path_scr2,"scr2");
 	strcat(path_confs,"configurations");
 	strcat(path_poke,"poke");
 	strcat(path_tmp,"tmp");
