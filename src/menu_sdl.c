@@ -1414,9 +1414,10 @@ int ask_value_sdl(int *final_value,int y_coord,int max_value) {
 	videomem=screen->pixels;
 	ancho=screen->w;
 
-	retorno=0;
+	
 	value=0;
 	do {
+		retorno=-1;
 		sprintf (nombre2, " %d\177 ", value);
 		print_string (videomem, nombre2, -1, y_coord, 15, 0, ancho);
 		
@@ -1424,7 +1425,8 @@ int ask_value_sdl(int *final_value,int y_coord,int max_value) {
 		VirtualKeyboard.sel_y = 155;
 		
 		virtualkey = get_key();
-		if (virtualkey == NULL) return(2);
+		if (virtualkey == NULL) return(0);
+		if (virtualkey->sdl_code==1) break; //done, retorno -1
 		sdl_key = virtualkey->sdl_code;
 		
 		switch (sdl_key) {
@@ -1432,7 +1434,7 @@ int ask_value_sdl(int *final_value,int y_coord,int max_value) {
 			value/=10;
 		break;
 		case SDLK_ESCAPE:
-			retorno=2;
+			retorno=0;
 		break;
 		case SDLK_RETURN:
 			retorno=1;
@@ -1498,7 +1500,7 @@ int ask_value_sdl(int *final_value,int y_coord,int max_value) {
 			}
 		break;
 		}
-	} while (!retorno);
+	} while (retorno==-1);
 
 	*final_value=value;
 

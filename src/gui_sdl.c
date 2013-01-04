@@ -135,7 +135,7 @@ static const  char *input_messages[] = {
 
 static const char *microdrive_messages[] = {
 		/*00*/		"Microdrive",
-		/*01*/		"^|Select|Create|Delete",
+		/*01*/		"^|Insert|Create|Delete",
 		/*02*/		"  ",
 		/*03*/		"Interface I",
 		/*04*/		"^|on|off",
@@ -351,6 +351,7 @@ void create_tapfile_sdl() {
 	ordenador.tape_file_type = TAP_TAP;
 	switch(retorno) {
 	case 0:
+	strcpy(ordenador.last_selected_file,nombre2);
 	break;
 	case -1:
 		msgInfo("File already exists",3000,NULL);
@@ -364,8 +365,9 @@ void create_tapfile_sdl() {
 	clean_screen();
 }	
 
-static void manage_tape(int which)
+static int manage_tape(int which)
 {
+	int retorno=0; //Stay in menu as default
 	switch (which)
 	{
 	case 0: //Insert
@@ -407,15 +409,17 @@ static void manage_tape(int which)
 			ordenador.keyboard_buffer[1][1]= 0;
 			ordenador.kbd_buffer_pointer=5;
 			}
-		
+		retorno=-1;
 		break;
 	case 2: //Play
 		if ((ordenador.tape_fast_load == 0) || (ordenador.tape_file_type==TAP_TZX))
 				ordenador.pause = 0;
+		retorno=-1;
 		break;
 	case 3: //Stop
 		if ((ordenador.tape_fast_load == 0) || (ordenador.tape_file_type==TAP_TZX))
 				ordenador.pause = 1;
+		retorno=-1;		
 		break;
 	case 4: //Rewind
 			ordenador.pause=1;
@@ -424,6 +428,7 @@ static void manage_tape(int which)
 				rewind_tape(ordenador.tap_file,1);		
 			}
 			msgInfo("Tape rewinded",3000,NULL);
+			retorno=-1;
 		break;
 	case 5: //Create
 		// Create tape 
@@ -435,6 +440,7 @@ static void manage_tape(int which)
 	default:
 		break;
 	}
+	return retorno;
 }
 
 static unsigned int get_machine_model(void)
@@ -731,23 +737,25 @@ static void input_options(int joy)
 	
 }
 
-static void select_mdr()
+static int select_mdr()
 {
-	int retorno, retval;
+	int retorno, retval, retorno2;
+	
+	retorno2=0; //stay in menu as default
 
 	const char *filename = menu_select_file(path_mdrs, ordenador.mdr_current_mdr, 0);
 	
 	if (filename==NULL) // Aborted
-		return; 
+		return 0; 
 		
 	if (strstr(filename, "None") != NULL)
 	{
 			ordenador.mdr_current_mdr[0] = '\0';
 			free((void *)filename);
-			return;
+			return 0;
 	}	
 	
-	if (!(ext_matches(filename, ".mdr")|ext_matches(filename, ".MDR"))) {free((void *)filename); return;}
+	if (!(ext_matches(filename, ".mdr")|ext_matches(filename, ".MDR"))) {free((void *)filename); return 0;}
 	
 	ordenador.mdr_file=fopen(filename,"rb"); // read
 	if(ordenador.mdr_file==NULL)
@@ -766,12 +774,15 @@ static void select_mdr()
 
 	switch(retorno) {
 	case 0: // all right
+	retorno2=-1;
 		break;
 	default:
 		ordenador.mdr_current_mdr[0]=0;
 		msgInfo("Error: Can't load that file",3000,NULL);
+	retorno2=0;	
 	break;
 	}
+	return retorno2;
 }
 
 static void delete_mdr()
@@ -850,9 +861,12 @@ static void microdrive()
 {
 	
 	unsigned int submenus[3], submenus_old[3];
-	int opt,retval ;
+	int opt,retval, retorno ;
 
 	memset(submenus, 0, sizeof(submenus));
+	
+	do {
+	retorno=-1; //Exit from menu as default
 	
 	submenus[1] = !ordenador.mdr_active;
 	submenus[2] = !ordenador.mdr_cartridge[137922];
@@ -886,20 +900,21 @@ static void microdrive()
 	if (opt==0)
 		switch (submenus[0]) 
 		{
-		case 0: // Select microdrive 
-			select_mdr();
+		case 0: // Insert microdrive 
+			retorno = select_mdr();
 			break;
 		case 1: // Create microdrive file
-			// Create microdrive file ;
 			create_mdrfile_sdl();
-			//msgInfo("Not yet implemented",3000,NULL);
+			retorno=0;
 			break;
 		case 2: // Delete microdrive file
 			delete_mdr();
+			retorno=0;
 			break;
 		default:
 			break;
-		}		
+		}
+	} while (!retorno); //Stay in menu if create or delete are selected	
 }
 	
 static void delete_scr()
@@ -915,20 +930,21 @@ static void delete_scr()
 	free((void *)filename);
 }
 
-static void load_scr()
+static int load_scr()
 {
-	int retorno,loop;
+	int retorno,loop, retorno2;;
 	unsigned char value;
 	FILE *fichero;
 	unsigned char paleta_tmp[64];
+	retorno2=0; //stay in the menu as default
 
 
 	const char *filename = menu_select_file(path_scr1, NULL, 0); // Load from SCR1
 	
 	if (filename==NULL) // Aborted
-		return; 
+		return 0; 
 	
-	if (!(ext_matches(filename, ".scr")|ext_matches(filename, ".SCR"))) {free((void *)filename); return;}
+	if (!(ext_matches(filename, ".scr")|ext_matches(filename, ".SCR"))) {free((void *)filename); return 0;}
 	
 	ordenador.osd_text[0]=0;
 	fichero=fopen(filename,"rb");
@@ -956,9 +972,11 @@ static void load_scr()
 	switch(retorno) {
 	case 0: // all right
 		strcpy(ordenador.last_selected_file,filename);
+		retorno2=-2; //come back to emulator
 		break;
 	case -1:
 		msgInfo("Error: Can't load that file",3000,NULL);
+		retorno2=0;
 		break;
 	default:
 		break;	
@@ -966,9 +984,11 @@ static void load_scr()
 	
 	free((void *)filename);
 	
+	return retorno2;
+	
 }
 
-static void save_scr(int i)
+static int save_scr(int i)
 {
 	const char *dir; 
 	const char *tape = ordenador.last_selected_file;
@@ -976,8 +996,9 @@ static void save_scr(int i)
 	FILE *fichero;
 	char db[256];
 	char fb[81];
-	int retorno,retval, length;
+	int retorno,retval, length, retorno2;
 	char path_scr[2049];
+	retorno2=0; //Stay in menu as default
 	
 	strcpy(path_scr,getenv("HOME"));
 	length=strlen(path_scr);
@@ -986,7 +1007,7 @@ static void save_scr(int i)
 	
 	//Save only on SD card
 	if (i==1) strcat(path_scr,"scr"); else
-	 if (i==2) strcat(path_scr,"scr2"); else return;
+	 if (i==2) strcat(path_scr,"scr2"); else return 0;
 	 
 	dir = path_scr; 
 	
@@ -1011,7 +1032,7 @@ static void save_scr(int i)
 	{	
 		fclose(fichero);
 		if (!msgYesNo("Overwrite the exiting file?", 0, FULL_DISPLAY_X /2-160/RATIO, FULL_DISPLAY_Y /2-48/RATIO))
-			return; // file already exists
+			return 0; // file already exists
 	}
 	
 	fichero=fopen(db,"wb"); // create for write
@@ -1030,13 +1051,16 @@ static void save_scr(int i)
 	switch(retorno) {
 	case 0:
 		if (i==1) msgInfo("SCR1 saved",3000,NULL); else msgInfo("SCR2 saved",3000,NULL);
+		retorno2=-2; //come back to emulator
 		break;
 	case -1:
 		msgInfo("Can't create file",3000,NULL);
+		retorno2=0;
 	break;
 	default:
 	break;
 	}
+	return retorno2;
 }
 
 static void set_port(int which)
@@ -1115,7 +1139,7 @@ static void set_port(int which)
 
 // shows the POKE menu
 
-void do_poke_sdl() {
+static int do_poke_sdl() {
 
 	unsigned char *videomem,string[80];
 	int ancho,retorno,address,old_value,new_value;
@@ -1132,8 +1156,12 @@ void do_poke_sdl() {
 
 		clean_screen();
 
-		if (retorno==2) {
-			return;
+		if (retorno==0) { //Escape
+			return (0);
+		}
+		
+		if (retorno==-1) { //Done
+			return (-2); //come back yo emulator
 		}
 
 		if ((address<16384) && ((ordenador.mode128k != 3) || (1 != (ordenador.mport2 & 0x01)))) {
@@ -1170,8 +1198,8 @@ void do_poke_sdl() {
 
 		clean_screen();
 
-		if (retorno==2) {
-			continue;
+		if (retorno==0) { //Escape
+			return (0);
 		}
 
 		switch (address & 0x0C000) {
@@ -1230,7 +1258,7 @@ int parse_poke (const char *filename)
 	if (fpoke==NULL) 
 	{
 		msgInfo("Can not access the file",3000,NULL);	
-		return (0);
+		return (-1);
 	}
 
 	clean_screen();
@@ -1340,30 +1368,41 @@ int parse_poke (const char *filename)
 	return (ritorno);
 }
 
-void load_poke_file()
+static int load_poke_file()
 {
 	const char *dir = path_poke;
-	int ritorno;
+	int ritorno, retorno2;
 	ritorno=0;
+	retorno2=0; //Stay in menu as default
 	
 	const char *filename = menu_select_file(dir, NULL,0);
 		
-	if (!filename) return;
+	if (!filename) return 0;
 
 	if (ext_matches(filename, ".pok")|ext_matches(filename, ".POK"))
-	ritorno = parse_poke(filename);
+	ritorno = parse_poke(filename); else return 0;
 	
 	switch(ritorno)
 	{
+	case -1: //can not access the file
+	retorno2=0;
+	break;
+	case 0: //OK
+	retorno2=-2; //come back to emulator
+	break;
 	case 1:
 	msgInfo("Not compatible file",3000,NULL);
+	retorno2=0;
 	break;
 	case 2:
 	msgInfo("Too many trainers",3000,NULL);
+	retorno2=0;
 	break;
 	}
 				
 	free((void*)filename);
+	
+	return retorno2;
 	
 }
 
@@ -1373,62 +1412,69 @@ static void help(void)
 			help_messages, NULL);
 }
 
-void manage_scr(int which)
+static int manage_scr(int which)
 {
-
+int retorno = 0; //Stay in menu as default
 switch (which) 
 		{
 		case 0: // Save SCR 1
-			save_scr(1);
+			retorno=save_scr(1);
 			break;
 		case 1: // Save SCR 2
-			save_scr(2);
+			retorno=save_scr(2);
 			break;	
 		case 2: // Load SCR 
-			load_scr();
+			retorno=load_scr();
 			break;
 		case 3: // Delete scr
 			delete_scr();
+			retorno=0;
 			break;
 		default:
 			break;
 		}		
-
+ return retorno;
 }
 
-static void tools()
+static int tools()
 {
-	int opt ;
+	int opt , retorno;
 	int submenus[2];
 
 	memset(submenus, 0, sizeof(submenus));
 
+	do {
+	retorno=-1; //Exit from menu as default
+ 
 	submenus[1] = ordenador.port;
 	
 	opt = menu_select_title("Tools menu",
 			tools_messages, submenus);
 	if (opt < 0)
-		return;
+		return 0;
 		
 	set_port(submenus[1]);
 	
 	switch(opt)
 		{
 		case 0: 
-			manage_scr(submenus[0]);
+			retorno = manage_scr(submenus[0]);
 			break;
 		case 3: // Insert poke
-			do_poke_sdl();
+			retorno = do_poke_sdl();
 			break;
 		case 5: // Load poke file
-			load_poke_file();
+			retorno = load_poke_file();
 			break;
 		case 10:
 			help();
+			retorno = -1;
 			break;
 		default:
 			break;
-		}	
+		}
+	} while (!retorno);
+	return retorno;
 }
 
 
@@ -1453,14 +1499,16 @@ void virtual_keyboard(void)
 
 }	
 
-static void save_load_snapshot(int which)
+static int save_load_snapshot(int which)
 {
 	const char *dir = path_snaps;
 	const char *tape = ordenador.last_selected_file;
 	char *ptr;
 	char db[256];
 	char fb[81];
-	int retorno;
+	int retorno, retorno2;
+	
+	retorno2 = 0; //Stay in menu as default
 
 	// Name (for saves) - TO CHECK
 	if (tape && strrchr(tape, '/'))
@@ -1480,7 +1528,7 @@ static void save_load_snapshot(int which)
 		const char *filename = menu_select_file(dir, NULL,1);
 
 		if (!filename)
-			return;
+			return 0;
 
 		if (ext_matches(filename, ".z80")|ext_matches(filename, ".Z80")|
 		ext_matches(filename, ".sna")|ext_matches(filename, ".SNA"))
@@ -1493,6 +1541,7 @@ static void save_load_snapshot(int which)
 				case 0: // all right
 				strcpy(ordenador.last_selected_file,filename);
 				if (ordenador.autoconf) maybe_load_conf(filename);
+				retorno2=-1;
 				break;
 				case -1:
 				msgInfo("Error: Can't load that file",3000,NULL);
@@ -1525,12 +1574,14 @@ static void save_load_snapshot(int which)
 			{
 			case 0: //OK
 				msgInfo("Snapshot saved",3000,NULL);
+				retorno2=-1;
 				break;
 			case -1:
 				if (msgYesNo("Overwrite the exiting file?", 0, FULL_DISPLAY_X /2-160/RATIO, FULL_DISPLAY_Y /2-48/RATIO))
 				{
 					save_z80(db,1); //force overwrite
 					msgInfo("Snapshot saved",3000,NULL);
+					retorno2=-1;
 				}
 				break;
 			case -2:
@@ -1541,16 +1592,20 @@ static void save_load_snapshot(int which)
 	default:
 		break;
 	}
+	
+	return retorno2;
 }
 
-static void save_load_game_configurations(int which)
+static int save_load_game_configurations(int which)
 {
 	const char *dir = path_confs;
 	const char *tape = ordenador.last_selected_file;
 	char *ptr;
 	char db[256];
 	char fb[81];
-	int retorno;
+	int retorno, retorno2;
+	
+	retorno2 = 0; //stay in menu as default
 	
 	switch(which)
 	{
@@ -1560,13 +1615,13 @@ static void save_load_game_configurations(int which)
 		const char *filename = menu_select_file(dir, NULL,0);
 		
 		if (!filename)
-			return;
+			return 0;
 
 		if (ext_matches(filename, ".conf")|ext_matches(filename, ".CONF"))
 		{
 			if (which == 0) // Load config file
 			{
-				if (!load_config(&ordenador,db)) msgInfo("Game confs loaded",3000,NULL);
+				if (!load_config(&ordenador,(char *)filename)) {msgInfo("Game confs loaded",3000,NULL);retorno2=-1;}
 				break;
 			}
 			else // Delete config file
@@ -1582,7 +1637,7 @@ static void save_load_game_configurations(int which)
 		else
 			{
 			msgInfo("No file selected",3000,NULL);
-			return;
+			return 0;
 			}
 		
 		//remove the extension
@@ -1598,12 +1653,14 @@ static void save_load_game_configurations(int which)
 			{
 			case 0: //OK
 				msgInfo("Game confs saved",3000,NULL);
+				retorno2=-1;
 				break;
 			case -1:
 				if (msgYesNo("Overwrite the exiting file?", 0, FULL_DISPLAY_X /2-160/RATIO, FULL_DISPLAY_Y /2-48/RATIO))
 				{
 					save_config_game(&ordenador,db,1); //force overwrite
 					msgInfo("Game confs saved",3000,NULL);
+					retorno2=-1;
 				}
 				break;
 			case -2:
@@ -1614,6 +1671,7 @@ static void save_load_game_configurations(int which)
 	default:
 		break;
 	}
+	return retorno2;
 }
 static void save_load_general_configurations(int which)
 {
@@ -1675,10 +1733,13 @@ static void save_load_general_configurations(int which)
 }
 static void manage_configurations()
 {
-	int opt ;
+	int opt , retorno;
 	int submenus[3];
+	
 
 	memset(submenus, 0, sizeof(submenus));
+	do {
+	retorno = -1; //Exit from menu as default
 	
 	submenus[2]=!ordenador.autoconf;
 
@@ -1693,13 +1754,15 @@ static void manage_configurations()
 		{
 		case 0: // Save, load and delete general configurations 
 			save_load_general_configurations(submenus[0]);
+			retorno=-1;
 			break;
 		case 3: // Save, load and delete game configurations
-			save_load_game_configurations(submenus[1]);
+			retorno = save_load_game_configurations(submenus[1]);
 			break;
 		default:
 			break;
-		}		
+		}
+	} while (!retorno);		
 }
 
 
@@ -1707,11 +1770,13 @@ void main_menu()
 {
 	int submenus[3];
 	int opt;
+	int retorno;
 	
 	memset(submenus, 0, sizeof(submenus));
 
 	do
 	{
+	retorno=0; //stay in menu as default
 		opt = menu_select_title("Main menu", main_menu_messages, submenus);
 		if (opt < 0)
 			break;
@@ -1719,10 +1784,10 @@ void main_menu()
 		switch(opt)
 		{
 		case 0:
-			manage_tape(submenus[0]);
+			retorno = manage_tape(submenus[0]);
 			break;
 		case 2:
-			save_load_snapshot(submenus[1]);
+			retorno = save_load_snapshot(submenus[1]);
 			break;
 		case 5:
 			input_options(submenus[2]);
@@ -1743,7 +1808,7 @@ void main_menu()
 			microdrive();
 			break;	
 		case 12:
-			tools();
+			if (tools()==-2) retorno=-1;
 			break;
 		case 13:
 			ResetComputer ();
@@ -1760,7 +1825,7 @@ void main_menu()
 		default:
 			break;
 		}
-	} while (opt == 4 || opt == 7 || opt == 11);
+	} while (opt != 13 && opt != 14 && (!retorno));
 	
 	clean_screen();
 	

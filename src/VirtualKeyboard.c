@@ -57,7 +57,6 @@ static int vkb_is_init;
 extern struct computer ordenador;
 void clean_screen(); 
 
-//TO DO Key_name and name are not necessary
 static virtkey_t keys[KEY_COLS * KEY_ROWS] = {
   K(" 1",SDLK_1),K(" 2",SDLK_2), K(" 3",SDLK_3), K(" 4",SDLK_4), K(" 5",SDLK_5), K(" 6",SDLK_6), K(" 7",SDLK_7), K(" 8",SDLK_8), K(" 9",SDLK_9), K(" 0",SDLK_0),
   K(" Q",SDLK_q), K(" W",SDLK_w), K(" E",SDLK_e), K(" R",SDLK_r), K(" T",SDLK_t), K(" Y",SDLK_y), K(" U",SDLK_u), K(" I",SDLK_i), K(" O",SDLK_o), K(" P",SDLK_p),
