@@ -1083,7 +1083,7 @@ inline void read_keyboard () {
 		#ifdef GEKKO
 		WPADData *wd;
 		wd = WPAD_Data(0);
-		if ((wd->ir.valid)&&(!countdown_kb)) {virtual_keyboard();countdown_kb=30;}
+		if ((wd->ir.valid)&&(!countdown_kb)) {virtual_keyboard();countdown_kb=20;}
 		#else
 		int x=0,y=0 ;
 		SDL_GetRelativeMouseState(&x,&y);
