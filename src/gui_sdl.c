@@ -119,11 +119,11 @@ static const  char *input_messages[] = {
 		/*00*/		"Joystick type",
 		/*01*/		"^|Cursor|Kempston|Sinclair1|Sinclair2",
 		/*02*/		"Bind key to Wiimote",
-		/*03*/		"^|A|B|1|2|-",
+		/*03*/		"^|A|B|1|2|-|+",
 		/*04*/		"Bind key to Nunchuk",
 		/*05*/		"^|Z|C",
 		/*06*/		"Bind key to Classic",
-		/*07*/		"^|a|b|x|y|L|R|Zl|Zr|-",
+		/*07*/		"^|a|b|x|y|L|R|Zl|Zr|-|+",
 		/*08*/		"Bind key to Pad",
 		/*09*/		"^|Up|Down|Left|Right",
 		/*10*/		"Use Joypad as Joystick",
@@ -156,7 +156,10 @@ static const char *tools_messages[] = {
 		/*07*/		"Port",
 		/*08*/		"^|sd|usb|smb|ftp",
 		/*09*/		"  ",
-		/*10*/		"Help",
+		/*10*/		"Auto virtual keyboard",
+		/*11*/		"^|on|off",
+		/*12*/		"  ",
+		/*13*/		"Help",
 		NULL
 };
 
@@ -674,9 +677,9 @@ static void setup_joystick(int joy, unsigned int sdl_key, int joy_key)
 
 static void input_options(int joy)
 {
-	const unsigned int wiimote_to_sdl[] = {0, 1, 2, 3, 4};
+	const unsigned int wiimote_to_sdl[] = {0, 1, 2, 3, 4,5};
 	const unsigned int nunchuk_to_sdl[] = {7, 8};
-	const unsigned int classic_to_sdl[] = {9, 10, 11, 12, 13, 14, 15, 16, 17};
+	const unsigned int classic_to_sdl[] = {9, 10, 11, 12, 13, 14, 15, 16, 17,18};
 	const unsigned int pad_to_sdl[] = {18, 19, 20, 21};
 	int joy_key = 1;
 	unsigned int sdl_key;
@@ -707,7 +710,7 @@ static void input_options(int joy)
 	VirtualKeyboard.sel_x = 64;
 	VirtualKeyboard.sel_y = 90;
 	
-	virtualkey = get_key();
+	virtualkey = get_key(0);
 	if (virtualkey == NULL)
 		return;
 	sdl_key = virtualkey->sdl_code;
@@ -1290,7 +1293,7 @@ int parse_poke (const char *filename)
 		k=0;
 
 		while (!((k & KEY_ESCAPE)||(k & KEY_SELECT)))
-		{k = menu_wait_key_press();}
+		{k = menu_wait_key_press(0);}
 	
 		banner.y=y;
 	
@@ -1361,7 +1364,7 @@ int parse_poke (const char *filename)
 	k=0;
 
 	while (!(k & KEY_ESCAPE)&&(ritorno==0))
-	{k = menu_wait_key_press();}
+	{k = menu_wait_key_press(0);}
 
 	fclose(fpoke);
 	if (ritorno==0) strcpy(ordenador.last_selected_poke_file,filename);		
@@ -1439,7 +1442,7 @@ switch (which)
 static int tools()
 {
 	int opt , retorno;
-	int submenus[2];
+	int submenus[3];
 
 	memset(submenus, 0, sizeof(submenus));
 
@@ -1447,6 +1450,7 @@ static int tools()
 	retorno=-1; //Exit from menu as default
  
 	submenus[1] = ordenador.port;
+	submenus[2] = !ordenador.vk_auto;
 	
 	opt = menu_select_title("Tools menu",
 			tools_messages, submenus);
@@ -1454,6 +1458,7 @@ static int tools()
 		return 0;
 		
 	set_port(submenus[1]);
+	ordenador.vk_auto = !submenus[2];
 	
 	switch(opt)
 		{
@@ -1466,7 +1471,7 @@ static int tools()
 		case 5: // Load poke file
 			retorno = load_poke_file();
 			break;
-		case 10:
+		case 13:
 			help();
 			retorno = -1;
 			break;
@@ -1485,7 +1490,7 @@ void virtual_keyboard(void)
 	VirtualKeyboard.sel_x = 64;
 	VirtualKeyboard.sel_y = 90;
 	
-	virtkey_t *key =get_key();  
+	virtkey_t *key =get_key(1);  
 	if (key) {key_code = key->sdl_code;} else return;
 	
 	ordenador.kbd_buffer_pointer=1;

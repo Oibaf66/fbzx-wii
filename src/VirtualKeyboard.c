@@ -116,7 +116,7 @@ void draw()
 }
 
 
-struct virtkey *get_key_internal()
+struct virtkey *get_key_internal(int vk)
 {
 	while(1)
 	{
@@ -132,7 +132,7 @@ struct virtkey *get_key_internal()
 		
 		SDL_ShowCursor(SDL_ENABLE);
 
-		k = menu_wait_key_press();
+		k = menu_wait_key_press(vk);
 		
 		SDL_ShowCursor(SDL_DISABLE);
 
@@ -170,7 +170,7 @@ struct virtkey *get_key_internal()
 	return NULL;
 }
 
-struct virtkey* get_key()
+struct virtkey* get_key(int vk)
 {
 	virtkey_t *key;
 	
@@ -179,7 +179,7 @@ struct virtkey* get_key()
 	keys[3 * KEY_COLS + 0 ].is_on = 0; //Caps Shit
 	keys[3 * KEY_COLS + 8 ].is_on = 0; //Sym Shift
 	
-	key = get_key_internal();
+	key = get_key_internal(vk);
 
 	return key;
 }

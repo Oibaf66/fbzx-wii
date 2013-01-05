@@ -486,11 +486,11 @@ int retorno, bucle;
 	}
 
 	if (SDL_InitSubSystem(SDL_INIT_JOYSTICK)) {
-		ordenador.use_js=0;
+		//ordenador.use_js=0;
 		printf("Can't initialize JoyStick subsystem\n");
 	} else {
 		printf("JoyStick subsystem initialized\n");
-		ordenador.use_js=1;
+		//ordenador.use_js=1;
 		if(SDL_NumJoysticks()>0){
 			// Open joystick
 			ordenador.joystick_number = SDL_NumJoysticks();
@@ -663,6 +663,7 @@ int save_config(struct computer *object, char *filename) {
 	fprintf(fconfig,"port=%c%c",48+object->port,10);
 	fprintf(fconfig,"autoconf=%c%c",48+object->autoconf,10);
 	fprintf(fconfig,"turbo=%c%c",48+object->turbo,10);
+	fprintf(fconfig,"vk_auto=%c%c",48+object->vk_auto,10);
 	
 	
 	for (joy_n=0; joy_n<2; joy_n++)
@@ -831,7 +832,7 @@ int load_config(struct computer *object, char *filename) {
 	FILE *fconfig;
 	unsigned char volume=255,mode128k=255,issue=255,ntsc=255, joystick1=255,joystick2=255,ay_emul=255,mdr_active=255,
 	dblscan=255,framerate =255, screen =255, text=255, precision=255, bw=255, tap_fast=255, audio_mode=255,
-	joypad1=255, joypad2=255, rumble1=255, rumble2=255, joy_n=255, key_n=255, port=255, autoconf=255, turbo=225;
+	joypad1=255, joypad2=255, rumble1=255, rumble2=255, joy_n=255, key_n=255, port=255, autoconf=255, turbo=225, vk_auto=255;
 	
 	if (filename) strcpy(config_path,filename); 
 	else return -2;
@@ -957,6 +958,10 @@ int load_config(struct computer *object, char *filename) {
 			turbo=line[6]-'0';
 			continue;
 		}
+		if (!strncmp(line,"vk_auto=",8)) {
+			vk_auto=line[8]-'0';
+			continue;
+		}
 		if (!strncmp(line,"joybutton_",10)) {
 			sscanf(line, "joybutton_%c_%c=%3d",&joy_n ,&key_n, &key_sdl);
 			if ((joy_n<50) && (joy_n>47) && (key_n<119) && (key_n>96))
@@ -1034,6 +1039,9 @@ int load_config(struct computer *object, char *filename) {
 	}
 	if (turbo<2) {
 		object->turbo=turbo;
+	}
+	if (vk_auto<2) {
+		object->vk_auto=vk_auto;
 	}
 		
 	fclose(fconfig);

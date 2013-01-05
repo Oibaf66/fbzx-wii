@@ -105,8 +105,8 @@ struct computer {
 
 	// Linux joystick private global variables
 
-	unsigned char use_js;
-	unsigned char updown,leftright;
+	//unsigned char use_js;
+	//unsigned char updown,leftright;
 
 	// sound global variables
 
@@ -231,6 +231,7 @@ struct computer {
 	unsigned int joybuttonkey[2][22];
 	unsigned char joypad_as_joystick[2];
 	unsigned char rumble[2];
+	unsigned char vk_auto;
 	unsigned char port; //SD, USB, SMB or FTP
 	unsigned char smb_enable;
 	unsigned char SmbUser[32]; 

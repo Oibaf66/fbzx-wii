@@ -106,6 +106,7 @@ void computer_init () { //Called only on start-up
 	ordenador.videosystem = 0; //PAL
 	ordenador.joystick[0] = 1; //Kemposton
 	ordenador.joystick[1] = 0; // Cursor
+	ordenador.vk_auto = 0; //Vk called by +
 	ordenador.rumble[0] = 0;
 	ordenador.rumble[1] = 0;
 	ordenador.turbo = 0;
@@ -1057,6 +1058,8 @@ inline void read_keyboard () {
 	fire_on[0]=0;
 	fire_on[1]=0;
 	
+	static int countdown_kb;
+	
 	ordenador.k8 = ordenador.k9 = ordenador.k10 = ordenador.k11 =
 		ordenador.k12 = ordenador.k13 = ordenador.k14 =
 		ordenador.k15 = 0;
@@ -1072,6 +1075,22 @@ inline void read_keyboard () {
 	
 	
 	SDL_JoystickUpdate();
+	
+	if (ordenador.vk_auto)
+	{
+		if (countdown_kb>0) countdown_kb--;
+	
+		#ifdef GEKKO
+		WPADData *wd;
+		wd = WPAD_Data(0);
+		if ((wd->ir.valid)&&(!countdown_kb)) {virtual_keyboard();countdown_kb=30;}
+		#else
+		int x=0,y=0 ;
+		SDL_GetRelativeMouseState(&x,&y);
+		if ((x||y)&&(!countdown_kb)) {virtual_keyboard();countdown_kb=30;}
+		#endif
+	}
+	
 	for(joy_n=0;joy_n<ordenador.joystick_number;joy_n++) 
 	{
 	joy_axis_x[joy_n] = SDL_JoystickGetAxis(ordenador.joystick_sdl[joy_n], 0);
@@ -1080,8 +1099,9 @@ inline void read_keyboard () {
 	if (SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 6) ||
 	SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 19)) main_menu(); //Wii button "Home"
 	
-	if (SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 5) ||
-	SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 18)) virtual_keyboard(); //Wii  button "+"
+	
+	if ((!ordenador.vk_auto) &&(SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 5) ||
+	SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 18))) virtual_keyboard(); //Wii  button "+"
 	
 	if (joy_axis_x[joy_n] > 16384) ordenador.joy_axis_x_state[joy_n] = JOY_RIGHT; 
 	else if (joy_axis_x[joy_n] < -16384) ordenador.joy_axis_x_state[joy_n] = JOY_LEFT;
@@ -1096,12 +1116,20 @@ inline void read_keyboard () {
 		joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][joybutton_n])] = 
 		SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], joybutton_n);
 		}
-		
+			
 	for(joybutton_n=7;joybutton_n<18;joybutton_n++)
 		{
 		joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][joybutton_n])] = 
 		SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], joybutton_n);
 		}
+		
+		if (ordenador.vk_auto) { //Check if it is possible to put in the loop
+		joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][5])] = 
+		SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 5);
+		joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][18])] = 
+		SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 18);
+		}	
+		
 		//JOY HAT
 		status_hat[joy_n] = SDL_JoystickGetHat(ordenador.joystick_sdl[joy_n], 0);
 		if(!ordenador.joypad_as_joystick[joy_n])
@@ -1487,8 +1515,8 @@ void ResetComputer () {
 	ordenador.s15|=0x1F;
 	ordenador.js=0;
 
-	ordenador.updown=0;
-	ordenador.leftright=0;
+	//ordenador.updown=0;
+	//ordenador.leftright=0;
 	
 	ordenador.wr=0;
 	ordenador.r_fetch = 0;
