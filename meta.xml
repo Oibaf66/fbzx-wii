@@ -2,8 +2,8 @@
   <app version="1">
     <name>FBZX Wii</name>
     <coder>Oibaf</coder>
-    <version>7.0</version>
-    <release_date>20121230</release_date>
+    <version>8.0</version>
+    <release_date>20130106</release_date>
     <short_description>ZX Spectrum Emulator</short_description>
     <long_description>A ZX Spectrum emulator for FrameBuffer written by Sergio Costas, see http://www.rastersoft.com/fbzx.html.
 The port to Wii was done by Fabio Olimpieri.
@@ -12,9 +12,9 @@ USAGE
 ------
 Put .z80 and .sna files in /fbzx-wii/snapshots or .tap and .tzx files in /fbzx-wii/tapes on your SD card.
 
-Press the home button to access the in-game menu. Press 1 or A to select an item and 2 or B to escape.
+Press the "home" button to access the in-game menu. Press 1 or A to select an item and 2 or B to come back to the previous menu.
 
-Press the "+" button to access the virtual keyboard which uses the IR pointer.
+Press the "+" button to access the virtual keyboard which uses the IR pointer or point the wiimote at the screen.
 
 The in-game menu allows you to insert tapes, load them and configure the display, joysticks etc.
 
@@ -32,6 +32,8 @@ The general preferences are saved (joystick type, machine, buttons bindings, etc
 
 You can also save the game preferences which can be automatically loaded with the tape/snapshot if the related option is set.
 
+If you save the screen shots they will appear on the screen during the menu navigation.
+
 You can also load a file from a usb disk, from your PC and from Internet via FTP using a wi-fi connection. For the wi-fi you should set the parameters in fbzx.net file.
 
 If Rumble is enabled, the wiimote rumbles each time the fire button is pressed. 
@@ -42,6 +44,8 @@ See http://wiibrew.org/wiki/FBZX_Wii for more information.
 COPYRIGHT
 ---------
 The software is distributed under the terms and conditions of the General Public License Version 3.
+
+Amstrad has kindly given their permission for the redistribution of their copyrighted material (ZX Spectrum ROM files) but retains that copyright.
 
 </long_description>
   </app>

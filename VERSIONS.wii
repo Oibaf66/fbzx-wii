@@ -1,3 +1,17 @@
+
+version 8:
+	* Screen snapshots visible on screen in file select menus	
+	* Option to activate the virtual keyboard with the  wiimote IR pointer
+	* Changed menu navigation rules (2 and B always come back to previuos menu)
+	* FTP and SMP connect also after start up 
+	* Tape stops after machine selection change
+	* Fixed contention in normal mode emulation
+	* Fixed crackling in turbo auto mode
+	* Other minor bug fixes
+
+		-- Fabio Olimpieri <fabio.olimpieri@tin.it> Jan 6 2013
+
+
 version 7:
 	  * Added auto turbo mode
 	  * Added graphical virtual keyboard using wii pointer
