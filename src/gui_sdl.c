@@ -527,7 +527,7 @@ static void emulation_settings(void)
 	if (opt < 0)
 		return;
 	
-	set_machine_model(submenus[0]);
+	if (submenus[0]!=submenus_old[0]) set_machine_model(submenus[0]);
 	if ((old_mode!=ordenador.mode128k)||(old_videosystem!=ordenador.videosystem)) ResetComputer(); 
 	
 	jump_frames = submenus[1];
@@ -545,6 +545,7 @@ static void emulation_settings(void)
 		update_frequency(0); //set machine frequency
 		jump_frames=0;
 		ordenador.turbo_state=0;
+		ordenador.precision = ordenador.precision_old;
 		break;
 	case 2:	//fast	
 		update_frequency(10000000);
@@ -554,7 +555,7 @@ static void emulation_settings(void)
 		ordenador.turbo_state=2;
 		break;
 	case 3:	//ultra fast
-		update_frequency(15000000);
+		update_frequency(14000000);
 		jump_frames=24;
 		ordenador.precision =0;
 		ordenador.precision_old =0;
@@ -568,8 +569,9 @@ static void emulation_settings(void)
 	if (submenus[4] != submenus_old[4])
 	{
 	ordenador.precision = !submenus[4];
-	if ((ordenador.turbo==1)&&(ordenador.turbo_state==3)) ordenador.precision_old=ordenador.precision; //Tape is loading
-	else if (ordenador.precision)
+	ordenador.precision_old=ordenador.precision;
+	if (ordenador.turbo_state!=4)  //Tape is not loading with turbo mode
+	 if (ordenador.precision)
 		{ 
 		update_frequency(0);
 		jump_frames=0;
@@ -1817,20 +1819,16 @@ void main_menu()
 			break;
 		case 13:
 			ResetComputer ();
-			ordenador.pause = 1;
-			if (ordenador.tap_file != NULL) {
-				ordenador.tape_current_mode = TAP_TRASH;
-				rewind_tape (ordenador.tap_file,1);				
-			}
+			retorno=-1;
 			break;	
 		case 14:
 			if (msgYesNo("Are you sure to quit?", 0, FULL_DISPLAY_X /2-138/RATIO, FULL_DISPLAY_Y /2-48/RATIO)) 
-				{salir = 0;}	
+				{salir = 0;retorno=-1;}	
 			break;
 		default:
 			break;
 		}
-	} while (opt != 13 && opt != 14 && (!retorno));
+	} while (!retorno);
 	
 	clean_screen();
 	

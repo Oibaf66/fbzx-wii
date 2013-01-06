@@ -393,6 +393,7 @@ static const char **get_file_list(const char *base_dir)
 				for ( i = 0; file_list[i]; i++ )
 				free((void*)file_list[i]);
 				free(file_list);
+				closedir(d);
 				return NULL;
 				}
 		}

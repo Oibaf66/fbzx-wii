@@ -1247,11 +1247,6 @@ inline void read_keyboard () {
 
 		case SDLK_F10:	// Reset emulator
 			ResetComputer ();
-			ordenador.pause = 1;
-			if (ordenador.tap_file != NULL) {
-				ordenador.tape_current_mode = TAP_TRASH;
-				rewind_tape (ordenador.tap_file,1);				
-			}
 		break;
 
 		case SDLK_F11:	// lower volume
@@ -1588,6 +1583,13 @@ void ResetComputer () {
 	ordenador.tst_sample=(ordenador.cpufreq + ordenador.freq/2)/ordenador.freq;
 	
 	microdrive_reset();
+	
+	ordenador.pause = 1;
+			if (ordenador.tap_file != NULL) {
+				ordenador.tape_current_mode = TAP_TRASH;
+				rewind_tape (ordenador.tap_file,1);				
+			}
+	ordenador.precision=ordenador.precision_old;
 }
 
 // check if there's contention and waits the right number of tstates

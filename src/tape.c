@@ -45,13 +45,13 @@ inline void tape_read(FILE *fichero, int tstados) {
 	}
 	
 	//Auto ultra fast mode
-	if ((ordenador.turbo_state != 3)&&(ordenador.turbo==1))
+	if ((ordenador.turbo_state != 4)&&(ordenador.turbo==1))
 	{
-		update_frequency(15000000);
-		jump_frames=24;
+		update_frequency(11000000);
+		jump_frames=7;
 		ordenador.precision_old=ordenador.precision;
 		ordenador.precision =0;
-		ordenador.turbo_state = 3;
+		ordenador.turbo_state = 4;
 	}
 	
 	if(ordenador.tape_file_type == TAP_TAP)
