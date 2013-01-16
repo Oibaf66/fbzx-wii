@@ -54,7 +54,7 @@ int menu_select(const char **pp_msgs, int *p_submenus);
 const char *menu_select_file(const char *dir_path,const char *selected_file, int draw_scr);
 
 
-uint32_t menu_wait_key_press(int vk);
+uint32_t menu_wait_key_press();
 
 void msgKill(SDL_Rect *rc);
 int msgInfo(char *text, int duration, SDL_Rect *rc);

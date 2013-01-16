@@ -142,7 +142,7 @@ int msgInfo(char *text, int duration, SDL_Rect *irc)
 		SDL_FillRect(real_screen, &brc, SDL_MapRGB(real_screen->format, 0x00, 0x80, 0x00));
 		menu_print_font(real_screen, 0,0,0, FULL_DISPLAY_X/2-12/RATIO, Y+42/RATIO, "OK",20);
 		SDL_UpdateRect(real_screen, brc.x, brc.y, brc.w, brc.h);
-		while (!(KEY_SELECT & menu_wait_key_press(0))) {}
+		while (!(KEY_SELECT & menu_wait_key_press())) {}
 
 	}
 
@@ -216,7 +216,7 @@ int msgYesNo(char *text, int default_opt, int x, int y)
 		SDL_UpdateRect(real_screen, brc.x, brc.y, brc.w,brc.h);
 
 		//SDL_Flip(real_screen);
-		key = menu_wait_key_press(0);
+		key = menu_wait_key_press();
 		if (key & KEY_SELECT)
 		{
 			return default_opt;
@@ -248,7 +248,7 @@ static int cmpstringp(const void *p1, const void *p2)
 		return -1;
 	if (*p1_s != '[' && *p2_s == '[')
 		return 1;
-	return strcmp(* (char * const *) p1, * (char * const *) p2);
+	return strcasecmp(* (char * const *) p1, * (char * const *) p2);
 }
 
 /* Return true if name ends with ext (for filenames) */
@@ -920,7 +920,7 @@ static void menu_fini(menu_t *p_menu)
 	free(p_menu->p_submenus);
 }
 
-uint32_t menu_wait_key_press(int vk)
+uint32_t menu_wait_key_press()
 {
 	SDL_Event ev;
 	uint32_t keys = 0;
@@ -933,19 +933,6 @@ uint32_t menu_wait_key_press(int vk)
 		static int joy_keys_last;
 		static int joy_bottons_last[2][8];
 		SDL_JoystickUpdate();
-		
-		if (ordenador.vk_auto)
-		{
-			#ifdef GEKKO
-			WPADData *wd;
-			wd = WPAD_Data(0);
-			if (vk&&!(wd->ir.valid)) return KEY_ESCAPE; 
-			#else
-			int x=0,y=0 ;
-			SDL_GetRelativeMouseState(&x,&y);
-			if ((x<20||y<20||(x>FULL_DISPLAY_X-20)||y>FULL_DISPLAY_Y-20)) return KEY_ESCAPE; 
-			#endif
-		}
 		
 		/* Wii-specific, sorry */
 		for (nr = 0; nr < ordenador.joystick_number; nr++) {
@@ -1088,7 +1075,7 @@ static int menu_select_internal(SDL_Surface *screen,
 		menu_draw(screen, p_menu, 0, font_size, draw_scr);
 		SDL_Flip(screen);
 
-		keys = menu_wait_key_press(0);
+		keys = menu_wait_key_press();
 
 		if (keys & KEY_UP)
 			select_next(p_menu, 0, -1, 1);
@@ -1443,7 +1430,7 @@ int ask_value_sdl(int *final_value,int y_coord,int max_value) {
 		VirtualKeyboard.sel_x = 64;
 		VirtualKeyboard.sel_y = 155;
 		
-		virtualkey = get_key(0);
+		virtualkey = get_key();
 		if (virtualkey == NULL) return(0);
 		if (virtualkey->sdl_code==1) break; //done, retorno -1
 		sdl_key = virtualkey->sdl_code;
@@ -1572,7 +1559,7 @@ int ask_filename_sdl(char *nombre_final,int y_coord,char *extension, char *path,
 		VirtualKeyboard.sel_x = 64;
 		VirtualKeyboard.sel_y = 155;
 		
-		virtualkey = get_key(0);
+		virtualkey = get_key();
 		if (virtualkey == NULL) return(2);
 		sdl_key = virtualkey->sdl_code;
 		

@@ -81,6 +81,7 @@ unsigned int jump_frames,curr_frames;
 
 static SDL_Surface *image;
 
+unsigned char sdismount = 0;
 unsigned char usbismount = 0;
 unsigned char networkisinit = 0;
 unsigned char smbismount = 0;
@@ -626,6 +627,55 @@ void load_main_game(char *nombre) {
 			ordenador.tape_file_type = TAP_TAP;
 			rewind_tape(ordenador.tap_file,1);
 		}
+		
+		//Emulate load ""
+			if (ordenador.mode128k==4) //Spanish 128k
+			{
+			ordenador.keyboard_buffer[0][9]= 0;		
+			ordenador.keyboard_buffer[1][9]= 0;
+			ordenador.keyboard_buffer[0][8]= SDLK_l;		
+			ordenador.keyboard_buffer[1][8]= 0;
+			ordenador.keyboard_buffer[0][7]= SDLK_o;		
+			ordenador.keyboard_buffer[1][7]= 0;
+			ordenador.keyboard_buffer[0][6]= SDLK_a;		
+			ordenador.keyboard_buffer[1][6]= 0;
+			ordenador.keyboard_buffer[0][5]= SDLK_d;		
+			ordenador.keyboard_buffer[1][5]= 0;
+			ordenador.keyboard_buffer[0][4]= SDLK_p;		//"	
+			ordenador.keyboard_buffer[1][4]= SDLK_LCTRL;
+			ordenador.keyboard_buffer[0][3]= SDLK_p;		//"	
+			ordenador.keyboard_buffer[1][3]= SDLK_LCTRL;
+			ordenador.keyboard_buffer[0][2]= SDLK_RETURN;	// Return
+			ordenador.keyboard_buffer[1][2]= 0;
+			ordenador.keyboard_buffer[0][1]= SDLK_F6;		//F6 - play
+			ordenador.keyboard_buffer[1][1]= 0;
+			ordenador.kbd_buffer_pointer=100;
+			}
+			else
+			{
+			ordenador.keyboard_buffer[0][9]= 0;		
+			ordenador.keyboard_buffer[1][9]= 0;
+			ordenador.keyboard_buffer[0][8]= 0;		
+			ordenador.keyboard_buffer[1][8]= 0;
+			ordenador.keyboard_buffer[0][7]= 0;		
+			ordenador.keyboard_buffer[1][7]= 0;
+			ordenador.keyboard_buffer[0][6]= 0;		
+			ordenador.keyboard_buffer[1][6]= 0;
+			
+			ordenador.keyboard_buffer[0][5]= SDLK_j;		//Load
+			ordenador.keyboard_buffer[1][5]= 0;
+			ordenador.keyboard_buffer[0][4]= SDLK_p;		//"
+			ordenador.keyboard_buffer[1][4]= SDLK_LCTRL;
+			ordenador.keyboard_buffer[0][3]= SDLK_p;		//"
+			ordenador.keyboard_buffer[1][3]= SDLK_LCTRL;
+			ordenador.keyboard_buffer[0][2]= SDLK_RETURN;	// Return
+			ordenador.keyboard_buffer[1][2]= 0;
+			ordenador.keyboard_buffer[0][1]= SDLK_F6;		//F6
+			ordenador.keyboard_buffer[1][1]= 0;
+			ordenador.kbd_buffer_pointer=100; //Delay the insertion in the buffer
+			}
+			countdown_buffer=0;
+			
 		return;
 	}
 }
@@ -1031,7 +1081,7 @@ int load_config(struct computer *object, char *filename) {
 	if (rumble2<2) {
 		object->rumble[1]=rumble2;
 	}
-	if (port<4) {
+	if (port<5) {
 		object->port=port;
 	}
 	if (autoconf<2) {
@@ -1082,17 +1132,26 @@ int main(int argc,char *argv[]) {
 	dblbuffer=1;
 	hwsurface=1;
 	setenv("HOME", "/fbzx-wii", 1);
-
+	
 	//initialize libfat library
-	if (!fatInitDefault())
-	{ 
-		printf("Couldn't initialize SD fat subsytem\n");
-		
-		exit(0);
-	}
+	if (fatInitDefault())
+		printf("FAT subsytem initialized\n");
 	else
-		printf("SD FAT subsytem initialized\n");
+		printf("Couldn't initialize fat subsytem\n");
 		
+	DIR *dp;
+    
+	dp = opendir ("sd:/");
+	if (dp) sdismount = 1; else sdismount = 0;
+	
+	if (sdismount)
+		printf("SD FAT subsytem initialized\n");
+	else
+		printf("Couldn't initialize SD fat subsytem\n");
+ 	
+	if (sdismount) closedir (dp);
+		
+	usbismount = InitUSB();
 	#endif
 
 
@@ -1256,7 +1315,6 @@ int main(int argc,char *argv[]) {
 	if (ordenador.zaurus_mini==0) if (load_zxspectrum_picture()) SDL_FreeSurface (image);
 	
 	#ifdef GEKKO
-	usbismount = InitUSB();
 	
 	load_config_network(&ordenador);
 	
@@ -1315,15 +1373,19 @@ int main(int argc,char *argv[]) {
 	else {printf("Can't make tmp directory\n"); tmpismade=0;}
 	
 	#ifdef GEKKO
-	if ((ordenador.port==1)&&usbismount) {
+	if ((ordenador.port==1)&&sdismount) {
+	strcpy(path_snaps,"sd:/");
+	strcpy(path_taps,"sd:/");
+	}
+	if ((ordenador.port==2)&&usbismount) {
 	strcpy(path_snaps,"usb:/");
 	strcpy(path_taps,"usb:/");
 	}
-	if ((ordenador.port==2)&&smbismount) {
+	if ((ordenador.port==3)&&smbismount) {
 	strcpy(path_snaps,"smb:/");
 	strcpy(path_taps,"smb:/");
 	}
-	if ((ordenador.port==3)&&ftpismount) {
+	if ((ordenador.port==4)&&ftpismount) {
 	strcpy(path_snaps,"ftp:");
 	strcpy(path_taps,"ftp:");
 	}

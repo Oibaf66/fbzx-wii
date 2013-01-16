@@ -26,13 +26,15 @@
 
 // #define MUT
 
+#define KB_BUFFER_LENGHT 10
+
 extern char salir;
 
 enum tapmodes {TAP_GUIDE, TAP_DATA, TAP_PAUSE, TAP_TRASH, TAP_STOP, TAP_PAUSE2, TZX_PURE_TONE,
 	TZX_SEQ_PULSES, TAP_FINAL_BIT, TAP_PAUSE3};
 enum taptypes {TAP_TAP, TAP_TZX};
 
-int countdown;
+int countdown_buffer;
 
 struct computer {
 
@@ -67,6 +69,8 @@ struct computer {
 	int next_scanline; // cuantity to add to pass to the next scanline
 	int first_line; // first line to start to paint
 	int last_line; // last line to paint
+	int first_line_kb; // first line to start to paint the keyboard
+	int last_line_kb; // last line to paint the keyboard
 	int first_pixel; // first pixel of a line to paint
 	int last_pixel; // last pixel of a line to paint
 	int next_pixel; // next pixel
@@ -221,7 +225,7 @@ struct computer {
 
 	unsigned char turbo;
 	unsigned char turbo_state;
-	unsigned int keyboard_buffer[2][10];
+	unsigned int keyboard_buffer[2][KB_BUFFER_LENGHT];
 	unsigned int kbd_buffer_pointer;
 	unsigned char *key;
 	unsigned char joystick_number;
@@ -232,6 +236,7 @@ struct computer {
 	unsigned char joypad_as_joystick[2];
 	unsigned char rumble[2];
 	unsigned char vk_auto;
+	unsigned char vk_is_active;
 	unsigned char port; //SD, USB, SMB or FTP
 	unsigned char smb_enable;
 	unsigned char SmbUser[32]; 
@@ -252,8 +257,8 @@ void computer_init();
 void register_screen(SDL_Surface *);
 inline void show_screen(int);
 inline void show_screen_precision(int);
-inline void paint_pixels(unsigned char, unsigned char, unsigned char);
-inline void paint_pixels_precision(unsigned char, unsigned char, unsigned char);
+inline void paint_pixels(unsigned char, unsigned char, unsigned char, unsigned char draw);
+inline void paint_pixels_precision(unsigned char, unsigned char, unsigned char,unsigned char draw);
 inline void read_keyboard();
 void fill_audio(void *udata,Uint8 *,int);
 void set_volume(unsigned char);

@@ -45,10 +45,11 @@ struct Virtual_Keyboard
 } VirtualKeyboard;
 
 void VirtualKeyboard_init(SDL_Surface *screen);
-struct virtkey* get_key(int vk);
-struct virtkey* get_key_internal(int vk);
-void draw();
+struct virtkey* get_key();
+struct virtkey* get_key_internal();
+void draw_vk();
 void select_next_kb(int dx, int dy);
 void toggle_shift();
-
-
+void virtkey_ir_run();
+void virtkey_ir_activate(void);
+void virtkey_ir_deactivate(void);

@@ -42,7 +42,7 @@ extern char path_poke[2049];
 extern char path_tmp[2049];
 extern unsigned int colors[80];
 extern unsigned int jump_frames,curr_frames;
-extern unsigned char usbismount, smbismount, tmpismade, ftpismount,networkisinit;
+extern unsigned char sdismount, usbismount, smbismount, tmpismade, ftpismount,networkisinit;
 
 void SDL_Fullscreen_Switch(void);
 void load_rom(char);

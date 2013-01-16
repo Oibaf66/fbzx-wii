@@ -50,7 +50,7 @@ extern FILE *fdebug;
 #define MAX_POKE 20
 #define MAX_TRAINER 50
 
-extern int countdown;
+extern int countdown_buffer;
 void clean_screen();
 
 
@@ -154,7 +154,7 @@ static const char *tools_messages[] = {
 		/*05*/		"Load poke file",
 		/*06*/		"  ",
 		/*07*/		"Port",
-		/*08*/		"^|sd|usb|smb|ftp",
+		/*08*/		"^|default|sd|usb|smb|ftp",
 		/*09*/		"  ",
 		/*10*/		"Auto virtual keyboard",
 		/*11*/		"^|on|off",
@@ -377,7 +377,7 @@ static int manage_tape(int which)
 		insert_tape();
 		break;
 	case 1: //Emulate load ""
-		countdown=8;
+		countdown_buffer=8;
 		if (ordenador.mode128k==4) //Spanish 128k
 			{
 			ordenador.keyboard_buffer[0][8]= SDLK_l;		
@@ -712,7 +712,7 @@ static void input_options(int joy)
 	VirtualKeyboard.sel_x = 64;
 	VirtualKeyboard.sel_y = 90;
 	
-	virtualkey = get_key(0);
+	virtualkey = get_key();
 	if (virtualkey == NULL)
 		return;
 	sdl_key = virtualkey->sdl_code;
@@ -1074,7 +1074,7 @@ static void set_port(int which)
 	
 	switch (which)
 	{
-	case 0: //PORT_SD
+	case 0: //PORT_DEFAULT
 		strcpy(path_snaps,getenv("HOME"));
 		length=strlen(path_snaps);
 		if ((length>0)&&(path_snaps[length-1]!='/')) strcat(path_snaps,"/");
@@ -1089,7 +1089,18 @@ static void set_port(int which)
 		strcat(path_scr2,"scr2");
 		ordenador.port = which;
 		break;
-	case 1: //PORT_USB
+	case 1: //PORT_SD
+		if (sdismount) {
+			strcpy(path_snaps,"sd:/");
+			strcpy(path_taps,"sd:/");
+			strcpy(path_poke,"sd:/");
+			strcpy(path_scr1,"sd:/");
+			strcpy(path_scr2,"sd:/");
+			ordenador.port = which;}
+		else
+			msgInfo("SD is not mounted",3000,NULL);
+		break;
+	case 2: //PORT_USB
 		if (usbismount) {
 			strcpy(path_snaps,"usb:/");
 			strcpy(path_taps,"usb:/");
@@ -1100,7 +1111,7 @@ static void set_port(int which)
 		else
 			msgInfo("USB is not mounted",3000,NULL);
 		break;
-	case 2: //PORT_SMB
+	case 3: //PORT_SMB
 		if (!smbismount)
 		{
 			msgInfo("Try to mount SMB",0,NULL);
@@ -1118,7 +1129,7 @@ static void set_port(int which)
 		else
 			msgInfo("SMB is not mounted",3000,NULL);
 		break;
-	case 3: //PORT_FTP
+	case 4: //PORT_FTP
 		if (!ftpismount)
 		{
 			msgInfo("Try to mount FTP",0,NULL);
@@ -1295,7 +1306,7 @@ int parse_poke (const char *filename)
 		k=0;
 
 		while (!((k & KEY_ESCAPE)||(k & KEY_SELECT)))
-		{k = menu_wait_key_press(0);}
+		{k = menu_wait_key_press();}
 	
 		banner.y=y;
 	
@@ -1366,7 +1377,7 @@ int parse_poke (const char *filename)
 	k=0;
 
 	while (!(k & KEY_ESCAPE)&&(ritorno==0))
-	{k = menu_wait_key_press(0);}
+	{k = menu_wait_key_press();}
 
 	fclose(fpoke);
 	if (ritorno==0) strcpy(ordenador.last_selected_poke_file,filename);		
@@ -1492,11 +1503,11 @@ void virtual_keyboard(void)
 	VirtualKeyboard.sel_x = 64;
 	VirtualKeyboard.sel_y = 90;
 	
-	virtkey_t *key =get_key(1);  
+	virtkey_t *key =get_key();  
 	if (key) {key_code = key->sdl_code;} else return;
 	
 	ordenador.kbd_buffer_pointer=1;
-	countdown=8;
+	countdown_buffer=8;
 	ordenador.keyboard_buffer[0][1]= key_code;
 	if 	(key->caps_on) ordenador.keyboard_buffer[1][1]= SDLK_LSHIFT; 
 	else if (key->sym_on) ordenador.keyboard_buffer[1][1]= SDLK_LCTRL; 

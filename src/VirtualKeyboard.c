@@ -51,7 +51,7 @@ extern FILE *fdebug;
  #endif
 #endif
 
-static SDL_Surface *image_kbd, *image_sym, *image_caps,*image_kbd_small, *image_sym_small, *image_caps_small ;
+static SDL_Surface *image_kbd, *image_sym, *image_caps,*image_kbd_small, *image_sym_small, *image_caps_small, *tmp_surface ;
 static int vkb_is_init;
 
 extern struct computer ordenador;
@@ -71,29 +71,44 @@ void VirtualKeyboard_init(SDL_Surface *screen)
 	VirtualKeyboard.sel_y = 100;
 	vkb_is_init = -1;
 	
-	image_kbd=IMG_Load("/fbzx-wii/fbzx/Spectrum_keyboard.png");
-	image_sym=IMG_Load("/fbzx-wii/fbzx/symbol_shift.png");
-	image_caps=IMG_Load("/fbzx-wii/fbzx/caps_shift.png");
+	tmp_surface=IMG_Load("/fbzx-wii/fbzx/Spectrum_keyboard.png");
+	if (tmp_surface == NULL) {printf("Impossible to load keyboard image\n"); return;}
+	image_kbd=SDL_DisplayFormat(tmp_surface);
+	SDL_FreeSurface (tmp_surface);
 	
-	image_kbd_small=IMG_Load("/fbzx-wii/fbzx/Spectrum_keyboard_small.png");
-	image_sym_small=IMG_Load("/fbzx-wii/fbzx/symbol_shift_small.png");
-	image_caps_small=IMG_Load("/fbzx-wii/fbzx/caps_shift_small.png");
 	
-
-	if (image_kbd == NULL) {printf("Impossible to load keyboard image\n"); return;}
-	if (image_sym == NULL) {printf("Impossible to load symbol shift image\n"); return;}
-	if (image_caps == NULL) {printf("Impossible to load caps shift image\n"); return;}
+	tmp_surface=IMG_Load("/fbzx-wii/fbzx/symbol_shift.png");
+	if (tmp_surface == NULL) {printf("Impossible to load symbol shift image\n"); return;}
+	image_sym=SDL_DisplayFormat(tmp_surface);
+	SDL_FreeSurface (tmp_surface);
 	
-	if (image_kbd_small == NULL) {printf("Impossible to load keyboard small image\n"); return;}
-	if (image_sym_small == NULL) {printf("Impossible to load symbol small shift image\n"); return;}
-	if (image_caps_small == NULL) {printf("Impossible to load caps shift small image\n"); return;}
+	
+	tmp_surface=IMG_Load("/fbzx-wii/fbzx/caps_shift.png");
+	if (tmp_surface == NULL) {printf("Impossible to load caps shift image\n"); return;}
+	image_caps=SDL_DisplayFormat(tmp_surface);
+	SDL_FreeSurface (tmp_surface);
+	
+	tmp_surface=IMG_Load("/fbzx-wii/fbzx/Spectrum_keyboard_small.png");
+	if (tmp_surface == NULL) {printf("Impossible to load keyboard small image\n"); return;}
+	image_kbd_small=SDL_DisplayFormat(tmp_surface);
+	SDL_FreeSurface (tmp_surface);
+	
+	tmp_surface=IMG_Load("/fbzx-wii/fbzx/symbol_shift_small.png");
+	if (tmp_surface == NULL) {printf("Impossible to load symbol shift small image\n"); return;}
+	image_sym_small=SDL_DisplayFormat(tmp_surface);
+	SDL_FreeSurface (tmp_surface);
+	
+	tmp_surface=IMG_Load("/fbzx-wii/fbzx/caps_shift_small.png");
+	if (tmp_surface == NULL) {printf("Impossible to load caps shift small image\n"); return;}
+	image_caps_small=SDL_DisplayFormat(tmp_surface);
+	SDL_FreeSurface (tmp_surface);
 	
 
 	memset(VirtualKeyboard.buf, 0, sizeof(VirtualKeyboard.buf));
 	vkb_is_init = 1;
 }
 
-void draw()
+void draw_vk()
 {
 	
 	SDL_Rect dst_rect = {VirtualKeyboard.sel_x/RATIO, VirtualKeyboard.sel_y/RATIO, 0, 0};
@@ -116,7 +131,7 @@ void draw()
 }
 
 
-struct virtkey *get_key_internal(int vk)
+struct virtkey *get_key_internal()
 {
 	while(1)
 	{
@@ -127,12 +142,12 @@ struct virtkey *get_key_internal(int vk)
 		int border_x = VirtualKeyboard.sel_x/RATIO;
 		int border_y = VirtualKeyboard.sel_y/RATIO;
 
-		draw();
+		draw_vk();
 		SDL_Flip(VirtualKeyboard.screen);
 		
 		SDL_ShowCursor(SDL_ENABLE);
 
-		k = menu_wait_key_press(vk);
+		k = menu_wait_key_press();
 		
 		SDL_ShowCursor(SDL_DISABLE);
 
@@ -148,10 +163,11 @@ struct virtkey *get_key_internal(int vk)
 			
 			i = y/key_h*KEY_COLS + x/key_w;
 			
-			
+			#ifdef GEKKO
 			WPAD_Rumble(0, 1);
-			SDL_Delay(50);
+			SDL_Delay(90);
 			WPAD_Rumble(0, 0);
+			#endif
 			
 			virtkey_t *key = &keys[i];
 			
@@ -170,7 +186,7 @@ struct virtkey *get_key_internal(int vk)
 	return NULL;
 }
 
-struct virtkey* get_key(int vk)
+struct virtkey* get_key()
 {
 	virtkey_t *key;
 	
@@ -179,8 +195,98 @@ struct virtkey* get_key(int vk)
 	keys[3 * KEY_COLS + 0 ].is_on = 0; //Caps Shit
 	keys[3 * KEY_COLS + 8 ].is_on = 0; //Sym Shift
 	
-	key = get_key_internal(vk);
+	key = get_key_internal();
 
 	return key;
 }
 
+void virtkey_ir_run(void)
+{ 
+	int key_code;
+	int x,y,xm, ym, i=0;
+	int key_w = 50/RATIO;
+	int key_h = 64/RATIO;
+	int border_x = VirtualKeyboard.sel_x/RATIO;
+	int border_y = VirtualKeyboard.sel_y/RATIO;
+	int key = 0;
+	SDL_Joystick *joy;
+	static int joy_bottons_last[4];
+	static char countdown_rumble=0;
+	
+	#ifdef GEKKO
+	if (countdown_rumble > 0) {countdown_rumble--; if (countdown_rumble==0) WPAD_Rumble(0, 0);}
+	#endif
+		
+	joy = ordenador.joystick_sdl[0];
+				
+	if ((SDL_JoystickGetButton(joy, 0) && !joy_bottons_last[0]) ||      /* A */
+		(SDL_JoystickGetButton(joy, 3) && !joy_bottons_last[1]) ||  /* 2 */
+		(SDL_JoystickGetButton(joy, 9) && !joy_bottons_last[2]) ||  /* CA */
+		(SDL_JoystickGetButton(joy, 10) && !joy_bottons_last[3]))   /* CB */
+	key = KEY_SELECT;
+				
+	joy_bottons_last[0]=SDL_JoystickGetButton(joy, 0) ;   /* A */
+	joy_bottons_last[1]	=SDL_JoystickGetButton(joy, 3) ;  /* 2 */
+	joy_bottons_last[2]	=SDL_JoystickGetButton(joy, 9) ;  /* CA */
+	joy_bottons_last[3]	=SDL_JoystickGetButton(joy, 10) ; /* CB */
+
+	
+	if (key==KEY_SELECT)
+	{	
+		SDL_GetMouseState(&xm, &ym);
+		x = (xm-border_x);
+		y = (ym-border_y);
+		if ((x>0)&&(x< KEY_COLS*key_w)&&(y>0)&&(y< KEY_ROWS*key_h)) 
+		{
+			#ifdef GEKKO
+			WPAD_Rumble(0, 1);
+			#endif
+			countdown_rumble=5;
+			
+			i = y/key_h*KEY_COLS + x/key_w;
+			
+			virtkey_t *key = &keys[i];
+				
+			if ((key->sdl_code == SDLK_LSHIFT) && !keys[3 * KEY_COLS + 8 ].is_on)
+			keys[3 * KEY_COLS + 0 ].is_on = !keys[3 * KEY_COLS + 0 ].is_on; //Caps Shit
+			else if ((key->sdl_code == SDLK_LCTRL) && !keys[3 * KEY_COLS + 0 ].is_on) 
+			keys[3 * KEY_COLS + 8 ].is_on = !keys[3 * KEY_COLS + 8 ].is_on; //Sym Shift
+			else {
+			key->caps_on = keys[3 * KEY_COLS + 0 ].is_on;
+			key->sym_on = keys[3 * KEY_COLS + 8 ].is_on;
+			keys[3 * KEY_COLS + 0 ].is_on = 0; //Caps Shit
+			keys[3 * KEY_COLS + 8 ].is_on = 0; //Sym Shift
+			}
+	
+			key_code = key->sdl_code;
+	
+			ordenador.kbd_buffer_pointer=1;
+			countdown_buffer=8;
+			ordenador.keyboard_buffer[0][1]= key_code;
+			if 	(key->caps_on) ordenador.keyboard_buffer[1][1]= SDLK_LSHIFT; 
+			else if (key->sym_on) ordenador.keyboard_buffer[1][1]= SDLK_LCTRL; 
+			else ordenador.keyboard_buffer[1][1]= 0;
+	
+			printf ("Push Event: keycode %d\n", key_code);
+			
+			SDL_ShowCursor(SDL_DISABLE);
+			draw_vk();
+			SDL_ShowCursor(SDL_ENABLE);
+		}	
+	}
+}
+
+void virtkey_ir_activate(void)	
+{
+	ordenador.vk_is_active=1;
+	VirtualKeyboard.sel_x = 64;
+	VirtualKeyboard.sel_y = 90;
+	draw_vk();
+	SDL_ShowCursor(SDL_ENABLE);
+}
+		
+void virtkey_ir_deactivate(void)
+{
+	ordenador.vk_is_active=0;
+	SDL_ShowCursor(SDL_DISABLE);
+}

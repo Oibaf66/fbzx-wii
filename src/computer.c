@@ -159,6 +159,7 @@ void computer_init () { //Called only on start-up
 	
 	ordenador.tape_loop_counter = 0;
 	ordenador.kbd_buffer_pointer = 0;
+	ordenador.vk_is_active=0;
 	ordenador.key = SDL_GetKeyState(NULL);
 	ordenador.joybuttonkey[0][0]=SDLK_LALT; //Fire button to wiimote1 button A
 	ordenador.joybuttonkey[1][0]=SDLK_LALT; //Fire button to wiimote1 button A
@@ -579,9 +580,9 @@ inline void show_screen (int tstados) {
 			// is border
 				
 			if (ordenador.ulaplus) {
-				paint_pixels (255, ordenador.border+24, 0);	// paint 8 pixels with BORDER color
+				paint_pixels (255, ordenador.border+24, 0,1);	// paint 8 pixels with BORDER color
 			} else {
-				paint_pixels (255, ordenador.border, 0);	// paint 8 pixels with BORDER color
+				paint_pixels (255, ordenador.border, 0,1);	// paint 8 pixels with BORDER color
 			}
 
 			ordenador.bus_value = 255;
@@ -619,9 +620,9 @@ inline void show_screen (int tstados) {
 			ordenador.p_translt2++;
 			
 			if ((fflash) && (ordenador.flash))
-				paint_pixels (temporal3, paper, ink);	// if FLASH, invert PAPER and INK
+				paint_pixels (temporal3, paper, ink,(!ordenador.vk_is_active)||(ordenador.currline>ordenador.last_line_kb)||(ordenador.currline<ordenador.first_line_kb));	// if FLASH, invert PAPER and INK
 			else
-				paint_pixels (temporal3, ink, paper);
+				paint_pixels (temporal3, ink, paper,(!ordenador.vk_is_active)||(ordenador.currline>ordenador.last_line_kb)||(ordenador.currline<ordenador.first_line_kb));
 				
 		}
 		}
@@ -724,9 +725,9 @@ inline void show_screen_precision (int tstados) {
 			if (ordenador.pixels_octect==0) ordenador.border_sampled = ordenador.border;  
 				
 			if (ordenador.ulaplus) {
-				paint_pixels_precision (255, ordenador.border_sampled+24, 0);	// paint 2 pixels with BORDER color
+				paint_pixels_precision (255, ordenador.border_sampled+24, 0,1);	// paint 2 pixels with BORDER color
 			} else {
-				paint_pixels_precision (255, ordenador.border_sampled, 0);	// paint 2 pixels with BORDER color
+				paint_pixels_precision (255, ordenador.border_sampled, 0,1);	// paint 2 pixels with BORDER color
 			}
 
 			ordenador.bus_value = 255;
@@ -858,9 +859,9 @@ inline void show_screen_precision (int tstados) {
 
 			
 			if ((fflash) && (ordenador.flash))
-				paint_pixels_precision (temporal3, paper, ink);	// if FLASH, invert PAPER and INK
+				paint_pixels_precision (temporal3, paper, ink, (!ordenador.vk_is_active)||(ordenador.currline>ordenador.last_line_kb) ||(ordenador.currline<ordenador.first_line_kb));	// if FLASH, invert PAPER and INK
 			else
-				paint_pixels_precision (temporal3, ink, paper);
+				paint_pixels_precision (temporal3, ink, paper, (!ordenador.vk_is_active)||(ordenador.currline>ordenador.last_line_kb) ||(ordenador.currline<ordenador.first_line_kb));
 				
 		}
 		}
@@ -926,7 +927,7 @@ inline void show_screen_precision (int tstados) {
 }
 
 
-inline void paint_pixels (unsigned char octet,unsigned char ink, unsigned char paper) {
+inline void paint_pixels (unsigned char octet,unsigned char ink, unsigned char paper, unsigned char draw) {
 
 	static int bucle,valor,*p;
 	static unsigned char mask;
@@ -934,6 +935,9 @@ inline void paint_pixels (unsigned char octet,unsigned char ink, unsigned char p
 	mask = 0x80;
 	 
 	for (bucle = 0; bucle < 8; bucle++) {
+		
+		if (draw)
+		{
 		valor = (octet & mask) ? (int) ink : (int) paper;
 		p=(colors+valor);
 		
@@ -954,6 +958,22 @@ inline void paint_pixels (unsigned char octet,unsigned char ink, unsigned char p
 		default:
 		break;
 		}
+		}
+		else
+		{
+		
+		switch (ordenador.npixels)
+		{
+		case 2:
+		ordenador.pixel+=ordenador.next_pixel;
+		break;
+		case 4:
+		ordenador.pixel+=ordenador.next_pixel;
+		break;
+		default:
+		break;
+		}
+		}
 		
 		ordenador.pixel+=ordenador.next_pixel;
 		mask = ((mask >> 1) & 0x7F);
@@ -961,7 +981,7 @@ inline void paint_pixels (unsigned char octet,unsigned char ink, unsigned char p
 }
 
 
-inline void paint_pixels_precision (unsigned char octet,unsigned char ink, unsigned char paper) {
+inline void paint_pixels_precision (unsigned char octet,unsigned char ink, unsigned char paper, unsigned char draw) {
 
 	static int bucle,valor,*p;
 	static unsigned char mask;
@@ -969,6 +989,8 @@ inline void paint_pixels_precision (unsigned char octet,unsigned char ink, unsig
 	if (ordenador.pixels_octect==0) mask = 0x80;
 	 
 	for (bucle = 0; bucle < 2; bucle++) {
+		if (draw)
+		{
 		valor = (octet & mask) ? (int) ink : (int) paper;
 		p=(colors+valor);
 		
@@ -988,6 +1010,21 @@ inline void paint_pixels_precision (unsigned char octet,unsigned char ink, unsig
 		break;
 		default:
 		break;
+		}
+		}
+		else
+		{
+		switch (ordenador.npixels)
+		{
+		case 2:
+		ordenador.pixel+=ordenador.next_pixel;
+		break;
+		case 4:
+		ordenador.pixel+=ordenador.next_pixel;
+		break;
+		default:
+		break;
+		}
 		}
 		
 		ordenador.pixel+=ordenador.next_pixel;
@@ -1001,11 +1038,11 @@ inline void paint_pixels_precision (unsigned char octet,unsigned char ink, unsig
 inline void paint_one_pixel(unsigned char *colour,unsigned char *address) 
 {
  *(address++)=*(colour+2);
- *(address++)=*(colour+3);	
+ *(address++)=*(colour+3);
 }
 #else
 
-inline void paint_one_pixel(unsigned char *colour,unsigned char *address) {
+inline void paint_one_pixel(unsigned char *colour,unsigned char *address ) {
 
 	#if BYTE_ORDER == LITTLE_ENDIAN
 	switch(ordenador.bpp) {
@@ -1058,7 +1095,6 @@ inline void read_keyboard () {
 	fire_on[0]=0;
 	fire_on[1]=0;
 	
-	static int countdown_kb;
 	
 	ordenador.k8 = ordenador.k9 = ordenador.k10 = ordenador.k11 =
 		ordenador.k12 = ordenador.k13 = ordenador.k14 =
@@ -1076,32 +1112,19 @@ inline void read_keyboard () {
 	
 	SDL_JoystickUpdate();
 	
-	if (ordenador.vk_auto)
-	{
-		if (countdown_kb>0) countdown_kb--;
+	if (SDL_JoystickGetButton(ordenador.joystick_sdl[0], 6) ||//Wii button "Home"
+	SDL_JoystickGetButton(ordenador.joystick_sdl[0], 19)) 
+	{if (ordenador.vk_is_active) virtkey_ir_deactivate();main_menu(); }
 	
-		#ifdef GEKKO
-		WPADData *wd;
-		wd = WPAD_Data(0);
-		if ((wd->ir.valid)&&(!countdown_kb)) {virtual_keyboard();countdown_kb=20;}
-		#else
-		int x=0,y=0 ;
-		SDL_GetRelativeMouseState(&x,&y);
-		if ((x||y)&&(!countdown_kb)) {virtual_keyboard();countdown_kb=30;}
-		#endif
-	}
 	
+	if (!ordenador.vk_is_active) { 
 	for(joy_n=0;joy_n<ordenador.joystick_number;joy_n++) 
 	{
 	joy_axis_x[joy_n] = SDL_JoystickGetAxis(ordenador.joystick_sdl[joy_n], 0);
 	joy_axis_y[joy_n] = SDL_JoystickGetAxis(ordenador.joystick_sdl[joy_n], 1);
 	
-	if (SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 6) ||
-	SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 19)) main_menu(); //Wii button "Home"
 	
-	
-	if ((!ordenador.vk_auto) &&(SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 5) ||
-	SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 18))) virtual_keyboard(); //Wii  button "+"
+
 	
 	if (joy_axis_x[joy_n] > 16384) ordenador.joy_axis_x_state[joy_n] = JOY_RIGHT; 
 	else if (joy_axis_x[joy_n] < -16384) ordenador.joy_axis_x_state[joy_n] = JOY_LEFT;
@@ -1140,12 +1163,13 @@ inline void read_keyboard () {
 			joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][21])] = (status_hat[joy_n] & SDL_HAT_RIGHT);
 		}
 	}
+	}
 	
 	//Keyboard buffer
 	
-	if (countdown)
+	if (countdown_buffer)
 		{ 
-		if (countdown <5) 
+		if (countdown_buffer <5) 
 			{
 			joybutton_matrix[0][(ordenador.keyboard_buffer[0][ordenador.kbd_buffer_pointer+1])]=0;
 			joybutton_matrix[0][(ordenador.keyboard_buffer[1][ordenador.kbd_buffer_pointer+1])]=0;
@@ -1157,17 +1181,24 @@ inline void read_keyboard () {
 			joybutton_matrix[0][(ordenador.keyboard_buffer[0][ordenador.kbd_buffer_pointer+1])]=1;
 			joybutton_matrix[0][(ordenador.keyboard_buffer[1][ordenador.kbd_buffer_pointer+1])]=1;
 			}
-		countdown--;
+		countdown_buffer--;
 		}
 		else if (ordenador.kbd_buffer_pointer)
 			{
-			joybutton_matrix[0][(ordenador.keyboard_buffer[0][ordenador.kbd_buffer_pointer])]=1;
-			joybutton_matrix[0][(ordenador.keyboard_buffer[1][ordenador.kbd_buffer_pointer])]=1;
+				if (ordenador.kbd_buffer_pointer<KB_BUFFER_LENGHT)
+				{
+				joybutton_matrix[0][(ordenador.keyboard_buffer[0][ordenador.kbd_buffer_pointer])]=1;
+				joybutton_matrix[0][(ordenador.keyboard_buffer[1][ordenador.kbd_buffer_pointer])]=1;
 		
-			ordenador.kbd_buffer_pointer--; 
-			countdown=8;		
-			}	
-
+				ordenador.kbd_buffer_pointer--; 
+				countdown_buffer=8;		
+				}
+				else
+				{
+				ordenador.kbd_buffer_pointer--; 
+				countdown_buffer=0;		
+				}	
+			}
 	
 	temporal_io = (unsigned int) pevento->key.keysym.sym;
 
@@ -1242,7 +1273,7 @@ inline void read_keyboard () {
 			}
 			
 			
-			countdown=8;
+			countdown_buffer=8;
 			break;
 
 		case SDLK_F10:	// Reset emulator
@@ -1474,7 +1505,47 @@ inline void read_keyboard () {
 	
 	if (joybutton_matrix[0][SDLK_F6] && ((ordenador.tape_fast_load == 0) || (ordenador.tape_file_type==TAP_TZX)))
 				ordenador.pause = 0; //Play the tape
-	return;
+				
+	//Virtual Keyboard
+	
+	//VK activation/deactivation
+	
+	static char old_plus_button;
+	char plus_button;
+	
+	plus_button= SDL_JoystickGetButton(ordenador.joystick_sdl[0], 5) || //Wii  button "+"
+	SDL_JoystickGetButton(ordenador.joystick_sdl[0], 18);
+	
+	
+	if (!ordenador.vk_auto && plus_button && !old_plus_button)
+	{if (!ordenador.vk_is_active)  virtkey_ir_activate(); else virtkey_ir_deactivate();}
+		
+	if (ordenador.vk_auto)
+	{
+	#ifdef GEKKO
+	WPADData *wd;
+	wd = WPAD_Data(0); //only wiimote 0
+	if ((wd->ir.valid)&&(!ordenador.vk_is_active)) virtkey_ir_activate();	
+	if ((!wd->ir.valid)&&(ordenador.vk_is_active)) virtkey_ir_deactivate();	
+	#else
+	int x=0,y=0 ;
+	SDL_GetRelativeMouseState(&x,&y);
+	if (x||y) 
+		{
+			ordenador.vk_is_active=1;
+			SDL_ShowCursor(SDL_ENABLE);
+		}
+	else 
+		{
+			ordenador.vk_is_active=0;
+			SDL_ShowCursor(SDL_DISABLE);
+		}
+	#endif
+    }
+	old_plus_button = plus_button;
+	
+	if (ordenador.vk_is_active) virtkey_ir_run();
+		
 }
 
 // resets the computer and loads the right ROMs
@@ -1577,6 +1648,8 @@ void ResetComputer () {
 		ordenador.start_screen=45;
 	break;
 	}
+	ordenador.first_line_kb=ordenador.first_line + 90/2;
+	ordenador.last_line_kb=ordenador.first_line + 90/2 + 306/2;
 	
 	ordenador.last_selected_poke_file[0]='\0';
 	
