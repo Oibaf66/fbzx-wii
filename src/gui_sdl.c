@@ -148,16 +148,16 @@ static const char *microdrive_messages[] = {
 static const char *tools_messages[] = {
 		/*00*/		"Screen shot",
 		/*01*/		"^|Save1|Save2|Load|Delete",
-		/*02*/		"  ",
-		/*03*/		"Insert poke",
-		/*04*/		"  ",
-		/*05*/		"Load poke file",
-		/*06*/		"  ",
-		/*07*/		"Port",
-		/*08*/		"^|default|sd|usb|smb|ftp",
-		/*09*/		"  ",
-		/*10*/		"Auto virtual keyboard",
-		/*11*/		"^|on|off",
+		/*02*/		"Port",
+		/*03*/		"^|default|sd|usb|smb|ftp",
+		/*04*/		"Auto virtual keyboard",
+		/*05*/		"^|on|off",
+		/*06*/		"Keyboard rumble",
+		/*07*/		"^|on|off",
+		/*08*/		"  ",
+		/*09*/		"Load poke file",
+		/*10*/		"  ",
+		/*11*/		"Insert poke",
 		/*12*/		"  ",
 		/*13*/		"Help",
 		NULL
@@ -1386,7 +1386,7 @@ int parse_poke (const char *filename)
 
 static int load_poke_file()
 {
-	const char *dir = path_poke;
+	char *dir = path_poke;
 	int ritorno, retorno2;
 	ritorno=0;
 	retorno2=0; //Stay in menu as default
@@ -1455,7 +1455,7 @@ switch (which)
 static int tools()
 {
 	int opt , retorno;
-	int submenus[3];
+	int submenus[4];
 
 	memset(submenus, 0, sizeof(submenus));
 
@@ -1464,6 +1464,7 @@ static int tools()
  
 	submenus[1] = ordenador.port;
 	submenus[2] = !ordenador.vk_auto;
+	submenus[3] = !ordenador.vk_rumble;
 	
 	opt = menu_select_title("Tools menu",
 			tools_messages, submenus);
@@ -1472,18 +1473,19 @@ static int tools()
 		
 	set_port(submenus[1]);
 	ordenador.vk_auto = !submenus[2];
+	ordenador.vk_rumble = !submenus[3];
 	
 	switch(opt)
 		{
 		case 0: 
 			retorno = manage_scr(submenus[0]);
 			break;
-		case 3: // Insert poke
-			retorno = do_poke_sdl();
-			break;
-		case 5: // Load poke file
+		case 9: // Load poke file
 			retorno = load_poke_file();
 			break;
+		case 11: // Insert poke
+			retorno = do_poke_sdl();
+			break;	
 		case 13:
 			help();
 			retorno = -1;
@@ -1519,7 +1521,7 @@ void virtual_keyboard(void)
 
 static int save_load_snapshot(int which)
 {
-	const char *dir = path_snaps;
+	char *dir = path_snaps;
 	const char *tape = ordenador.last_selected_file;
 	char *ptr;
 	char db[256];
@@ -1616,7 +1618,7 @@ static int save_load_snapshot(int which)
 
 static int save_load_game_configurations(int which)
 {
-	const char *dir = path_confs;
+	char *dir = path_confs;
 	const char *tape = ordenador.last_selected_file;
 	char *ptr;
 	char db[256];

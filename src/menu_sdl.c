@@ -1171,7 +1171,7 @@ static const char *menu_select_file_internal_zip(char *path,
 		ptr_selected_file= strrchr(selected_file,'/');
 		if (ptr_selected_file) ptr_selected_file++;
 		else ptr_selected_file = selected_file;
-		snprintf(buf,64,"file:%s",ptr_selected_file);
+		snprintf(buf,64,"Selected file:%s",ptr_selected_file);
 		opt = menu_select_sized(buf, file_list, NULL, 0, x, y, x2, y2, NULL, NULL, 16, draw_scr);
 	}
 	else opt = menu_select_sized("Select file", file_list, NULL, 0, x, y, x2, y2, NULL, NULL ,16, draw_scr);
@@ -1269,7 +1269,7 @@ static const char *menu_select_file_internal_zip(char *path,
 	return write_filename;
 }
 
-static const char *menu_select_file_internal(const char *dir_path,
+static const char *menu_select_file_internal(char *dir_path,
 		int x, int y, int x2, int y2, const char *selected_file, int draw_scr)
 {
 	const char **file_list = get_file_list(dir_path);
@@ -1277,6 +1277,7 @@ static const char *menu_select_file_internal(const char *dir_path,
 	char *out;
 	char *out_zip;
 	const char *ptr_selected_file;
+	char *updir;
 	int opt;
 	int i;
 	char buf[64];
@@ -1289,7 +1290,7 @@ static const char *menu_select_file_internal(const char *dir_path,
 		ptr_selected_file= strrchr(selected_file,'/');
 		if (ptr_selected_file) ptr_selected_file++;
 		else ptr_selected_file = selected_file;
-		snprintf(buf,64,"file:%s",ptr_selected_file);
+		snprintf(buf,64,"Selected file:%s",ptr_selected_file);
 		opt = menu_select_sized(buf, file_list, NULL, 0, x, y, x2, y2, NULL, NULL, 16, draw_scr);
 	}
 	else opt = menu_select_sized("Select file", file_list, NULL, 0, x, y, x2, y2, NULL, NULL ,16, draw_scr);
@@ -1305,23 +1306,38 @@ static const char *menu_select_file_internal(const char *dir_path,
 
 	if (!sel)
 		return NULL;
+		
+	if (!strcmp(sel,"[..]")) //selected "[..]"
+	{
+		free((void*)sel);
+		updir=strrchr(dir_path,'/');
+		if ((updir!=NULL)&&(updir!=dir_path))  // or "/" and not root dir
+		*updir=0; //trunk dir_path at last /
+		
+		return menu_select_file(dir_path, selected_file, draw_scr);
+	}		
         /* If this is a folder, enter it recursively */
         if (sel[0] == '[')
         {
-        	char buf[255];
         	int len = strlen(sel);
-        	int s;
 
         	/* Remove trailing ] */
         	sel[len-1] = '\0';
-        	s = snprintf(buf, 128, "%s/%s", dir_path, sel + 1);
-
+			if ((strlen(dir_path) + len) < 2049) 
+			{
+			strcat(dir_path, "/");
+			strcat(dir_path, sel+1);
+			}
+			else
+			{
+			free((void*)sel);
+			return NULL;
+			}
+			
         	/* We don't need this anymore */
         	free((void*)sel);
-        	/* Too deep recursion! */
-        	if (s >= sizeof(buf))
-        		return NULL;
-        	return menu_select_file(buf, selected_file, draw_scr);
+        	
+        	return menu_select_file(dir_path, selected_file, draw_scr);
         }
 		
 		
@@ -1345,7 +1361,7 @@ static const char *menu_select_file_internal(const char *dir_path,
     else return out;
 }
 
-const char *menu_select_file(const char *dir_path,const char *selected_file, int draw_scr)
+const char *menu_select_file(char *dir_path,const char *selected_file, int draw_scr)
 {
 	if (dir_path == NULL)
 		dir_path = "";

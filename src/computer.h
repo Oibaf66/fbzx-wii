@@ -236,6 +236,7 @@ struct computer {
 	unsigned char joypad_as_joystick[2];
 	unsigned char rumble[2];
 	unsigned char vk_auto;
+	unsigned char vk_rumble;
 	unsigned char vk_is_active;
 	unsigned char port; //SD, USB, SMB or FTP
 	unsigned char smb_enable;

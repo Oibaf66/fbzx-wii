@@ -164,9 +164,9 @@ struct virtkey *get_key_internal()
 			i = y/key_h*KEY_COLS + x/key_w;
 			
 			#ifdef GEKKO
-			WPAD_Rumble(0, 1);
+			if (ordenador.vk_rumble) WPAD_Rumble(0, 1);
 			SDL_Delay(90);
-			WPAD_Rumble(0, 0);
+			if (ordenador.vk_rumble) WPAD_Rumble(0, 0);
 			#endif
 			
 			virtkey_t *key = &keys[i];
@@ -214,7 +214,7 @@ void virtkey_ir_run(void)
 	static char countdown_rumble=0;
 	
 	#ifdef GEKKO
-	if (countdown_rumble > 0) {countdown_rumble--; if (countdown_rumble==0) WPAD_Rumble(0, 0);}
+	if (countdown_rumble > 0) {countdown_rumble--; if ((countdown_rumble==0)&&(ordenador.vk_rumble)) WPAD_Rumble(0, 0);}
 	#endif
 		
 	joy = ordenador.joystick_sdl[0];
@@ -239,7 +239,7 @@ void virtkey_ir_run(void)
 		if ((x>0)&&(x< KEY_COLS*key_w)&&(y>0)&&(y< KEY_ROWS*key_h)) 
 		{
 			#ifdef GEKKO
-			WPAD_Rumble(0, 1);
+			if (ordenador.vk_rumble) WPAD_Rumble(0, 1);
 			#endif
 			countdown_rumble=5;
 			

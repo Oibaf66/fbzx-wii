@@ -107,6 +107,7 @@ void computer_init () { //Called only on start-up
 	ordenador.joystick[0] = 1; //Kemposton
 	ordenador.joystick[1] = 0; // Cursor
 	ordenador.vk_auto = 0; //Vk called by +
+	ordenador.vk_rumble = 1; //enabled
 	ordenador.rumble[0] = 0;
 	ordenador.rumble[1] = 0;
 	ordenador.turbo = 0;
