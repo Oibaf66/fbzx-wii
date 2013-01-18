@@ -1311,8 +1311,11 @@ static const char *menu_select_file_internal(char *dir_path,
 	{
 		free((void*)sel);
 		updir=strrchr(dir_path,'/');
-		if ((updir!=NULL)&&(updir!=dir_path))  // or "/" and not root dir
-		*updir=0; //trunk dir_path at last /
+		if (updir!=NULL)  // found "/"
+		{
+			*updir=0; //trunk dir_path at last /
+			if (strrchr(dir_path,'/')==NULL) {*updir='/'; *(updir+1)=0;} //check if it was root
+		}
 		
 		return menu_select_file(dir_path, selected_file, draw_scr);
 	}		

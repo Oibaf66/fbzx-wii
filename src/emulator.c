@@ -1143,7 +1143,7 @@ int main(int argc,char *argv[]) {
 	if (fatInitDefault())
 		printf("FAT subsytem initialized\n");
 	else
-		printf("Couldn't initialize fat subsytem\n");
+		printf("Couldn't initialize FAT subsytem\n");
 		
 	DIR *dp;
     
@@ -1379,21 +1379,40 @@ int main(int argc,char *argv[]) {
 	else {printf("Can't make tmp directory\n"); tmpismade=0;}
 	
 	#ifdef GEKKO
-	if ((ordenador.port==1)&&sdismount) {
-	strcpy(path_snaps,"sd:/");
-	strcpy(path_taps,"sd:/");
+	switch (ordenador.port)
+	{
+	case 1: //SD
+	if (sdismount) 
+	{
+		strcpy(path_snaps,"sd:/");
+		strcpy(path_taps,"sd:/");
 	}
-	if ((ordenador.port==2)&&usbismount) {
-	strcpy(path_snaps,"usb:/");
-	strcpy(path_taps,"usb:/");
+	else ordenador.port =0;
+	break;
+	case 2: //USB
+	if (usbismount) 
+	{
+		strcpy(path_snaps,"usb:/");
+		strcpy(path_taps,"usb:/");
 	}
-	if ((ordenador.port==3)&&smbismount) {
-	strcpy(path_snaps,"smb:/");
-	strcpy(path_taps,"smb:/");
+	else ordenador.port =0;
+	break;
+	case 3: //SMB
+	if (smbismount) 
+	{
+		strcpy(path_snaps,"smb:/");
+		strcpy(path_taps,"smb:/");
 	}
-	if ((ordenador.port==4)&&ftpismount) {
-	strcpy(path_snaps,"ftp:");
-	strcpy(path_taps,"ftp:");
+	else ordenador.port =0;
+	break;
+	case 4: //FTP
+	if (ftpismount) 
+	{
+		strcpy(path_snaps,"ftp:");
+		strcpy(path_taps,"ftp:");
+	}
+	else ordenador.port =0;
+	break;
 	}
 	#endif
 	
