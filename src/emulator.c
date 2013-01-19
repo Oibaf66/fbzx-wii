@@ -74,8 +74,12 @@ char path_mdrs[2049];
 char path_scr1[2049];
 char path_scr2[2049];
 char path_confs[2049];
-char path_poke[2049];
 char path_tmp[2049];
+char load_path_snaps[2049];
+char load_path_taps[2049];
+char load_path_scr1[2049];
+char load_path_poke[2049];
+
 unsigned int colors[80];
 unsigned int jump_frames,curr_frames;
 
@@ -1143,7 +1147,10 @@ int main(int argc,char *argv[]) {
 	if (fatInitDefault())
 		printf("FAT subsytem initialized\n");
 	else
+		{
 		printf("Couldn't initialize FAT subsytem\n");
+		exit(0);
+		}
 		
 	DIR *dp;
     
@@ -1343,7 +1350,7 @@ int main(int argc,char *argv[]) {
 	strcpy(path_scr1,path_snaps);
 	strcpy(path_scr2,path_snaps);
 	strcpy(path_confs,path_snaps);
-	strcpy(path_poke,path_snaps);
+	strcpy(load_path_poke,path_snaps);
 	strcpy(path_tmp,path_snaps);
 	strcat(path_snaps,"snapshots");
 	strcat(path_taps,"tapes");
@@ -1351,9 +1358,12 @@ int main(int argc,char *argv[]) {
 	strcat(path_scr1,"scr"); //left scr for retrocompatibility
 	strcat(path_scr2,"scr2");
 	strcat(path_confs,"configurations");
-	strcat(path_poke,"poke");
+	strcat(load_path_poke,"poke");
 	strcat(path_tmp,"tmp");
-	
+	strcpy(load_path_snaps,path_snaps);
+	strcpy(load_path_taps,path_taps);
+	strcpy(load_path_scr1,path_scr1);
+
 	//Remove and make tmp dir
 	
 	if (!chdir(path_tmp)) remove_dir(path_tmp); //remove the tmp directory if it exists
@@ -1384,32 +1394,40 @@ int main(int argc,char *argv[]) {
 	case 1: //SD
 	if (sdismount) 
 	{
-		strcpy(path_snaps,"sd:/");
-		strcpy(path_taps,"sd:/");
+		strcpy(load_path_snaps,"sd:/");
+		strcpy(load_path_taps,"sd:/");
+		strcpy(load_path_scr1,"sd:/");
+		strcpy(load_path_poke,"sd:/");
 	}
 	else ordenador.port =0;
 	break;
 	case 2: //USB
 	if (usbismount) 
-	{
-		strcpy(path_snaps,"usb:/");
-		strcpy(path_taps,"usb:/");
+	{	
+		strcpy(load_path_snaps,"usb:/");
+		strcpy(load_path_taps,"usb:/");
+		strcpy(load_path_scr1,"usb:/");
+		strcpy(load_path_poke,"usb:/");
 	}
 	else ordenador.port =0;
 	break;
 	case 3: //SMB
 	if (smbismount) 
 	{
-		strcpy(path_snaps,"smb:/");
-		strcpy(path_taps,"smb:/");
+		strcpy(load_path_snaps,"smb:/");
+		strcpy(load_path_taps,"smb:/");
+		strcpy(load_path_scr1,"smb:/");
+		strcpy(load_path_poke,"smb:/");
 	}
 	else ordenador.port =0;
 	break;
 	case 4: //FTP
 	if (ftpismount) 
 	{
-		strcpy(path_snaps,"ftp:");
-		strcpy(path_taps,"ftp:");
+		strcpy(load_path_snaps,"ftp:/");
+		strcpy(load_path_taps,"ftp:/");
+		strcpy(load_path_scr1,"ftp:/");
+		strcpy(load_path_poke,"ftp:/");
 	}
 	else ordenador.port =0;
 	break;

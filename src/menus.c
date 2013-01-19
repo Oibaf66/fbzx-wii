@@ -689,7 +689,7 @@ void select_tapfile() {
 
 	print_string(videomem,"Choose the TAPE file to load",-1,32,13,0,ancho);
 
-	filename=select_file(path_taps,FILETYPE_TAP_TZX);
+	filename=select_file(load_path_taps,FILETYPE_TAP_TZX);
 
 	if(filename==NULL) { // Aborted
 		clean_screen();
@@ -1002,7 +1002,7 @@ void create_scrfile() {
 	print_string(videomem,"(up to 30 characters)",-1,52,14,0,ancho);
 
 	print_string(videomem,"SCR file will be saved in:",-1,132,12,0,ancho);
-	print_string(videomem,path_snaps,0,152,12,0,ancho);
+	print_string(videomem,path_scr1,0,152,12,0,ancho);
 
 	if (strlen(ordenador.current_tap))
 		{
@@ -1012,7 +1012,7 @@ void create_scrfile() {
 	else
 	 name=NULL;
 	
-	retorno=ask_filename(nombre2,84,"scr",path_snaps, name);
+	retorno=ask_filename(nombre2,84,"scr",path_scr1, name);
 
 	clean_screen();
 
@@ -1547,7 +1547,7 @@ void load_z80file() {
 
 	print_string(videomem,"Choose the Z80 snapshot file to load",-1,32,13,0,ancho);
 
-	filename=select_file(path_snaps,FILETYPE_Z80);
+	filename=select_file(load_path_snaps,FILETYPE_Z80);
 
 	if(filename==NULL) { // Aborted
 		clean_screen();
@@ -1592,7 +1592,7 @@ void load_scrfile() {
 
 	print_string(videomem,"Choose the SCR snapshot file to load",-1,32,13,0,ancho);
 
-	filename=select_file(path_snaps,FILETYPE_SCR);
+	filename=select_file(load_path_scr1,FILETYPE_SCR);
 
 	if(filename==NULL) { // Aborted
 		clean_screen();

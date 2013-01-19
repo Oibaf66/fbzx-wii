@@ -229,7 +229,7 @@ static void insert_tape()
 	ordenador.tape_current_bit=0;
 	ordenador.tape_current_mode=TAP_TRASH;
 	
-	const char *filename = menu_select_file(path_taps, ordenador.current_tap, 1);
+	const char *filename = menu_select_file(load_path_taps, ordenador.current_tap, 1);
 	
 	if (filename==NULL) // Aborted
 		return; 
@@ -287,7 +287,7 @@ static void insert_tape()
 
 static void delete_tape()
 {
-	const char *filename = menu_select_file(path_taps, NULL, 1);
+	const char *filename = menu_select_file(load_path_taps, NULL, 1);
 	
 	if (filename==NULL) // Aborted
 		return; 
@@ -310,15 +310,6 @@ void create_tapfile_sdl() {
 
 	clean_screen();
 	
-	if (ordenador.port==3)  //If FTP is selected, saves file on SD card
-		{
-			int length;
-			strcpy(path_taps,getenv("HOME"));
-			length=strlen(path_taps);
-			if ((length>0)&&(path_taps[length-1]!='/')) strcat(path_taps,"/");
-			strcat(path_taps,"tapes");
-		}
-
 	print_string(videomem,"Choose a name for the TAP file",-1,32,14,0,ancho);
 	print_string(videomem,"(up to 30 characters)",-1,52,14,0,ancho);
 
@@ -328,7 +319,6 @@ void create_tapfile_sdl() {
 
 	retorno=ask_filename_sdl(nombre2,82,"tap",path_taps,NULL);
 	
-	if (ordenador.port==3) strcpy(path_taps,"ftp:");
 
 	if(retorno==2) // abort
 		return;
@@ -944,7 +934,7 @@ static int load_scr()
 	retorno2=0; //stay in the menu as default
 
 
-	const char *filename = menu_select_file(path_scr1, NULL, 0); // Load from SCR1
+	const char *filename = menu_select_file(load_path_scr1, NULL, 0); // Load from SCR1
 	
 	if (filename==NULL) // Aborted
 		return 0; 
@@ -1075,38 +1065,34 @@ static void set_port(int which)
 	switch (which)
 	{
 	case 0: //PORT_DEFAULT
-		strcpy(path_snaps,getenv("HOME"));
-		length=strlen(path_snaps);
-		if ((length>0)&&(path_snaps[length-1]!='/')) strcat(path_snaps,"/");
-		strcpy(path_taps,path_snaps);
-		strcpy(path_poke,path_snaps);
-		strcpy(path_scr1,path_snaps);
-		strcpy(path_scr2,path_snaps);
-		strcat(path_snaps,"snapshots");
-		strcat(path_taps,"tapes");
-		strcat(path_poke,"poke");
-		strcat(path_scr1,"scr");
-		strcat(path_scr2,"scr2");
+		strcpy(load_path_snaps,getenv("HOME"));
+		length=strlen(load_path_snaps);
+		if ((length>0)&&(load_path_snaps[length-1]!='/')) strcat(load_path_snaps,"/");
+		strcpy(load_path_taps,load_path_snaps);
+		strcpy(load_path_scr1,load_path_snaps);
+		strcpy(load_path_poke,load_path_snaps);
+		strcat(load_path_snaps,"snapshots");
+		strcat(load_path_taps,"tapes");
+		strcat(load_path_scr1,"scr");
+		strcat(load_path_poke,"poke");
 		ordenador.port = which;
 		break;
 	case 1: //PORT_SD
 		if (sdismount) {
-			strcpy(path_snaps,"sd:/");
-			strcpy(path_taps,"sd:/");
-			strcpy(path_poke,"sd:/");
-			strcpy(path_scr1,"sd:/");
-			strcpy(path_scr2,"sd:/");
+			strcpy(load_path_snaps,"sd:/");
+			strcpy(load_path_taps,"sd:/");
+			strcpy(load_path_scr1,"sd:/");
+			strcpy(load_path_poke,"sd:/");
 			ordenador.port = which;}
 		else
 			msgInfo("SD is not mounted",3000,NULL);
 		break;
 	case 2: //PORT_USB
 		if (usbismount) {
-			strcpy(path_snaps,"usb:/");
-			strcpy(path_taps,"usb:/");
-			strcpy(path_poke,"usb:/");
-			strcpy(path_scr1,"usb:/");
-			strcpy(path_scr2,"usb:/");
+			strcpy(load_path_snaps,"usb:/");
+			strcpy(load_path_taps,"usb:/");
+			strcpy(load_path_scr1,"usb:/");
+			strcpy(load_path_poke,"usb:/");
 			ordenador.port = which;}
 		else
 			msgInfo("USB is not mounted",3000,NULL);
@@ -1120,11 +1106,10 @@ static void set_port(int which)
 			if (smbismount) msgInfo("SMB is now mounted",3000,NULL);
 		}
 		if (smbismount) {
-			strcpy(path_snaps,"smb:/");
-			strcpy(path_taps,"smb:/");
-			strcpy(path_poke,"smb:/");
-			strcpy(path_scr1,"smb:/");
-			strcpy(path_scr2,"smb:/");
+			strcpy(load_path_snaps,"smb:/");
+			strcpy(load_path_taps,"smb:/");
+			strcpy(load_path_scr1,"smb:/");
+			strcpy(load_path_poke,"smb:/");
 			ordenador.port = which;}
 		else
 			msgInfo("SMB is not mounted",3000,NULL);
@@ -1139,11 +1124,10 @@ static void set_port(int which)
 		}
 		
 		if (ftpismount) {
-			strcpy(path_snaps,"ftp:");
-			strcpy(path_taps,"ftp:");
-			strcpy(path_poke,"ftp:");
-			strcpy(path_scr1,"ftp:");
-			strcpy(path_scr2,"ftp:");
+			strcpy(load_path_snaps,"ftp:/");
+			strcpy(load_path_taps,"ftp:/");
+			strcpy(load_path_scr1,"ftp:/");
+			strcpy(load_path_poke,"ftp:/");
 			ordenador.port = which;}
 		else
 			msgInfo("FTP is not mounted",3000,NULL);
@@ -1386,7 +1370,7 @@ int parse_poke (const char *filename)
 
 static int load_poke_file()
 {
-	char *dir = path_poke;
+	char *dir = load_path_poke;
 	int ritorno, retorno2;
 	ritorno=0;
 	retorno2=0; //Stay in menu as default
@@ -1522,6 +1506,7 @@ void virtual_keyboard(void)
 static int save_load_snapshot(int which)
 {
 	char *dir = path_snaps;
+	char *dir_load = load_path_snaps;
 	const char *tape = ordenador.last_selected_file;
 	char *ptr;
 	char db[256];
@@ -1545,7 +1530,7 @@ static int save_load_snapshot(int which)
 	case 2:
 	case 0: // Load or delete file
 	{
-		const char *filename = menu_select_file(dir, NULL,1);
+		const char *filename = menu_select_file(dir_load, NULL,1);
 
 		if (!filename)
 			return 0;
@@ -1578,17 +1563,8 @@ static int save_load_snapshot(int which)
 		free((void*)filename);
 	} break;
 	case 1: // Save snapshot file
-		if (ordenador.port==3)  //If file is taken from FTP, saves file on SD card
-		{
-			int length;
-			strcpy(path_snaps,getenv("HOME"));
-			length=strlen(path_snaps);
-			if ((length>0)&&(path_snaps[length-1]!='/')) strcat(path_snaps,"/");
-			strcat(path_snaps,"snapshots");
-			dir=path_snaps;
-		}
 		snprintf(db, 255, "%s/%s.z80", dir, fb);
-		if (ordenador.port==3) strcpy(path_snaps,"ftp:"); 
+		
 		retorno=save_z80(db,0);
 		switch(retorno) 
 			{
