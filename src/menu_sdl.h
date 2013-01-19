@@ -44,7 +44,7 @@ int FULL_DISPLAY_Y; //480
 int RATIO;
 
 
-void menu_print_font(SDL_Surface *screen, int r, int g, int b, int x, int y, const char *msg, int font_size);
+void menu_print_font(SDL_Surface *screen, int r, int g, int b, int x, int y, const char *msg, int font_size, int max_string);
 
 void print_font(SDL_Surface *screen, int r, int g, int b, int x, int y, const char *msg, int font_size);
 
