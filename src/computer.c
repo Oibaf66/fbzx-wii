@@ -935,47 +935,45 @@ inline void paint_pixels (unsigned char octet,unsigned char ink, unsigned char p
 	
 	mask = 0x80;
 	 
-	for (bucle = 0; bucle < 8; bucle++) {
-		
+	for (bucle = 0; bucle < 8; bucle++) 
+	{
 		if (draw)
 		{
-		valor = (octet & mask) ? (int) ink : (int) paper;
-		p=(colors+valor);
+			valor = (octet & mask) ? (int) ink : (int) paper;
+			p=(colors+valor);
 		
-		paint_one_pixel((unsigned char *)p,ordenador.pixel);
+			paint_one_pixel((unsigned char *)p,ordenador.pixel);
 		
-		switch (ordenador.npixels)
-		{
-		case 2:
-		ordenador.pixel+=ordenador.next_pixel;
-		paint_one_pixel((unsigned char *)p,ordenador.pixel);
-		break;
-		case 4:
-		paint_one_pixel((unsigned char *)p,ordenador.pixel+ordenador.next_scanline);
-		ordenador.pixel+=ordenador.next_pixel;
-		paint_one_pixel((unsigned char *)p,ordenador.pixel);
-		paint_one_pixel((unsigned char *)p,ordenador.pixel+ordenador.next_scanline);
-		break;
-		default:
-		break;
-		}
+			switch (ordenador.npixels)
+			{
+			case 2:
+			ordenador.pixel+=ordenador.next_pixel;
+			paint_one_pixel((unsigned char *)p,ordenador.pixel);
+			break;
+			case 4:
+			paint_one_pixel((unsigned char *)p,ordenador.pixel+ordenador.next_scanline);
+			ordenador.pixel+=ordenador.next_pixel;
+			paint_one_pixel((unsigned char *)p,ordenador.pixel);
+			paint_one_pixel((unsigned char *)p,ordenador.pixel+ordenador.next_scanline);
+			break;
+			default:
+			break;
+			}
 		}
 		else
 		{
-		
-		switch (ordenador.npixels)
-		{
-		case 2:
-		ordenador.pixel+=ordenador.next_pixel;
-		break;
-		case 4:
-		ordenador.pixel+=ordenador.next_pixel;
-		break;
-		default:
-		break;
+			switch (ordenador.npixels)
+			{
+			case 2:
+			ordenador.pixel+=ordenador.next_pixel;
+			break;
+			case 4:
+			ordenador.pixel+=ordenador.next_pixel;
+			break;
+			default:
+			break;
+			}
 		}
-		}
-		
 		ordenador.pixel+=ordenador.next_pixel;
 		mask = ((mask >> 1) & 0x7F);
 	}
@@ -989,47 +987,46 @@ inline void paint_pixels_precision (unsigned char octet,unsigned char ink, unsig
 	
 	if (ordenador.pixels_octect==0) mask = 0x80;
 	 
-	for (bucle = 0; bucle < 2; bucle++) {
+	for (bucle = 0; bucle < 2; bucle++)
+	{
 		if (draw)
 		{
-		valor = (octet & mask) ? (int) ink : (int) paper;
-		p=(colors+valor);
+			valor = (octet & mask) ? (int) ink : (int) paper;
+			p=(colors+valor);
 		
-		paint_one_pixel((unsigned char *)p,ordenador.pixel);
+			paint_one_pixel((unsigned char *)p,ordenador.pixel);
 		
-		switch (ordenador.npixels)
-		{
-		case 2:
-		ordenador.pixel+=ordenador.next_pixel;
-		paint_one_pixel((unsigned char *)p,ordenador.pixel);
-		break;
-		case 4:
-		paint_one_pixel((unsigned char *)p,ordenador.pixel+ordenador.next_scanline);
-		ordenador.pixel+=ordenador.next_pixel;
-		paint_one_pixel((unsigned char *)p,ordenador.pixel);
-		paint_one_pixel((unsigned char *)p,ordenador.pixel+ordenador.next_scanline);
-		break;
-		default:
-		break;
-		}
+			switch (ordenador.npixels)
+			{
+			case 2:
+			ordenador.pixel+=ordenador.next_pixel;
+			paint_one_pixel((unsigned char *)p,ordenador.pixel);
+			break;
+			case 4:
+			paint_one_pixel((unsigned char *)p,ordenador.pixel+ordenador.next_scanline);
+			ordenador.pixel+=ordenador.next_pixel;
+			paint_one_pixel((unsigned char *)p,ordenador.pixel);
+			paint_one_pixel((unsigned char *)p,ordenador.pixel+ordenador.next_scanline);
+			break;
+			default:
+			break;
+			}
 		}
 		else
 		{
-		switch (ordenador.npixels)
-		{
-		case 2:
-		ordenador.pixel+=ordenador.next_pixel;
-		break;
-		case 4:
-		ordenador.pixel+=ordenador.next_pixel;
-		break;
-		default:
-		break;
+			switch (ordenador.npixels)
+			{
+			case 2:
+			ordenador.pixel+=ordenador.next_pixel;
+			break;
+			case 4:
+			ordenador.pixel+=ordenador.next_pixel;
+			break;
+			default:
+			break;
+			}
 		}
-		}
-		
 		ordenador.pixel+=ordenador.next_pixel;
-		
 		mask = ((mask >> 1) & 0x7F);
 	}
 }

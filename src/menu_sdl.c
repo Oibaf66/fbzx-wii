@@ -425,19 +425,17 @@ void menu_print_font(SDL_Surface *screen, int r, int g, int b,
 	SDL_Rect dst = {x, y,  0, 0};
 	SDL_Color color = {r, g, b};
 	char buf[255];
-	unsigned int i;
+	unsigned int i, lenght;
 
 	memset(buf, 0, sizeof(buf));
 	strncpy(buf, msg, 254);
 	if (buf[0] != '|' && buf[0] != '^' && buf[0] != '.'
 		&& buf[0] != '-' && buf[0] != ' ' && !strstr(buf, "  \""))
 	{
-		if (strlen(buf)>max_string)
+		lenght = strlen(buf); 
+		if (lenght>max_string)
 		{
-			//buf[_MAX_STRING-3] = '.';
-			//buf[_MAX_STRING-2] = '.';
-			//buf[_MAX_STRING-1] = '.';
-			buf[max_string] = '\0';
+			strcpy (buf + max_string-4, buf + lenght-4); 
 		}
 	}
 	/* Fixup multi-menu option look */
@@ -781,7 +779,7 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_siz
 	ptr = strrchr (name, '.');	
 	if (ptr) *ptr = 0;		
 	
-	//Always load from SD card
+	//Always load from Default device
 	strcpy(filename,getenv("HOME"));
 	length=strlen(filename);
 	if ((length>0)&&(filename[length-1]!='/'))
@@ -1094,9 +1092,9 @@ static int menu_select_internal(SDL_Surface *screen,
 		else if (keys & KEY_DOWN)
 			select_next(p_menu, 0, 1, 1);
 		else if (keys & KEY_PAGEUP)
-			select_next(p_menu, 0, -18, 0);
+			select_next(p_menu, 0, -19, 0);
 		else if (keys & KEY_PAGEDOWN)
-			select_next(p_menu, 0, 18, 0);
+			select_next(p_menu, 0, 19, 0);
 		else if (keys & KEY_LEFT)
 			select_next(p_menu, -1, 0 ,1);
 		else if (keys & KEY_RIGHT)
