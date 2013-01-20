@@ -2,15 +2,15 @@
   <app version="1">
     <name>FBZX Wii</name>
     <coder>Oibaf</coder>
-    <version>8.0</version>
-    <release_date>20130106</release_date>
+    <version>9.0</version>
+    <release_date>20130120</release_date>
     <short_description>ZX Spectrum Emulator</short_description>
     <long_description>A ZX Spectrum emulator for FrameBuffer written by Sergio Costas, see http://www.rastersoft.com/fbzx.html.
 The port to Wii was done by Fabio Olimpieri.
 
 USAGE
 ------
-Put .z80 and .sna files in /fbzx-wii/snapshots or .tap and .tzx files in /fbzx-wii/tapes on your SD card.
+Put .z80 and .sna files in /fbzx-wii/snapshots or .tap and .tzx files in /fbzx-wii/tapes on your SD card or usb device.
 
 Press the "home" button to access the in-game menu. Press 1 or A to select an item and 2 or B to come back to the previous menu.
 

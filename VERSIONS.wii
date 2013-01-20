@@ -1,3 +1,13 @@
+version 9:
+	* Virtual keyboard does not stop the emulation
+	* Support for installation on usb device
+	* Case insensitive file ordering
+	* The path in file browsing is remembered
+	* Changed layout in file selection menu
+	* Support for Wiiflow
+	* Option to disable Virtual keyboard rumble
+
+		-- Fabio Olimpieri <fabio.olimpieri@tin.it> Jan 20 2013
 
 version 8:
 	* Screen snapshots visible on screen in file select menus	
