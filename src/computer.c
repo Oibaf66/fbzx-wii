@@ -178,6 +178,7 @@ void computer_init () { //Called only on start-up
 	ordenador.npixels=4;
 	ordenador.progressive=0;
 	ordenador.audio_mode=2; //ACB
+	ordenador.low_filter=480;
 }
 
 void computer_set_palete() {
@@ -1122,8 +1123,6 @@ inline void read_keyboard () {
 	joy_axis_y[joy_n] = SDL_JoystickGetAxis(ordenador.joystick_sdl[joy_n], 1);
 	
 	
-
-	
 	if (joy_axis_x[joy_n] > 16384) ordenador.joy_axis_x_state[joy_n] = JOY_RIGHT; 
 	else if (joy_axis_x[joy_n] < -16384) ordenador.joy_axis_x_state[joy_n] = JOY_LEFT;
 		else ordenador.joy_axis_x_state[joy_n] = JOY_CENTER_X;
@@ -1155,10 +1154,10 @@ inline void read_keyboard () {
 		status_hat[joy_n] = SDL_JoystickGetHat(ordenador.joystick_sdl[joy_n], 0);
 		if(!ordenador.joypad_as_joystick[joy_n])
 		{
-			joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][18])] = (status_hat[joy_n] & SDL_HAT_UP);
-			joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][19])] = (status_hat[joy_n] & SDL_HAT_DOWN);
-			joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][20])] = (status_hat[joy_n] & SDL_HAT_LEFT);
-			joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][21])] = (status_hat[joy_n] & SDL_HAT_RIGHT);
+			joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][19])] = (status_hat[joy_n] & SDL_HAT_UP);
+			joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][20])] = (status_hat[joy_n] & SDL_HAT_DOWN);
+			joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][21])] = (status_hat[joy_n] & SDL_HAT_LEFT);
+			joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][22])] = (status_hat[joy_n] & SDL_HAT_RIGHT);
 		}
 	}
 	}
@@ -1660,7 +1659,7 @@ void ResetComputer () {
 				ordenador.tape_current_mode = TAP_TRASH;
 				rewind_tape (ordenador.tap_file,1);				
 			}
-	ordenador.precision=ordenador.precision_old;
+	ordenador.precision=ordenador.precision_old; //in case the machine is reset during loading
 }
 
 // check if there's contention and waits the right number of tstates
@@ -1977,6 +1976,10 @@ void Z80free_Out (register word Port, register byte Value) {
 				ordenador.sound_bit = 1;
 			else
 				ordenador.sound_bit = 0;	// assign to SOUND_BIT the value
+		if (Value & 0x08)
+				ordenador.sound_bit_mic = 1;
+			else
+				ordenador.sound_bit_mic = 0;	// assign to SOUND_BIT_MIC the value
 		}
 	}
 

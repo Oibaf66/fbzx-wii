@@ -67,7 +67,7 @@ Z80FREE procesador;
 struct computer ordenador;
 SDL_Surface *screen;
 char salir,sound_aborted;
-unsigned char *sound[NUM_SNDBUF];
+unsigned int *sound[NUM_SNDBUF];
 char path_snaps[2049];
 char path_taps[2049];
 char path_mdrs[2049];
@@ -577,8 +577,8 @@ int bucle, bucle2,ret2;
 	
 	for(bucle2=0;bucle2<NUM_SNDBUF;bucle2++) {
 		//ASND Required alligned memory with padding
-		sound[bucle2]=(unsigned char *)memalign(32,ordenador.buffer_len*ordenador.increment+32);
-		for(bucle=0;bucle<ordenador.buffer_len*ordenador.increment+4;bucle++)
+		sound[bucle2]=(unsigned int *)memalign(32,ordenador.buffer_len*ordenador.increment+32);
+		for(bucle=0;bucle<ordenador.buffer_len+8;bucle++)
 			sound[bucle2][bucle]=0; 
 	}
 
@@ -1066,6 +1066,7 @@ int load_config(struct computer *object, char *filename) {
 	}
 	if (precision<2) {
 		object->precision=precision;
+		object->precision_old=precision;
 	}
 	if (bw<2) {
 		object->bw=bw;

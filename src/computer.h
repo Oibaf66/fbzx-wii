@@ -123,11 +123,13 @@ struct computer {
 	int increment; // quantity to add to jump to the next sample
 	unsigned char volume; // volume
 	unsigned char sample1[4]; // buffer with precalculated sample 1 (for buzzer) -currently not used
-	unsigned char sample1b[4]; // buffer with prec. sample 1 (for AY-3-8912)
+	unsigned char sample1b[4]; // buffer with prec. sample 1 (for AY-3-8912) -currently not used
 	//unsigned char sample0[4]; // buffer with precalculated sample 0
 	unsigned char sound_bit;
+	unsigned char sound_bit_mic;
 	unsigned int tstados_counter_sound;
-	unsigned char *current_buffer;
+	unsigned int low_filter;
+	unsigned int *current_buffer;
 	unsigned char num_buff;
 	unsigned int sound_cuantity; // counter for the buffer
 	unsigned char ay_registers[16]; // registers for the AY emulation
@@ -135,7 +137,7 @@ struct computer {
 	unsigned char ayval_a,ayval_b,ayval_c,ayval_n;
 	unsigned char ay_emul; // 0: no AY emulation; 1: AY emulation
 	unsigned char audio_mode; //mono, ABC, ACB, BAC
-	unsigned char vol_a,vol_b,vol_c;
+	unsigned int vol_a,vol_b,vol_c;
 	unsigned int tst_ay;
 	unsigned int ay_latch;
 	signed char ay_envel_value;
@@ -232,7 +234,7 @@ struct computer {
 	SDL_Joystick *joystick_sdl[2];
 	unsigned char joy_axis_x_state[2];
 	unsigned char joy_axis_y_state[2];
-	unsigned int joybuttonkey[2][22];
+	unsigned int joybuttonkey[2][23];
 	unsigned char joypad_as_joystick[2];
 	unsigned char rumble[2];
 	unsigned char vk_auto;

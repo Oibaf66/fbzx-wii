@@ -24,6 +24,8 @@
 #include "sound.h"
 #include <stdlib.h>
 
+unsigned int beeper = 0;
+
 /* emulates the AY-3-8912 during TSTADOS tstates */
 
 inline void play_ay (unsigned int tstados) {
@@ -45,7 +47,7 @@ inline void play_ay (unsigned int tstados) {
     0x92, 0xAF, 0xD9, 0xFF
   };
   
-	if (!ordenador.ay_emul)
+	if ((!ordenador.ay_emul)||(ordenador.turbo_state))
 		return;
 
 	ordenador.tst_ay += tstados;
@@ -312,8 +314,7 @@ inline void play_ay (unsigned int tstados) {
 
 inline void play_sound (unsigned int tstados) {
 
-	int value, lvalue, rvalue;
-	
+	int lvalue, rvalue;
 
 	ordenador.tstados_counter_sound += tstados;
 
@@ -321,51 +322,57 @@ inline void play_sound (unsigned int tstados) {
 
 		ordenador.tstados_counter_sound -= ordenador.tst_sample;
 		
-		if (ordenador.sound_bit) value=ordenador.volume*6; //Sound bit volume max 96
-		else value=0;
-					
-				//Each channel max 51
-					
+		/*
+		//Low pass filter
+		if (ordenador.sound_bit)
+		{
+			if (beeper<480) beeper = beeper + ordenador.low_filter; //Sound bit volume max 480*vol	
+		}			
+		else if (beeper>0) beeper = beeper - ordenador.low_filter;
+		*/
+		
+		if (ordenador.sound_bit)
+		{
+			if (ordenador.sound_bit_mic) beeper = 544; //480 + 64 - MIC is audible only if EAR is on
+			else beeper = 480; //Sound bit volume max 480*vol
+		}			
+		else beeper =0;
+
+		//Each channel max 256*vol
+		
 		if (ordenador.ay_emul)
 		{
 			switch (ordenador.audio_mode)
 			{
 				case 0: //Mono
-				lvalue = value + (ordenador.vol_a  + ordenador.vol_b +ordenador.vol_c)*ordenador.volume/80;	
-				rvalue = value + (ordenador.vol_a  + ordenador.vol_b +ordenador.vol_c)*ordenador.volume/80;
+				lvalue = (beeper + ordenador.vol_a  + ordenador.vol_b +ordenador.vol_c)*ordenador.volume;	
+				rvalue = (beeper + ordenador.vol_a  + ordenador.vol_b +ordenador.vol_c)*ordenador.volume;
 				break;
 				case 1: //ABC
-				lvalue = value + (ordenador.vol_a*2  + ordenador.vol_b)*ordenador.volume/80;	
-				rvalue = value + (ordenador.vol_b + ordenador.vol_c*2)*ordenador.volume/80;
+				lvalue = (beeper + ordenador.vol_a*2  + ordenador.vol_b)*ordenador.volume;	
+				rvalue = (beeper + ordenador.vol_b + ordenador.vol_c*2)*ordenador.volume;
 				break;
 				case 2: //ACB
-				lvalue = value + (ordenador.vol_a*2  + ordenador.vol_c)*ordenador.volume/80;	
-				rvalue = value + (ordenador.vol_c + ordenador.vol_b*2)*ordenador.volume/80;
+				lvalue = (beeper + ordenador.vol_a*2  + ordenador.vol_c)*ordenador.volume;	
+				rvalue = (beeper + ordenador.vol_c + ordenador.vol_b*2)*ordenador.volume;
 				break;
 				case 3: //BAC
-				lvalue = value + (ordenador.vol_b*2  + ordenador.vol_a)*ordenador.volume/80;	
-				rvalue = value + (ordenador.vol_a + ordenador.vol_c*2)*ordenador.volume/80;
+				lvalue = (beeper + ordenador.vol_b*2  + ordenador.vol_a)*ordenador.volume;	
+				rvalue = (beeper + ordenador.vol_a + ordenador.vol_c*2)*ordenador.volume;
 				break;
 				default: //No emulation
-				rvalue = value;
-				lvalue = value;
+				rvalue = beeper*ordenador.volume;
+				lvalue = beeper*ordenador.volume;
 				break;
 			}
 		}
 		else
 		{
-			rvalue = value;
-			lvalue = value;
+			rvalue = beeper*ordenador.volume;
+			lvalue = beeper*ordenador.volume;
 		}
-				
-		/*
-		if (rvalue > 255) rvalue = 255;
-		if (lvalue > 255) lvalue = 255;
-		*/
-				
-		*ordenador.current_buffer =	(unsigned char)(rvalue - (unsigned int)ordenador.sign);	
-		ordenador.current_buffer++;
-		*ordenador.current_buffer =	(unsigned char)(lvalue - (unsigned int)ordenador.sign);	
+		
+		*ordenador.current_buffer =	(lvalue<<16)|(rvalue);
 		ordenador.current_buffer++;
 		
 		ordenador.sound_cuantity++;

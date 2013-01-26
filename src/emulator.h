@@ -31,7 +31,7 @@ extern char debug_var;
 extern SDL_Surface *screen;
 extern Z80FREE procesador;
 extern struct computer ordenador;
-extern unsigned char *sound[NUM_SNDBUF];
+extern unsigned int *sound[NUM_SNDBUF];
 extern char path_snaps[2049];
 extern char path_taps[2049];
 extern char path_mdrs[2049];
