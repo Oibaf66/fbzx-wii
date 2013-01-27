@@ -408,6 +408,14 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 					}
 					break;
 				
+				case 0x28: // select block
+					retval=fread(&value2,1,1,fichero);
+					retval=fread(&value3,1,1,fichero); 
+					bucle2 = ((unsigned int) value2) + 256 * ((unsigned int) value3);
+					for(bucle=0;bucle<bucle2;bucle++)
+						retval=fread(&value3,1,1,fichero);
+					break;
+				
 				case 0x2A: // pause if 48K
 					if(ordenador.mode128k==0) {
 						ordenador.pause = 1;
@@ -448,8 +456,8 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 						retval=fread(&value3,1,1,fichero);
 					break;
 					
-				case 0x35: // custon info					
-					for(bucle=0;bucle<10;bucle++)
+				case 0x35: // custom info					
+					for(bucle=0;bucle<16;bucle++)
 						retval=fread(&value3,1,1,fichero);
 					retval=fread(&value,1,1,fichero);
 					retval=fread(&value2,1,1,fichero);
@@ -461,7 +469,7 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 					break;
 					
 				default: // not supported
-					sprintf(ordenador.osd_text,"Unsuported TZX. Contact FBZX autor. %X",value);
+					sprintf(ordenador.osd_text,"Unsupported TZX. Contact FBZX autor. %X",value);
 					ordenador.osd_time=200;
 					rewind_tape(fichero,1); // rewind and stop
 					ordenador.tape_current_mode = TAP_TRASH;

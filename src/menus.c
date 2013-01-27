@@ -1568,7 +1568,7 @@ void load_z80file() {
 		break;
 	case -2:
 	case -3:
-		print_string(videomem,"Error: unsuported snap file",-1,232,10,0,ancho);
+		print_string(videomem,"Error: unsupported snap file",-1,232,10,0,ancho);
 		print_string(videomem,"Press any key",-1,248,10,0,ancho);
 		wait_key();
 		break;

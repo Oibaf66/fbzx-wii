@@ -98,8 +98,8 @@ static const char *audio_messages[] = {
 		/*05*/		"  ",
 		/*06*/		"Audio mode",
 		/*07*/		"^|mono|ABC|ACB|BAC",
-		/*08		"  ",
-		/*09		"Beeper low pass filter",
+		/*08		"  ", */
+		/*09		"Beeper low pass filter",*/
 		/*10		"^|0|1|2|3|4|5|6|7|max",*/
 		NULL
 };
@@ -1593,7 +1593,7 @@ static int save_load_snapshot(int which)
 				break;
 				case -2:
 				case -3:
-				msgInfo("Error: unsuported snap file",3000,NULL);
+				msgInfo("Error: unsupported snap file",3000,NULL);
 				break;
 				}
 			}
