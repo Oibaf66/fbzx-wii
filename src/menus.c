@@ -632,7 +632,7 @@ void taps_menu() {
 			fin=0;
 		break;
 		case SDLK_1:
-			ordenador.pause=1;
+			//ordenador.pause=1;
 			select_tapfile();
 		break;
 		case SDLK_2:
@@ -642,7 +642,7 @@ void taps_menu() {
 				ordenador.tape_current_mode=TAP_TRASH;
 				rewind_tape(ordenador.tap_file,1);		
 			}
-			sprintf(ordenador.osd_text,"Tape rewinded");
+			sprintf(ordenador.osd_text,"Tape rewound");
 			ordenador.osd_time=50;			
 		break;
 		case SDLK_3:
@@ -681,12 +681,6 @@ void select_tapfile() {
 
 	clean_screen();
 
-	if(ordenador.tap_file!=NULL)
-		rewind_tape(ordenador.tap_file,1);
-
-	ordenador.tape_current_bit=0;
-	ordenador.tape_current_mode=TAP_TRASH;
-
 	print_string(videomem,"Choose the TAPE file to load",-1,32,13,0,ancho);
 
 	filename=select_file(load_path_taps,FILETYPE_TAP_TZX);
@@ -696,6 +690,9 @@ void select_tapfile() {
 		return;
 	}
 
+	ordenador.tape_current_bit=0;
+	ordenador.tape_current_mode=TAP_TRASH;
+
 	if(ordenador.tap_file!=NULL) {
 		fclose(ordenador.tap_file);
 	}
@@ -703,6 +700,7 @@ void select_tapfile() {
 	if (!strncmp(filename,"smb:",4)) ordenador.tap_file=fopen(filename,"r"); //tinysmb does not work with r+
 	else ordenador.tap_file=fopen(filename,"r+"); // read and write
 	ordenador.tape_write = 0; // by default, can't record
+	
 	if(ordenador.tap_file==NULL)
 		retorno=-1;
 	else

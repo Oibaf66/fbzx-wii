@@ -372,7 +372,7 @@ inline void play_sound (unsigned int tstados) {
 			lvalue = beeper*ordenador.volume;
 		}
 		
-		*ordenador.current_buffer =	(lvalue<<16)|(rvalue);
+		*ordenador.current_buffer =	(rvalue<<16)|(lvalue);
 		ordenador.current_buffer++;
 		
 		ordenador.sound_cuantity++;

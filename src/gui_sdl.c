@@ -227,13 +227,6 @@ static void insert_tape()
 {
 	unsigned char char_id[11];
 	int retorno, retval;
-
-	// Maybe should go after the first control??
-	if(ordenador.tap_file!=NULL)
-		rewind_tape(ordenador.tap_file,1);
-
-	ordenador.tape_current_bit=0;
-	ordenador.tape_current_mode=TAP_TRASH;
 	
 	const char *filename = menu_select_file(load_path_taps, ordenador.current_tap, 1);
 	
@@ -250,6 +243,8 @@ static void insert_tape()
 	if (!(ext_matches(filename, ".tap")|ext_matches(filename, ".TAP")|ext_matches(filename, ".tzx")|
 	ext_matches(filename, ".TZX"))) {free((void *)filename); return;}
 	
+	ordenador.tape_current_bit=0;
+	ordenador.tape_current_mode=TAP_TRASH;
 	
 	if(ordenador.tap_file!=NULL) {
 		fclose(ordenador.tap_file);
@@ -426,7 +421,7 @@ static int manage_tape(int which)
 				ordenador.tape_current_mode=TAP_TRASH;
 				rewind_tape(ordenador.tap_file,1);		
 			}
-			msgInfo("Tape rewinded",3000,NULL);
+			msgInfo("Tape rewound",3000,NULL);
 			retorno=-1;
 		break;
 	case 5: //Create
