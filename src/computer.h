@@ -174,6 +174,7 @@ struct computer {
 	unsigned int tape_pause_at_end;
 	FILE *tap_file;
 	unsigned char tape_fast_load; // 0 normal load; 1 fast load
+	unsigned char rewind_on_reset;
 	unsigned char current_tap[2049];
 	unsigned char last_selected_file[2049];
 	unsigned char last_selected_poke_file[2049];

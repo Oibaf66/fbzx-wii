@@ -118,6 +118,7 @@ void computer_init () { //Called only on start-up
 	ordenador.tape_readed = 0;
 	ordenador.pause = 1;	// tape stop
 	ordenador.tape_fast_load = 1;	// fast load by default
+	ordenador.rewind_on_reset = 1; //Rewound on reset by default
 	ordenador.tape_current_mode = TAP_TRASH;
 	ordenador.tap_file = NULL;
 
@@ -1654,11 +1655,14 @@ void ResetComputer () {
 	
 	microdrive_reset();
 	
-	ordenador.pause = 1;
+	if (ordenador.rewind_on_reset)
+	{
+			ordenador.pause = 1;
 			if (ordenador.tap_file != NULL) {
 				ordenador.tape_current_mode = TAP_TRASH;
 				rewind_tape (ordenador.tap_file,1);				
 			}
+	}		
 	ordenador.precision=ordenador.precision_old; //in case the machine is reset during loading
 }
 

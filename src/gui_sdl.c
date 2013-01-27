@@ -84,8 +84,10 @@ static const char *emulation_messages[] = {
 		/*05*/		"^|on|off",
 		/*06*/		"Turbo mode",
 		/*07*/		"^|off|auto|fast|ultrafast",
-		/*08*/		"Precision",
+		/*08*/		"Rewind tape on reset",
 		/*09*/		"^|on|off",	
+		/*10*/		"Precision",
+		/*11*/		"^|on|off",	
 		NULL
 };
 
@@ -497,11 +499,13 @@ static void set_machine_model(int which)
 	}
 }
 
-static void emulation_settings(void)
+static int emulation_settings(void)
 {
-	unsigned int submenus[5],submenus_old[5];
-	int opt, i;
+	unsigned int submenus[6],submenus_old[6];
+	int opt, i, retorno;
 	unsigned char old_mode, old_videosystem;
+	
+	retorno=-1; //exit to the previous menue
 	
 	memset(submenus, 0, sizeof(submenus));
 	
@@ -509,24 +513,26 @@ static void emulation_settings(void)
 	submenus[1] = jump_frames;
 	submenus[2] = !ordenador.tape_fast_load;
 	submenus[3] = ordenador.turbo;
-	submenus[4] = !ordenador.precision;
+	submenus[4] = !ordenador.rewind_on_reset;
+	submenus[5] = !ordenador.precision;
 
 	
-	for (i=0; i<5; i++) submenus_old[i] = submenus[i];
+	for (i=0; i<6; i++) submenus_old[i] = submenus[i];
 	old_mode=ordenador.mode128k;
 	old_videosystem = ordenador.videosystem;
 	
 	opt = menu_select_title("Emulation settings menu",
 			emulation_messages, submenus);
 	if (opt < 0)
-		return;
+		return retorno;
 	
 	if (submenus[0]!=submenus_old[0]) set_machine_model(submenus[0]);
-	if ((old_mode!=ordenador.mode128k)||(old_videosystem!=ordenador.videosystem)) ResetComputer(); 
+	if ((old_mode!=ordenador.mode128k)||(old_videosystem!=ordenador.videosystem)) {ResetComputer(); retorno=-2;} 
 	
 	jump_frames = submenus[1];
 	ordenador.tape_fast_load = !submenus[2];
 	ordenador.turbo = submenus[3];
+	ordenador.rewind_on_reset = !submenus[4];
 	
 	curr_frames=0;
 	if (submenus[3] != submenus_old[3])
@@ -560,9 +566,9 @@ static void emulation_settings(void)
 	}
 	}
 	
-	if (submenus[4] != submenus_old[4])
+	if (submenus[5] != submenus_old[5])
 	{
-	ordenador.precision = !submenus[4];
+	ordenador.precision = !submenus[5];
 	ordenador.precision_old=ordenador.precision;
 	if (ordenador.turbo_state!=4)  //Tape is not loading with turbo mode
 	 if (ordenador.precision)
@@ -577,6 +583,8 @@ static void emulation_settings(void)
 			
 		}
 	}
+	
+	return retorno;
 }
 
 unsigned int get_value_filter (unsigned int value)
@@ -1829,7 +1837,7 @@ void main_menu()
 			input_options(submenus[2]);
 			break;
 		case 7:
-			emulation_settings();
+			if (emulation_settings()==-2) retorno=-1;
 			break;
 		case 8:
 			screen_settings();
