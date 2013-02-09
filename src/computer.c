@@ -110,10 +110,10 @@ void computer_init () { //Called only on start-up
 	ordenador.vk_rumble = 1; //enabled
 	ordenador.rumble[0] = 0;
 	ordenador.rumble[1] = 0;
-	ordenador.turbo = 0;
+	ordenador.turbo = 1; //auto turbo 
 	ordenador.turbo_state = 0;
-	ordenador.precision = 0;
-	ordenador.precision_old = 0;
+	ordenador.precision = 1; //precision
+	ordenador.precision_old = 1;
 
 	ordenador.tape_readed = 0;
 	ordenador.pause = 1;	// tape stop
@@ -559,6 +559,8 @@ inline void show_screen (int tstados) {
 			ordenador.interr = 1;
 			if ((ordenador.turbo_state == 0) || (curr_frames%7 == 0)) ordenador.readkeyboard = 1;
 			curr_frames++;
+			if (ordenador.tape_start_countdwn==1) ordenador.pause=0; //Autoplay
+			if (ordenador.tape_start_countdwn>0) ordenador.tape_start_countdwn--;
 		}
 		return;
 	}
@@ -704,8 +706,10 @@ inline void show_screen_precision (int tstados) {
 			ordenador.interr = 1;
 			ordenador.readkeyboard = 1;
 			curr_frames++;
+			if (ordenador.tape_start_countdwn==1) ordenador.pause=0; //Autoplay
+			if (ordenador.tape_start_countdwn>0) ordenador.tape_start_countdwn--;
 		}
-		if (ordenador.tstados_counter > 31) ordenador.interr = 0;
+		//if (ordenador.tstados_counter > 31) ordenador.interr = 0;
 		return;
 	}
 	
@@ -1663,16 +1667,34 @@ void ResetComputer () {
 	
 	microdrive_reset();
 	
+	ordenador.pause = 1;
+	
 	if (ordenador.rewind_on_reset)
-	{
-			ordenador.pause = 1;
+	{		
 			if (ordenador.tap_file != NULL) {
 				ordenador.tape_current_mode = TAP_TRASH;
 				rewind_tape (ordenador.tap_file,1);				
 			}
 	}		
+	
+	switch(ordenador.turbo)
+	{
+	case 2:	//fast	
+		update_frequency(10000000);
+		break;
+	case 3:	//ultra fast
+		update_frequency(14000000);
+		break;	
+	}
+	
 	ordenador.precision=ordenador.precision_old; //in case the machine is reset during loading
 	ordenador.tape_start_countdwn=0;
+	curr_frames=0;
+	ordenador.tstados_counter=0;
+	ordenador.cicles_counter=0;
+	ordenador.currline=0;
+	ordenador.currpix=0;
+	ordenador.interr = 0;
 }
 
 // check if there's contention and waits the right number of tstates

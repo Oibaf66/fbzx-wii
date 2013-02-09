@@ -1579,7 +1579,7 @@ int main(int argc,char *argv[]) {
 		
 		if(ordenador.interr==1) {
 			Z80free_INT(&procesador,bus_empty());
-			if (ordenador.precision==0) ordenador.interr=0;
+			if ((ordenador.precision==0)||(jump_frames>0)) ordenador.interr=0;
 		}
 	}
 	

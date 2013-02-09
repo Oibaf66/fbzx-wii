@@ -576,7 +576,7 @@ static int emulation_settings(void)
 	{
 	ordenador.precision = !submenus[5];
 	ordenador.precision_old=ordenador.precision;
-	if (ordenador.turbo_state!=4)  //Tape is not loading with turbo mode
+	if (ordenador.turbo_state!=1)  //Tape is not loading with turbo mode
 	 if (ordenador.precision)
 		{ 
 		update_frequency(0);

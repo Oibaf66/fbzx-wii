@@ -54,14 +54,14 @@ inline void tape_read(FILE *fichero, int tstados) {
 	}
 	
 	//Auto ultra fast mode
-	if ((ordenador.turbo_state != 4)&&(ordenador.turbo==1))
+	if ((ordenador.turbo_state != 1)&&(ordenador.turbo==1))
 	{
 		if (ordenador.tape_file_type==TAP_TAP) update_frequency(13000000);
 		else update_frequency(11000000);
 		jump_frames=7;
 		ordenador.precision_old=ordenador.precision;
 		ordenador.precision =0;
-		ordenador.turbo_state = 4;
+		ordenador.turbo_state = 1;
 	}
 	
 	if(ordenador.tape_file_type == TAP_TAP)
@@ -885,8 +885,6 @@ void fastload_block_tzx (FILE * fichero) {
 	unsigned int longitud, len, bucle, number_bytes, byte_position;
 	unsigned char value[65536], empty, blockid, parity;	
 	int retval;
-	fpos_t *file_pos;
-	
 	
 	//ordenador.other_ret = 1;	// next instruction must be RET
 	procesador.PC=0x5e2;
@@ -1151,9 +1149,16 @@ void fastload_block_tzx (FILE * fichero) {
 	byte_position=ftell(fichero);
 	
 	retval=fread (&blockid, 1, 1, fichero); //Read next id block
+
 	
 	if (!feof(fichero)) 
 	{
+		if (blockid==0x10) 
+		{
+		retval=fread (value, 1, 5, fichero); //read till flag byte
+		if (retval==5)
+			if ((value[4]!=0x0)&&(value[4]!=0xFF)) blockid=0x11; //custom data 
+		}
 		if ((blockid==0x11)||(blockid==0x12)||(blockid==0x13)||(blockid==0x14)||(blockid==0x21)||(blockid==0x24)) ordenador.tape_start_countdwn=80; //autoplay countdown
 		fseek(fichero, byte_position, SEEK_SET);
 		
