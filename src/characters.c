@@ -62,7 +62,7 @@ void printchar(unsigned char *memo, unsigned char carac, int x, int y, unsigned 
 
 void print_string(unsigned char *memo, char *cadena, int x, int y, unsigned char color, unsigned char back, int width) {
 
-	int length, ncarac, bucle, xx;
+	int length, ncarac, bucle, xx,yy, nr;
 	int xxx, yyy;
 	int w,h;
 	unsigned char *str2;
@@ -79,12 +79,12 @@ void print_string(unsigned char *memo, char *cadena, int x, int y, unsigned char
 	}
 
 	for (ncarac=0,str2=cadena;*str2;str2++) {
-		if ((*str2)>=' ') {
+		if (((*str2)>=' ')||(*str2==13)) {
 			ncarac++;
 		}
 	}
 	length=w * ncarac;
-
+	
 	if (length > width) {
 		if (x>=0)
 			xx=x;
@@ -96,9 +96,14 @@ void print_string(unsigned char *memo, char *cadena, int x, int y, unsigned char
 		else
 			xx=x;
 	}
-
+	
+	nr=length/width;
+	yy=y-h*nr;
+	
+	if (yy<0) yy=0;
+	
 	xxx=xx;
-	yyy=y;
+	yyy=yy;
 	str2=cadena;
 	for (bucle=0;bucle<ncarac;bucle++) {
 		while ((*str2)<' ') {
@@ -112,7 +117,12 @@ void print_string(unsigned char *memo, char *cadena, int x, int y, unsigned char
 				str2+=2;
 				continue;
 			}
-			printf("Error de cadena %d %s\n",*str2,cadena);
+			if (*str2==13) {
+				*(str2)=' ';
+				str2++;
+				continue;
+			}
+			//printf("Error de cadena %d %s\n",*str2,cadena);
 			str2++;
 		}
 		if ((*str2)<=127) {

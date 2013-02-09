@@ -1530,9 +1530,12 @@ int main(int argc,char *argv[]) {
 		/* if PC is 0x0556, a call to LD_BYTES has been made, so if
 		FAST_LOAD is 1, we must load the block in memory and return */
 
-		if((!ordenador.mdr_paged)&&(PC==0x0556) && (ordenador.tape_fast_load==1)&&(ordenador.tape_file_type==TAP_TAP)) {
+		if((!ordenador.mdr_paged)&&(PC==0x056c) && (ordenador.tape_fast_load==1)) {
 			if(ordenador.tap_file!=NULL)
-				fastload_block(ordenador.tap_file);
+				{
+				if (ordenador.tape_file_type==TAP_TAP) fastload_block_tap(ordenador.tap_file);
+				else fastload_block_tzx(ordenador.tap_file);
+				}
 			else {
 				sprintf(ordenador.osd_text,"No TAP file selected");
 				ordenador.osd_time=50;

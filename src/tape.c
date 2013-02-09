@@ -24,6 +24,15 @@
 #include "menus.h"
 #include "tape.h"
 
+#ifdef DEBUG
+extern FILE *fdebug;
+#define printf(...) fprintf(fdebug,__VA_ARGS__)
+#else
+ #ifdef GEKKO
+ #define printf(...)
+ #endif
+#endif
+
 int elcontador=0;
 int eltstado=0;
 char elbit=0;
@@ -47,7 +56,8 @@ inline void tape_read(FILE *fichero, int tstados) {
 	//Auto ultra fast mode
 	if ((ordenador.turbo_state != 4)&&(ordenador.turbo==1))
 	{
-		update_frequency(11000000);
+		if (ordenador.tape_file_type==TAP_TAP) update_frequency(13000000);
+		else update_frequency(11000000);
 		jump_frames=7;
 		ordenador.precision_old=ordenador.precision;
 		ordenador.precision =0;
@@ -82,6 +92,7 @@ inline void tape_read_tap (FILE * fichero, int tstados) {
 			}
 			ordenador.tape_byte_counter = ((unsigned int) value) + 256 * ((unsigned int) value2);
 			retval=fread (&(ordenador.tape_byte), 1, 1, fichero);
+			printf("TAP: Flag_byte_norm: %X en %ld\n",ordenador.tape_byte,ftell(fichero));
 			ordenador.tape_bit = 0x80;
 			ordenador.tape_current_mode = TAP_GUIDE;
 			ordenador.tape_counter0 = 2168;
@@ -139,8 +150,8 @@ inline void tape_read_tap (FILE * fichero, int tstados) {
 				ordenador.tape_counter0 = 1710 - tstados;
 				ordenador.tape_counter1 = 1710;
 			} else {
-				ordenador.tape_counter0 = 851 - tstados;
-				ordenador.tape_counter1 = 852;
+				ordenador.tape_counter0 = 855 - tstados;
+				ordenador.tape_counter1 = 855;
 			}
 			ordenador.tape_bit = ((ordenador.tape_bit >> 1) & 0x7F);	// from bit0 to bit7
 			if (!ordenador.tape_bit) {
@@ -195,7 +206,7 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 		done = 0;
 		do {
 			retval=fread(&value,1,1,fichero); // read block ID
-			//printf("ID: %X en %d\n",value,ftell(fichero));
+			printf("TZX:ID_normal: %X en %ld\n",value,ftell(fichero));
 			if(feof(fichero))
 				done = 1;
 			else
@@ -204,7 +215,7 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 					done = 1;
 					bucle = 0;
 					ordenador.tape_current_bit = 0;
-					ordenador.tape_bit0_level = 852;
+					ordenador.tape_bit0_level = 855;
 					ordenador.tape_bit1_level = 1710;
 					ordenador.tape_bits_at_end = 8;
 					ordenador.tape_block_level = 2168;
@@ -431,9 +442,14 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 					
 				case 0x31: // show text
 					retval=fread(&value2,1,1,fichero);
+					if (value2 < 11) ordenador.osd_time=value2*50; else ordenador.osd_time=500; //max 10 sec	
 					retval=fread(&value2,1,1,fichero); // length
 					for(bucle=0;bucle<((unsigned int)value2);bucle++)
-						retval=fread(&value3,1,1,fichero);
+					{
+					retval=fread(&value3,1,1,fichero);
+					if (bucle<199) ordenador.osd_text[bucle] = value3;
+					}
+					if (bucle>199) ordenador.osd_text[199]=0; else ordenador.osd_text[bucle]=0;
 					break;
 					
 				case 0x32: // archive info
@@ -704,21 +720,40 @@ void save_file(FILE *fichero) {
 	return;
 }
 
-void fastload_block (FILE * fichero) {
+void fastload_block_tap (FILE * fichero) {
 
-	unsigned int longitud;
-	unsigned char value[65536], salir,empty,flag_found;	
-	unsigned int veces;
+	/*Frome Fuse On exit:
+   *  A = calculated parity byte if parity checked, else 0 (CHECKME)
+   *  F : if parity checked, all flags are modified
+   *      else carry only is modified (FIXME)
+   *  B = 0xB0 (success) or 0x00 (failure)
+   *  C = 0x01 (confirmed), 0x21, 0xFE or 0xDE (CHECKME)
+   * DE : decremented by number of bytes loaded or verified
+   *  H = calculated parity byte or undefined
+   *  L = last byte read, or 1 if none
+   * IX : incremented by number of bytes loaded or verified
+   * A' = unchanged on error + no flag byte, else 0x01
+   * F' = 0x01      on error + no flag byte, else 0x45
+   *  R = no point in altering it :-)
+   * Other registers unchanged.
+   */
+   
+	unsigned int longitud, bucle, number_bytes;
+	unsigned char value[65536], empty, parity;	
 	int retval;
 
-	ordenador.other_ret = 1;	// next instruction must be RET
+	//ordenador.other_ret = 1;	// next instruction must be RET
+	procesador.PC=0x5e2;
 
-	if (!(procesador.Rm.br.F & F_C)) { // if Carry=0, is VERIFY, so return OK
+	if (!(procesador.Ra.br.F & F_C)) { // if Carry=0, is VERIFY, so return OK
 		procesador.Rm.br.F |= F_C;	 // verify OK
 		procesador.Rm.wr.IX += procesador.Rm.wr.DE;
 		procesador.Rm.wr.DE = 0;
 		return;
 	}
+	
+	procesador.Rm.br.B=0;
+	procesador.Rm.br.L=0x01;
 
 	empty=file_empty(fichero);
 
@@ -735,65 +770,394 @@ void fastload_block (FILE * fichero) {
 		return;
 	}
 
-	veces=0;
-
-	flag_found=0;
-	do {
-		retval=fread (value, 2, 1, fichero);	// read length of current block
+	retval=fread (value, 1, 2, fichero);	// read length of current block
 		if (feof (fichero))	{			// end of file?
-			veces++; // one more time rewinded
-			sprintf (ordenador.osd_text, "Tape rewind");			
+			sprintf (ordenador.osd_text, "Rewind tape");			
 			ordenador.osd_time = 100;
-			rewind (fichero);	// again
-			retval=fread (value, 2, 1, fichero);	// read length of current block
-		}
-		longitud = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1]);
-		retval=fread (value, 1, 1, fichero);	// read flag byte
-		longitud--;
-		if (value[0] != procesador.Rm.br.A) { // different flag
-			retval=fread (value, longitud, 1, fichero);	// jump to the next block
-			if (veces==3) { // tape rewinded three times? Block with that flag not found.
-				sprintf(ordenador.osd_text,"Block with right flag not found");
-				ordenador.osd_time = 100;
-				procesador.Rm.br.F &= (~F_C);	// Load error
-				return;
+			rewind_tape(fichero, 1);
+			return;
 			}
-		} else
-			flag_found = 1;
-	} while(flag_found == 0);
+			
+	longitud = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1]);
+		
+	retval=fread (value, 1,1, fichero); //Flag Byte
+	if (retval!=1)
+		{
+		procesador.Rm.br.F &= (~F_C);	// Load error
+		procesador.Rm.wr.IX += procesador.Rm.wr.DE;
+		procesador.Rm.wr.DE = 0;
+		printf("TAP: Read file error\n");
+		return;
+		}
 
-	salir = 0;
-	do {
-		if (longitud == 0)
-			salir = 1;
-		if (procesador.Rm.wr.DE == 0)
-			salir = 2;
-		if (!salir) {
-			retval=fread (value, 1, 1, fichero);	// read byte
-			Z80free_Wr_fake (procesador.Rm.wr.IX, (byte) value[0]);	// store the byte
+	longitud--;
+	printf("TAP: Flag_byte_fast: %X en %ld\n",value[0],ftell(fichero));
+	
+	if (value[0] != procesador.Ra.br.A) // different flag
+		{
+		procesador.Rm.br.F &= (~F_C);	// Load error
+		procesador.Rm.wr.IX += procesador.Rm.wr.DE;
+		procesador.Rm.wr.DE = 0;
+		retval=fread (value, 1,longitud, fichero); //read the remaining bytes
+		printf("TAP: Flag byte error, expected %X\n", procesador.Ra.br.A);
+		return;
+		}
+			
+	parity=(byte) value[0];	
+		
+	if ((longitud-1)!=procesador.Rm.wr.DE) 
+		{
+		printf("TAP: length block error\n");
+		printf("TAP: expected by system %d\n", procesador.Rm.wr.DE);
+		printf("TAP: expected by file %d\n", longitud-1);
+		}
+	
+	if (procesador.Rm.wr.DE>(longitud-1))
+		{
+		procesador.Rm.br.F &= (~F_C);	// Load error
+		procesador.Rm.wr.IX += procesador.Rm.wr.DE;
+		procesador.Rm.wr.DE = 0;
+        retval=fread (value, 1,longitud, fichero); //read the remaining bytes
+		return;
+		}
+	
+	retval=fread (value, 1,longitud, fichero);
+	if (retval!=longitud)
+		{
+		procesador.Rm.br.F &= (~F_C);	// Load error
+		procesador.Rm.wr.IX += procesador.Rm.wr.DE;
+		procesador.Rm.wr.DE = 0;
+		printf("TAP: Read file error\n");
+		return;
+		}
+	
+	number_bytes=procesador.Rm.wr.DE;
+
+	for(bucle=0;bucle<number_bytes; bucle++) 
+		{	
+			Z80free_Wr_fake (procesador.Rm.wr.IX, (byte) value[bucle]);	// store the byte
 			procesador.Rm.wr.IX++;
 			procesador.Rm.wr.DE--;
-			longitud--;
+			parity^=(byte) value[bucle];
 		}
-	}
-	while (!salir);
 
-	clean_screen ();
+	//clean_screen ();
 
-	if (salir == 1) { // system wants to load more bytes that the existent
-		procesador.Rm.br.F &= (~F_C);	// Load error
-		return;
-	}
-
-	if ((salir == 2) && (longitud != 1)) { // there are more bytes to load
-		procesador.Rm.br.F &= (~F_C);	// Load error
-		if (longitud > 1)
-			retval=fread (value, longitud, 1, fichero);	// jump to the next block
-		return;
-	}
-
-	retval=fread (value, 1, 1, fichero);	// jump over the checksum
+	parity^=value[number_bytes]; // checksum
+	
+	if (parity) printf("TAP: Parity error\n");
+	
+	procesador.Rm.br.A=parity;
+	//CP 01
+	Z80free_doArithmetic(&procesador,procesador.Rm.br.A,0x01,0,1);
+	Z80free_adjustFlags(&procesador,0x01);
+	
+	procesador.Rm.br.B=0xB0;
+	procesador.Rm.br.C=0x01;
+	procesador.Rm.br.H=parity;
+	procesador.Rm.br.L=value[longitud-1];
+	procesador.Ra.br.A=0x01;
+	procesador.Ra.br.F=0x45;
 	procesador.Rm.br.F |= F_C;	// Load OK
+	
+	//if (longitud==6913) sleep(2); //Screen
+	return;
+}
+
+void fastload_block_tzx (FILE * fichero) {
+
+	/* From Fuse - On exit:
+   *  A = calculated parity byte if parity checked, else 0 (CHECKME)
+   *  F : if parity checked, all flags are modified
+   *      else carry only is modified (FIXME)
+   *  B = 0xB0 (success) or 0x00 (failure)
+   *  C = 0x01 (confirmed), 0x21, 0xFE or 0xDE (CHECKME)
+   * DE : decremented by number of bytes loaded or verified
+   *  H = calculated parity byte or undefined
+   *  L = last byte read, or 1 if none
+   * IX : incremented by number of bytes loaded or verified
+   * A' = unchanged on error + no flag byte, else 0x01
+   * F' = 0x01      on error + no flag byte, else 0x45
+   *  R = no point in altering it :-)
+   * Other registers unchanged.
+   */
+   
+	unsigned int longitud, len, bucle, number_bytes, byte_position;
+	unsigned char value[65536], empty, blockid, parity;	
+	int retval;
+	fpos_t *file_pos;
+	
+	
+	//ordenador.other_ret = 1;	// next instruction must be RET
+	procesador.PC=0x5e2;
+	longitud =0;
+
+	if (!(procesador.Ra.br.F & F_C)) { // if Carry=0, is VERIFY, so return OK
+		procesador.Rm.br.F |= F_C;	 // verify OK
+		procesador.Rm.wr.IX += procesador.Rm.wr.DE;
+		procesador.Rm.wr.DE = 0;
+		return;
+	}
+	
+	procesador.Rm.br.B=0;
+	procesador.Rm.br.L=0x01;
+
+	empty=file_empty(fichero);
+
+	
+	if ((fichero == NULL)||(empty)) {
+		procesador.Rm.br.F &= (~F_C);	// Load error
+		procesador.Rm.wr.IX += procesador.Rm.wr.DE;
+		procesador.Rm.wr.DE = 0;
+		if(empty)
+			sprintf (ordenador.osd_text, "Tape file empty");
+		else
+			sprintf (ordenador.osd_text, "No tape selected");
+		ordenador.osd_time = 100;
+		return;
+	}
+		
+	do	{
+		retval=fread (&blockid, 1, 1, fichero); //Read id block
+		if (feof (fichero)) // end of file?
+			{			
+			sprintf (ordenador.osd_text, "Rewind tape");			
+			ordenador.osd_time = 100;
+			rewind_tape(fichero, 1);
+			return;
+			}
+		printf("TZX: ID_fast: %X en %ld\n",blockid,ftell(fichero));
+		switch(blockid) {
+				case 0x10: // classic tape block
+				retval=fread (value, 1, 2, fichero); //pause lenght
+				retval=fread (value, 1, 2, fichero);	// read length of current block
+				if (retval!=2)
+					{			
+					procesador.Rm.br.F &= (~F_C);	// Load error
+					procesador.Rm.wr.IX += procesador.Rm.wr.DE;
+					procesador.Rm.wr.DE = 0;
+					printf("TZX: Read file error\n");
+					return;
+					}
+				longitud = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1]);
+					break;
+					
+					case 0x11: // turbo 
+					retval=fread(value,1,0x0F, fichero);
+					retval=fread (value, 1,3 ,fichero);	// read length of current block
+					if (retval!=3) {procesador.Rm.br.F &= (~F_C);return;}
+					longitud = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1])+ 65536 * ((unsigned int) value[2]);
+					for(bucle=0;bucle<longitud;bucle++)
+						retval=fread(value,1,1, fichero);
+					break;
+					
+				case 0x12: // pure tone
+					retval=fread(value,1,4,fichero);
+					break;
+
+				case 0x13: // multiple pulses
+					retval=fread(value,1,1,fichero); // number of pulses
+					if (retval!=1) {procesador.Rm.br.F &= (~F_C);return;} 
+					if(value[0] != 0)
+						{
+						retval=fread(&value,1,2,fichero); // length of pulse in T-states
+						}
+					break;
+				
+				case 0x14: // turbo tape block					
+					retval=fread(value,1,0x07, fichero);
+					retval=fread (value, 1, 3, fichero);	// read length of current block
+					if (retval!=3) {procesador.Rm.br.F &= (~F_C);return;} 
+					longitud = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1])+ 65536 * ((unsigned int) value[2]);
+					for(bucle=0;bucle<longitud;bucle++)
+						retval=fread(value,1,1, fichero);
+					break;
+
+				case 0x20: // pause
+					retval=fread(value,1,2,fichero);
+					if (retval!=2) {procesador.Rm.br.F &= (~F_C);return;} 
+					if (!value[0]&&!value[1]) {procesador.Rm.br.F &= (~F_C);return;} //stop the tape
+					break;
+					
+				case 0x21: // group start
+					retval=fread(value,1,1,fichero);
+					if (retval!=1) {procesador.Rm.br.F &= (~F_C);return;} 
+					len = (unsigned int) value[0];
+					retval=fread(value,1,len,fichero);
+					break;
+					
+				case 0x22: // group end
+					break;
+				
+				case 0x24: // loop start
+					retval=fread(value,1,2, fichero);
+					break;
+				
+				case 0x25: // loop end
+					break;
+				
+				case 0x28: // select block
+					retval=fread(value,1,2,fichero);
+					if (retval!=2) {procesador.Rm.br.F &= (~F_C);return;} 
+					len = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1]);
+					retval=fread(value,1,len,fichero);
+					break;
+				
+				case 0x2A: // pause if 48K
+					retval=fread(value,1,4,fichero); 
+					break;
+					
+				case 0x30: // text description
+					retval=fread(value,1,1,fichero); // length
+					if (retval!=1) {procesador.Rm.br.F &= (~F_C);return;} 
+					len = (unsigned int) value[0] ;
+					retval=fread(value,1,len,fichero);
+					break;
+					
+				case 0x31: // show text
+					retval=fread(value,1,1,fichero);
+					if (retval!=1) {procesador.Rm.br.F &= (~F_C);return;} 
+					if (value[0] < 11) ordenador.osd_time=value[0]*50; else ordenador.osd_time=500;//max 10 sec	
+					retval=fread(value,1,1,fichero); // length
+					if (retval!=1) {procesador.Rm.br.F &= (~F_C);return;} 
+					len = (unsigned int) value[0];
+					for(bucle=0;bucle<len;bucle++)
+					{
+					retval=fread(value,1,1,fichero);
+					if (retval!=1) {procesador.Rm.br.F &= (~F_C);return;} 
+					if (bucle<199) ordenador.osd_text[bucle] = value[0];
+					}
+					if (bucle>199) ordenador.osd_text[199]=0; else ordenador.osd_text[bucle]=0;
+					break;
+					
+				case 0x32: // archive info
+					retval=fread(value,1,2,fichero); // length
+					if (retval!=2) {procesador.Rm.br.F &= (~F_C);return;} 
+					len = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1]);
+					retval=fread(value,1,len,fichero);
+					break;
+				
+				case 0x33: // hardware info
+					retval=fread(value,1,1,fichero);
+					if (retval!=1) {procesador.Rm.br.F &= (~F_C);return;} 
+					len = (unsigned int) value[0] *3;
+					retval=fread(value,1,len,fichero);
+					break;
+					
+				case 0x34: // emulation info					
+					retval=fread(value,1,8,fichero);
+					break;
+					
+				case 0x35: // custom info					
+					retval=fread(value,1,16,fichero);
+					retval=fread(value,1,4,fichero);
+					if (retval!=4) {procesador.Rm.br.F &= (~F_C);return;} 
+					len = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1]) + 65536*((unsigned int) value[2]);// + 16777216*((unsigned int) value[3]);
+					retval=fread(value,1,len,fichero);
+					break;
+					
+				default: // not supported
+					procesador.Rm.br.F &= (~F_C);return; //Tape error				
+					break;
+			}
+		} while ((blockid!=0x10)&&(!feof(fichero)));
+
+		if (feof(fichero)) {procesador.Rm.br.F &= (~F_C);return;}
+		
+		//Fast load routine
+		
+	retval=fread (value, 1,1, fichero); //Flag Byte
+	if (retval!=1)
+		{
+		procesador.Rm.br.F &= (~F_C);	// Load error
+		procesador.Rm.wr.IX += procesador.Rm.wr.DE;
+		procesador.Rm.wr.DE = 0;
+		printf("TZX: Read file error\n");
+		return;
+		}
+
+	longitud--;
+	printf("TZX: Flag_byte_fast: %X en %ld\n",value[0],ftell(fichero));
+	
+	if (value[0] != procesador.Ra.br.A) // different flag
+		{
+		procesador.Rm.br.F &= (~F_C);	// Load error
+		procesador.Rm.wr.IX += procesador.Rm.wr.DE;
+		procesador.Rm.wr.DE = 0;
+		retval=fread (value, 1,longitud, fichero); //read the remaining bytes
+		printf("TZX Flag byte error, expected %X\n", procesador.Ra.br.A);
+		return;
+		}
+			
+	parity=(byte) value[0];	
+		
+	if ((longitud-1)!=procesador.Rm.wr.DE) 
+		{
+		printf("TZX: length block error\n");
+		printf("TZX: expected by system %d\n", procesador.Rm.wr.DE);
+		printf("TZX: expected by file %d\n", longitud-1);
+		}
+	
+	if (procesador.Rm.wr.DE>(longitud-1))
+		{
+		procesador.Rm.br.F &= (~F_C);	// Load error
+		procesador.Rm.wr.IX += procesador.Rm.wr.DE;
+		procesador.Rm.wr.DE = 0;
+        retval=fread (value, 1,longitud, fichero); //read the remaining bytes
+		return;
+		}
+	
+	retval=fread (value, 1,longitud, fichero);
+	if (retval!=longitud)
+		{
+		procesador.Rm.br.F &= (~F_C);	// Load error
+		procesador.Rm.wr.IX += procesador.Rm.wr.DE;
+		procesador.Rm.wr.DE = 0;
+		printf("TZX: Read file error\n");
+		return;
+		}
+	
+	number_bytes=procesador.Rm.wr.DE;
+
+	for(bucle=0;bucle<number_bytes; bucle++) 
+		{	
+			Z80free_Wr_fake (procesador.Rm.wr.IX, (byte) value[bucle]);	// store the byte
+			procesador.Rm.wr.IX++;
+			procesador.Rm.wr.DE--;
+			parity^=(byte) value[bucle];
+		}
+
+	//clean_screen ();
+
+	parity^=value[number_bytes]; // checksum
+	
+	if (parity) printf("TZX: Parity error\n");
+	
+	procesador.Rm.br.A=parity;
+	//CP 01
+	Z80free_doArithmetic(&procesador,procesador.Rm.br.A,0x01,0,1);
+	Z80free_adjustFlags(&procesador,0x01);
+	
+	procesador.Rm.br.B=0xB0;
+	procesador.Rm.br.C=0x01;
+	procesador.Rm.br.H=parity;
+	procesador.Rm.br.L=value[longitud-1];
+	procesador.Ra.br.A=0x01;
+	procesador.Ra.br.F=0x45;
+	procesador.Rm.br.F |= F_C;	// Load OK
+	
+	//if (longitud==6913) sleep(2); //Screen
+	
+	byte_position=ftell(fichero);
+	
+	retval=fread (&blockid, 1, 1, fichero); //Read next id block
+	
+	if (!feof(fichero)) 
+	{
+		if ((blockid==0x11)||(blockid==0x12)||(blockid==0x13)||(blockid==0x14)||(blockid==0x21)||(blockid==0x24)) ordenador.tape_start_countdwn=80; //autoplay countdown
+		fseek(fichero, byte_position, SEEK_SET);
+		
+	}
 	return;
 
 }

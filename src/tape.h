@@ -26,7 +26,8 @@ inline void tape_read_tap(FILE *, int);
 inline void tape_read_tzx(FILE *, int);
 void rewind_tape(FILE *,unsigned char);
 unsigned char file_empty(FILE *);
-void fastload_block (FILE *);
+void fastload_block_tap (FILE *);
+void fastload_block_tzx (FILE *);
 void save_file(FILE *);
 
 #endif

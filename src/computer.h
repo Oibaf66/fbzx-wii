@@ -100,7 +100,7 @@ struct computer {
 	unsigned char s8,s9,s10,s11,s12,s13,s14,s15;
 	unsigned char k8,k9,k10,k11,k12,k13,k14,k15;
 	unsigned char readed;
-	unsigned char tab_extended;
+	//unsigned char tab_extended;
 	unsigned char esc_again;
 
 	// kempston joystick private global variables
@@ -187,6 +187,7 @@ struct computer {
 	unsigned int tape_bit1_level;
 	unsigned char tape_bits_at_end;
 	unsigned int tape_loop_counter;
+	unsigned int tape_start_countdwn;
 	long tape_loop_pos;
 
 	unsigned char tape_write; // 0 can't write; 1 can write

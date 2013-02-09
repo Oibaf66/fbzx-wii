@@ -80,7 +80,7 @@ static const char *emulation_messages[] = {
 		/*01*/		"^|48k_2|48K_3|128k|+2|+2A/+3|128K_Sp|NTSC",
 		/*02*/		"Frame rate",
 		/*03*/		"^|100%|50%|33%|25%|20%",
-		/*04*/		"Tap instant load",
+		/*04*/		"Tape instant load",
 		/*05*/		"^|on|off",
 		/*06*/		"Turbo mode",
 		/*07*/		"^|off|auto|fast|ultrafast",
@@ -369,8 +369,9 @@ static int manage_tape(int which)
 		break;
 	case 1: //Emulate load ""
 		countdown_buffer=8;
-		if (ordenador.mode128k==4) //Spanish 128k
-			{
+		switch (ordenador.mode128k)
+		{
+		case 4://Spanish 128k
 			ordenador.keyboard_buffer[0][8]= SDLK_l;		
 			ordenador.keyboard_buffer[1][8]= 0;
 			ordenador.keyboard_buffer[0][7]= SDLK_o;		
@@ -388,9 +389,18 @@ static int manage_tape(int which)
 			ordenador.keyboard_buffer[0][1]= SDLK_F6;		//F6 - play
 			ordenador.keyboard_buffer[1][1]= 0;
 			ordenador.kbd_buffer_pointer=8;
-			}
-			else
-			{
+			break;
+		case 3: //+3
+		case 2: //+2
+		case 1: //128k
+			ordenador.keyboard_buffer[0][2]= SDLK_RETURN;	// Return
+			ordenador.keyboard_buffer[1][2]= 0;
+			ordenador.keyboard_buffer[0][1]= SDLK_F6;		//F6 - play
+			ordenador.keyboard_buffer[1][1]= 0;
+			ordenador.kbd_buffer_pointer=2;
+			break;
+		case 0: //48k
+		default:
 			ordenador.keyboard_buffer[0][5]= SDLK_j;		//Load
 			ordenador.keyboard_buffer[1][5]= 0;
 			ordenador.keyboard_buffer[0][4]= SDLK_p;		//"
@@ -402,16 +412,17 @@ static int manage_tape(int which)
 			ordenador.keyboard_buffer[0][1]= SDLK_F6;		//F6
 			ordenador.keyboard_buffer[1][1]= 0;
 			ordenador.kbd_buffer_pointer=5;
-			}
+			break;
+		}
 		retorno=-1;
-		break;
+		break;	
 	case 2: //Play
-		if ((ordenador.tape_fast_load == 0) || (ordenador.tape_file_type==TAP_TZX))
+		//if (ordenador.tape_fast_load == 0)
 				ordenador.pause = 0;
 		retorno=-1;
 		break;
 	case 3: //Stop
-		if ((ordenador.tape_fast_load == 0) || (ordenador.tape_file_type==TAP_TZX))
+		//if (ordenador.tape_fast_load == 0)
 				ordenador.pause = 1;
 		retorno=-1;		
 		break;
@@ -1088,7 +1099,7 @@ static int save_scr(int i)
 
 	switch(retorno) {
 	case 0:
-		if (i==1) msgInfo("SCR1 saved",3000,NULL); else msgInfo("SCR2 saved",3000,NULL);
+		if (i==1) msgInfo("Screen 1 saved",3000,NULL); else msgInfo("Screen 2 saved",3000,NULL);
 		retorno2=-2; //come back to emulator
 		break;
 	case -1:

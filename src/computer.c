@@ -130,7 +130,7 @@ void computer_init () { //Called only on start-up
 	ordenador.s8 = ordenador.s9 = ordenador.s10 = ordenador.s11 =
 	ordenador.s12 = ordenador.s13 = ordenador.s14 =
 	ordenador.s15 = 0xFF;
-	ordenador.tab_extended=0;
+	//ordenador.tab_extended=0;
 	ordenador.esc_again=0;
 
 	ordenador.js = 0x00;
@@ -647,19 +647,23 @@ inline void show_screen (int tstados) {
 			if (ordenador.osd_time) {
 				ordenador.osd_time--;
 				if (ordenador.osd_time==0) {
-					ordenador.tab_extended=0;
+					//ordenador.tab_extended=0;
 					ordenador.esc_again=0;
 				}
 					
 				if (ordenador.osd_time)
 					print_string (ordenador.screenbuffer,ordenador.osd_text, -1,450, 12, 0,ordenador.screen_width);
-				else {
+				/*else {
 					if (ordenador.zaurus_mini==0)
 						print_string (ordenador.screenbuffer,"                                      ",-1, 450, 12, 0,ordenador.screen_width);
 					else
 						print_string (ordenador.screenbuffer,"                            ",-1, 450, 12, 0,ordenador.screen_width);
-				}
+				}*/
 			}
+			
+			if (ordenador.tape_start_countdwn==1) ordenador.pause=0; //Autoplay
+			
+			if (ordenador.tape_start_countdwn>0) ordenador.tape_start_countdwn--;
 				
 			if (ordenador.mustlock) {
 				SDL_UnlockSurface (ordenador.screen);
@@ -886,19 +890,23 @@ inline void show_screen_precision (int tstados) {
 			if (ordenador.osd_time) {
 				ordenador.osd_time--;
 				if (ordenador.osd_time==0) {
-					ordenador.tab_extended=0;
+					//ordenador.tab_extended=0;
 					ordenador.esc_again=0;
 				}
 					
 				if (ordenador.osd_time)
 					print_string (ordenador.screenbuffer,ordenador.osd_text, -1,450, 12, 0,ordenador.screen_width);
-				else {
+				/*else {
 					if (ordenador.zaurus_mini==0)
 						print_string (ordenador.screenbuffer,"                                      ",-1, 450, 12, 0,ordenador.screen_width);
 					else
 						print_string (ordenador.screenbuffer,"                            ",-1, 450, 12, 0,ordenador.screen_width);
-				}
+				}*/
 			}
+			
+			if (ordenador.tape_start_countdwn==1) ordenador.pause=0; //Autoplay
+			
+			if (ordenador.tape_start_countdwn>0) ordenador.tape_start_countdwn--;
 				
 			if (ordenador.mustlock) {
 				SDL_UnlockSurface (ordenador.screen);
@@ -1224,12 +1232,12 @@ inline void read_keyboard () {
 			break;
 
 		case SDLK_F5:   // STOP tape
-			if ((ordenador.tape_fast_load == 0) || (ordenador.tape_file_type==TAP_TZX))
+			//if ((ordenador.tape_fast_load == 0))
 				ordenador.pause = 1;
 			break;
 
 		case SDLK_F6:	// PLAY tape
-			if ((ordenador.tape_fast_load == 0) || (ordenador.tape_file_type==TAP_TZX))
+			//if (ordenador.tape_fast_load == 0)
 				ordenador.pause = 0;
 			break;		
 
@@ -1501,7 +1509,7 @@ inline void read_keyboard () {
 		ordenador.s15 = (ordenador.s15 & 0xE0)| (ordenador.k15 ^ 0x1F);
 		ordenador.js = ordenador.jk;
 	
-	if (joybutton_matrix[0][SDLK_F6] && ((ordenador.tape_fast_load == 0) || (ordenador.tape_file_type==TAP_TZX)))
+	if (joybutton_matrix[0][SDLK_F6] && (ordenador.tape_fast_load == 0))
 				ordenador.pause = 0; //Play the tape
 				
 	//Virtual Keyboard
@@ -1664,6 +1672,7 @@ void ResetComputer () {
 			}
 	}		
 	ordenador.precision=ordenador.precision_old; //in case the machine is reset during loading
+	ordenador.tape_start_countdwn=0;
 }
 
 // check if there's contention and waits the right number of tstates
