@@ -428,6 +428,8 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 					break;
 				
 				case 0x2A: // pause if 48K
+					for(bucle=0;bucle<4;bucle++)
+						retval=fread(&value,1,1,fichero);
 					if(ordenador.mode128k==0) {
 						ordenador.pause = 1;
 						return;
@@ -883,12 +885,13 @@ void fastload_block_tzx (FILE * fichero) {
    */
    
 	unsigned int longitud, len, bucle, number_bytes, byte_position;
-	unsigned char value[65536], empty, blockid, parity;	
-	int retval;
+	unsigned char value[65536], empty, blockid, parity, pause[2];	
+	int retval, retval2;
 	
 	//ordenador.other_ret = 1;	// next instruction must be RET
 	procesador.PC=0x5e2;
 	longitud =0;
+	pause[0]=pause[1]=0;
 
 	if (!(procesador.Ra.br.F & F_C)) { // if Carry=0, is VERIFY, so return OK
 		procesador.Rm.br.F |= F_C;	 // verify OK
@@ -927,9 +930,9 @@ void fastload_block_tzx (FILE * fichero) {
 		printf("TZX: ID_fast: %X en %ld\n",blockid,ftell(fichero));
 		switch(blockid) {
 				case 0x10: // classic tape block
-				retval=fread (value, 1, 2, fichero); //pause lenght
-				retval=fread (value, 1, 2, fichero);	// read length of current block
-				if (retval!=2)
+				retval=fread (pause, 1, 2, fichero); //pause lenght
+				retval2=fread (value, 1, 2, fichero);	// read length of current block
+				if ((retval!=2)||(retval2!=2))
 					{			
 					procesador.Rm.br.F &= (~F_C);	// Load error
 					procesador.Rm.wr.IX += procesador.Rm.wr.DE;
@@ -1002,7 +1005,11 @@ void fastload_block_tzx (FILE * fichero) {
 					break;
 				
 				case 0x2A: // pause if 48K
-					retval=fread(value,1,4,fichero); 
+					retval=fread(value,1,4,fichero);
+					if(ordenador.mode128k==0) {
+						ordenador.pause = 1;
+						return;
+					}
 					break;
 					
 				case 0x30: // text description
@@ -1159,9 +1166,19 @@ void fastload_block_tzx (FILE * fichero) {
 		if (retval==5)
 			if ((value[4]!=0x0)&&(value[4]!=0xFF)) blockid=0x11; //custom data 
 		}
-		if ((blockid==0x11)||(blockid==0x12)||(blockid==0x13)||(blockid==0x14)||(blockid==0x21)||(blockid==0x24)) ordenador.tape_start_countdwn=80; //autoplay countdown
-		fseek(fichero, byte_position, SEEK_SET);
+		if ((blockid==0x11)||(blockid==0x12)||(blockid==0x13)||(blockid==0x14)||(blockid==0x21)||(blockid==0x24))
+		{
+			//Anticipate auto ultra fast mode
+			if ((ordenador.turbo_state!= 1)&&(ordenador.turbo==1))
+			{
+			update_frequency(10000000);
+			jump_frames=7;
+			ordenador.turbo_state=4;
+			}
+		ordenador.tape_start_countdwn=((unsigned int)pause[0]+256*(unsigned int)pause[1])/30+1; //autoplay countdown	
+		}
 		
+		fseek(fichero, byte_position, SEEK_SET);
 	}
 	return;
 
