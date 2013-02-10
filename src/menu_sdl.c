@@ -64,7 +64,7 @@ typedef struct
 
 typedef struct
 {
-	char title[256];
+	char title[MAX_PATH_LENGTH];
 	const char **pp_msgs;
 	TTF_Font  *p_font;
 	int        x1,y1;
@@ -294,7 +294,7 @@ static const char **get_file_list_zip(const char *path)
 
 	for (cur=2;cur<gi.number_entry+2;cur++)
     {
-        char filename_inzip[1024];
+        char filename_inzip[MAX_PATH_LENGTH];
         unz_file_info file_info;
    
         err = unzGetCurrentFileInfo(uf,&file_info,filename_inzip,sizeof(filename_inzip),NULL,0,NULL,0);
@@ -615,8 +615,8 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_siz
 	SDL_Rect r;
 	int entries_visible = (p_menu->y2 - p_menu->y1-5) / line_height - 1;
 	const char *selected_file = NULL;
-	char filename[2049];
-	char name[512];
+	char filename[MAX_PATH_LENGTH];
+	char name[MAX_PATH_LENGTH];
 	char *ptr;
 	int i, y, length, max_string;
 	
@@ -1060,7 +1060,7 @@ uint32_t menu_wait_key_press()
 	return keys;
 }
 
-extern char curdir[256];
+extern char curdir[MAX_PATH_LENGTH];
 
 static int menu_select_internal(SDL_Surface *screen,
 		menu_t *p_menu, int *p_submenus, int sel,

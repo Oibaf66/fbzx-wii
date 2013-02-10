@@ -204,7 +204,7 @@ void maybe_load_conf(const char *filename)
 {
 	const char *dir = path_confs;
 	char *ptr;
-	char db[256];
+	char db[MAX_PATH_LENGTH];
 	char fb[81];
 	
 	if (filename==NULL) return;	
@@ -218,7 +218,7 @@ void maybe_load_conf(const char *filename)
 	ptr = strrchr (fb, '.');
 		if (ptr) *ptr = 0;	
 
-	snprintf(db, 255, "%s/%s.conf", dir, fb);
+	snprintf(db, MAX_PATH_LENGTH-1, "%s/%s.conf", dir, fb);
 	if (!load_config(&ordenador,db)) msgInfo("Configurations loaded",2000,NULL)	;
 	
 }
@@ -304,7 +304,7 @@ void create_tapfile_sdl() {
 
 	unsigned char *videomem;
 	int ancho,retorno;
-	unsigned char nombre2[1024];
+	unsigned char nombre2[MAX_PATH_LENGTH];
 
 	videomem=screen->pixels;
 	ancho=screen->w;
@@ -851,7 +851,7 @@ void create_mdrfile_sdl() {
 
 	unsigned char *videomem;
 	int ancho,retorno,bucle,retval;
-	unsigned char nombre2[1024];
+	unsigned char nombre2[MAX_PATH_LENGTH];
 
 	videomem=screen->pixels;
 	ancho=screen->w;
@@ -1043,22 +1043,13 @@ static int save_scr(int i)
 	const char *tape = ordenador.last_selected_file;
 	char *ptr;
 	FILE *fichero;
-	char db[256];
+	char db[MAX_PATH_LENGTH];
 	char fb[81];
-	int retorno,retval, length, retorno2;
-	char path_scr[2049];
+	int retorno,retval, retorno2;
 	retorno2=0; //Stay in menu as default
 	
-	strcpy(path_scr,getenv("HOME"));
-	length=strlen(path_scr);
-	if ((length>0)&&(path_scr[length-1]!='/'))
-		strcat(path_scr,"/");
-	
-	//Save only on SD card
-	if (i==1) strcat(path_scr,"scr"); else
-	 if (i==2) strcat(path_scr,"scr2"); else return 0;
-	 
-	dir = path_scr; 
+	if (i==1) dir=path_scr1; else
+	 if (i==2) dir=path_scr2; else return 0;
 	
 	// Name (for saves) - TO CHECK
 	if (tape && strrchr(tape, '/'))
@@ -1072,7 +1063,7 @@ static int save_scr(int i)
 					
 	
 	// Save SCR file		
-	snprintf(db, 255, "%s/%s.scr", dir, fb);
+	snprintf(db, MAX_PATH_LENGTH-1, "%s/%s.scr", dir, fb);
 	
 		
 	fichero=fopen(db,"r");
@@ -1493,7 +1484,7 @@ switch (which)
 static int tools()
 {
 	int opt , retorno;
-	int submenus[4];
+	int submenus[4], old_port;
 
 	memset(submenus, 0, sizeof(submenus));
 
@@ -1504,12 +1495,14 @@ static int tools()
 	submenus[2] = !ordenador.vk_auto;
 	submenus[3] = !ordenador.vk_rumble;
 	
+	old_port=ordenador.port;
+	
 	opt = menu_select_title("Tools menu",
 			tools_messages, submenus);
 	if (opt < 0)
 		return 0;
 		
-	set_port(submenus[1]);
+	if (old_port!= submenus[1]) set_port(submenus[1]);
 	ordenador.vk_auto = !submenus[2];
 	ordenador.vk_rumble = !submenus[3];
 	
@@ -1563,7 +1556,7 @@ static int save_load_snapshot(int which)
 	char *dir_load = load_path_snaps;
 	const char *tape = ordenador.last_selected_file;
 	char *ptr;
-	char db[256];
+	char db[MAX_PATH_LENGTH];
 	char fb[81];
 	int retorno, retorno2;
 	
@@ -1617,7 +1610,7 @@ static int save_load_snapshot(int which)
 		free((void*)filename);
 	} break;
 	case 1: // Save snapshot file
-		snprintf(db, 255, "%s/%s.z80", dir, fb);
+		snprintf(db, MAX_PATH_LENGTH-1, "%s/%s.z80", dir, fb);
 		
 		retorno=save_z80(db,0);
 		switch(retorno) 
@@ -1651,7 +1644,7 @@ static int save_load_game_configurations(int which)
 	char *dir = path_confs;
 	const char *tape = ordenador.last_selected_file;
 	char *ptr;
-	char db[256];
+	char db[MAX_PATH_LENGTH];
 	char fb[81];
 	int retorno, retorno2;
 	
@@ -1695,7 +1688,7 @@ static int save_load_game_configurations(int which)
 		
 		if (ptr) *ptr = 0;	
 	
-		snprintf(db, 255, "%s/%s.conf", dir, fb);
+		snprintf(db, MAX_PATH_LENGTH-1, "%s/%s.conf", dir, fb);
 	
 		retorno=save_config_game(&ordenador,db,0);
 		
@@ -1728,7 +1721,7 @@ static void save_load_general_configurations(int which)
 
 	int retorno;
 	unsigned char old_bw,old_mode;
-	char config_path[1024];
+	char config_path[MAX_PATH_LENGTH];
 	int length;
 	FILE *fconfig; 
 	

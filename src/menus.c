@@ -739,7 +739,7 @@ void create_tapfile() {
 
 	unsigned char *videomem;
 	int ancho,retorno;
-	unsigned char nombre2[1024];
+	unsigned char nombre2[MAX_PATH_LENGTH];
 
 	videomem=screen->pixels;
 	ancho=screen->w;
@@ -923,7 +923,7 @@ void create_mdrfile() {
 
 	unsigned char *videomem;
 	int ancho,retorno,bucle,retval;
-	unsigned char nombre2[1024];
+	unsigned char nombre2[MAX_PATH_LENGTH];
 
 	videomem=screen->pixels;
 	ancho=screen->w;
@@ -987,7 +987,7 @@ void create_scrfile() {
 
 	unsigned char *videomem;
 	int ancho,retorno,retval;
-	unsigned char nombre2[1024];
+	unsigned char nombre2[MAX_PATH_LENGTH];
 	FILE *fichero;
 	char *name;
 
@@ -1485,7 +1485,7 @@ void save_z80file() {
 
 	unsigned char *videomem;
 	int ancho,retorno;
-	unsigned char nombre2[1024];
+	unsigned char nombre2[MAX_PATH_LENGTH];
 	char *name;
 
 	videomem=screen->pixels;
@@ -1647,7 +1647,7 @@ struct fichero *read_directory(char *cpath,enum LOAD_FILE_TYPES kind) {
 	struct dirent *entry;
 	DIR *directory;
 	struct stat estado;
-	unsigned char path[2049],fichero[2049],extension[5],found;
+	unsigned char path[MAX_PATH_LENGTH],fichero[MAX_PATH_LENGTH],extension[5],found;
 	int bucle,length;
 	
 	strcpy(path,cpath);
@@ -1938,7 +1938,7 @@ void print_files(struct fichero *filelist,int from,int mark) {
 	int bucle,numitems,ancho,pos;
 	char ink1,ink2;
 	unsigned char spaces[39]="                                      ";
-	unsigned char namefile[2089];
+	unsigned char namefile[MAX_PATH_LENGTH];
 	unsigned char *videomem;
 
 	videomem=screen->pixels;

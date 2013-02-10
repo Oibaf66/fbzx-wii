@@ -68,17 +68,17 @@ struct computer ordenador;
 SDL_Surface *screen;
 char salir,sound_aborted;
 unsigned int *sound[NUM_SNDBUF];
-char path_snaps[2049];
-char path_taps[2049];
-char path_mdrs[2049];
-char path_scr1[2049];
-char path_scr2[2049];
-char path_confs[2049];
-char path_tmp[2049];
-char load_path_snaps[2049];
-char load_path_taps[2049];
-char load_path_scr1[2049];
-char load_path_poke[2049];
+char path_snaps[MAX_PATH_LENGTH];
+char path_taps[MAX_PATH_LENGTH];
+char path_mdrs[MAX_PATH_LENGTH];
+char path_scr1[MAX_PATH_LENGTH];
+char path_scr2[MAX_PATH_LENGTH];
+char path_confs[MAX_PATH_LENGTH];
+char path_tmp[MAX_PATH_LENGTH];
+char load_path_snaps[MAX_PATH_LENGTH];
+char load_path_taps[MAX_PATH_LENGTH];
+char load_path_scr1[MAX_PATH_LENGTH];
+char load_path_poke[MAX_PATH_LENGTH];
 
 unsigned int colors[80];
 unsigned int jump_frames,curr_frames;
@@ -263,7 +263,7 @@ int remove_dir(char *dir)
 	struct stat st;
 
     dp = opendir (dir);
-	char str[2049];
+	char str[MAX_PATH_LENGTH];
 	
     if (dp != NULL) 
 		{
@@ -765,7 +765,7 @@ int save_config_game(struct computer *object, char *filename, int overwrite) {
 
 void load_config_network(struct computer *object) {
 	
-	char line[1024],carac,done;
+	char line[256],carac,done;
 	int pos;
 	FILE *fconfig;
 	unsigned char smb_enable=0, ftp_enable=0, FTPPassive=0;
@@ -881,8 +881,8 @@ fclose(fconfig);
 
 int load_config(struct computer *object, char *filename) {
 	
-	char config_path[1024];
-	char line[1024],carac,done;
+	char config_path[MAX_PATH_LENGTH];
+	char line[256],carac,done;
 	int pos, key_sdl=0;
 	FILE *fconfig;
 	unsigned char volume=255,mode128k=255,issue=255,ntsc=255, joystick1=255,joystick2=255,ay_emul=255,mdr_active=255,
@@ -1121,7 +1121,7 @@ int load_config(struct computer *object, char *filename) {
 int main(int argc,char *argv[]) {
 
 	int bucle,tstados,tstados_screen, argumento,fullscreen,dblbuffer,hwsurface,length;
-	char gamefile[4096],config_path[1024] ;
+	char gamefile[MAX_PATH_LENGTH],config_path[MAX_PATH_LENGTH] ;
 	
 	word PC=0;
 	

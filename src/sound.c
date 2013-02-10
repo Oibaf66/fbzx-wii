@@ -25,7 +25,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-char tabla[1024];
+//char tabla[1024];
 
 #include <fcntl.h>
 #ifndef GEKKO 

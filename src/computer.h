@@ -27,6 +27,7 @@
 // #define MUT
 
 #define KB_BUFFER_LENGHT 10
+#define MAX_PATH_LENGTH 256
 
 extern char salir;
 
@@ -175,9 +176,9 @@ struct computer {
 	FILE *tap_file;
 	unsigned char tape_fast_load; // 0 normal load; 1 fast load
 	unsigned char rewind_on_reset;
-	unsigned char current_tap[2049];
-	unsigned char last_selected_file[2049];
-	unsigned char last_selected_poke_file[2049];
+	unsigned char current_tap[MAX_PATH_LENGTH];
+	unsigned char last_selected_file[MAX_PATH_LENGTH];
+	unsigned char last_selected_poke_file[MAX_PATH_LENGTH];
 
 	unsigned char tape_current_bit;
 	unsigned int tape_block_level;
@@ -194,7 +195,7 @@ struct computer {
 
 	// Microdrive global variables
 	FILE *mdr_file;                  // Current microdrive file
-	unsigned char mdr_current_mdr[2049]; // current path and name for microdrive file
+	unsigned char mdr_current_mdr[MAX_PATH_LENGTH]; // current path and name for microdrive file
 	unsigned char mdr_active;	// 0: not installed; 1: installed
 	unsigned char mdr_paged;	// 0: not pagined; 1: pagined
 	unsigned int mdr_tapehead; // current position in the tape
@@ -251,7 +252,7 @@ struct computer {
 	unsigned char ftp_enable;
 	unsigned char FTPUser[32]; 
 	unsigned char FTPPwd[32];
-	unsigned char FTPPath[512]; 
+	unsigned char FTPPath[MAX_PATH_LENGTH]; 
 	unsigned char FTPIp[64];
 	unsigned char FTPPassive;
 	unsigned short FTPPort;

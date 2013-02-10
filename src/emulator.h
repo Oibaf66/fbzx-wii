@@ -25,6 +25,7 @@
 #define emulator_h
 
 #define NUM_SNDBUF 2
+#define MAX_PATH_LENGTH 256
 
 extern char debug_var;
 
@@ -32,17 +33,17 @@ extern SDL_Surface *screen;
 extern Z80FREE procesador;
 extern struct computer ordenador;
 extern unsigned int *sound[NUM_SNDBUF];
-extern char path_snaps[2049];
-extern char path_taps[2049];
-extern char path_mdrs[2049];
-extern char path_scr1[2049];
-extern char path_scr2[2049];
-extern char path_confs[2049];
-extern char path_tmp[2049];
-extern char load_path_snaps[2049];
-extern char load_path_taps[2049];
-extern char load_path_scr1[2049];
-extern char load_path_poke[2049];
+extern char path_snaps[MAX_PATH_LENGTH];
+extern char path_taps[MAX_PATH_LENGTH];
+extern char path_mdrs[MAX_PATH_LENGTH];
+extern char path_scr1[MAX_PATH_LENGTH];
+extern char path_scr2[MAX_PATH_LENGTH];
+extern char path_confs[MAX_PATH_LENGTH];
+extern char path_tmp[MAX_PATH_LENGTH];
+extern char load_path_snaps[MAX_PATH_LENGTH];
+extern char load_path_taps[MAX_PATH_LENGTH];
+extern char load_path_scr1[MAX_PATH_LENGTH];
+extern char load_path_poke[MAX_PATH_LENGTH];
 
 extern unsigned int colors[80];
 extern unsigned int jump_frames,curr_frames;

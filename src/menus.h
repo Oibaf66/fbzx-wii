@@ -19,8 +19,8 @@
  */
 
 struct fichero {
-	char nombre[256]; // filename (for files and directories)
-	char nombrepath[2049]; // filename with path
+	char nombre[MAX_PATH_LENGTH]; // filename (for files and directories)
+	char nombrepath[MAX_PATH_LENGTH]; // filename with path
 	int tipo; // file type (0=file, 1=directory, 2=parent directory)
 	struct fichero *next;
 };
