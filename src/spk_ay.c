@@ -360,6 +360,10 @@ inline void play_sound (unsigned int tstados) {
 				lvalue = (beeper + ordenador.vol_b*2  + ordenador.vol_a)*ordenador.volume;	
 				rvalue = (beeper + ordenador.vol_a + ordenador.vol_c*2)*ordenador.volume;
 				break;
+				case 4: //CBA
+				lvalue = (beeper + ordenador.vol_b + ordenador.vol_c*2)*ordenador.volume;	
+				rvalue = (beeper + ordenador.vol_a*2  + ordenador.vol_b)*ordenador.volume;	
+				break;
 				default: //No emulation
 				rvalue = beeper*ordenador.volume;
 				lvalue = beeper*ordenador.volume;

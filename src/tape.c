@@ -862,7 +862,12 @@ void fastload_block_tap (FILE * fichero) {
 	procesador.Ra.br.F=0x45;
 	procesador.Rm.br.F |= F_C;	// Load OK
 	
-	//if (longitud==6913) sleep(2); //Screen
+	
+	if (ordenador.pause_instant_load) 
+		{
+			ordenador.pause_fastload_countdwn=2000/20+1; //tap pause
+		}
+		
 	return;
 }
 
@@ -950,11 +955,11 @@ void fastload_block_tzx (FILE * fichero) {
 					longitud = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1])+ 65536 * ((unsigned int) value[2]);
 					for(bucle=0;bucle<longitud;bucle++)
 						retval=fread(value,1,1, fichero);
-					break;
+				break;
 					
 				case 0x12: // pure tone
 					retval=fread(value,1,4,fichero);
-					break;
+				break;
 
 				case 0x13: // multiple pulses
 					retval=fread(value,1,1,fichero); // number of pulses
@@ -963,7 +968,7 @@ void fastload_block_tzx (FILE * fichero) {
 						{
 						retval=fread(&value,1,2,fichero); // length of pulse in T-states
 						}
-					break;
+				break;
 				
 				case 0x14: // turbo tape block					
 					retval=fread(value,1,0x07, fichero);
@@ -972,37 +977,37 @@ void fastload_block_tzx (FILE * fichero) {
 					longitud = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1])+ 65536 * ((unsigned int) value[2]);
 					for(bucle=0;bucle<longitud;bucle++)
 						retval=fread(value,1,1, fichero);
-					break;
+				break;
 
 				case 0x20: // pause
 					retval=fread(value,1,2,fichero);
 					if (retval!=2) {procesador.Rm.br.F &= (~F_C);return;} 
 					if (!value[0]&&!value[1]) {procesador.Rm.br.F &= (~F_C);return;} //stop the tape
-					break;
+				break;
 					
 				case 0x21: // group start
 					retval=fread(value,1,1,fichero);
 					if (retval!=1) {procesador.Rm.br.F &= (~F_C);return;} 
 					len = (unsigned int) value[0];
 					retval=fread(value,1,len,fichero);
-					break;
+				break;
 					
 				case 0x22: // group end
-					break;
+				break;
 				
 				case 0x24: // loop start
 					retval=fread(value,1,2, fichero);
-					break;
+				break;
 				
 				case 0x25: // loop end
-					break;
+				break;
 				
 				case 0x28: // select block
 					retval=fread(value,1,2,fichero);
 					if (retval!=2) {procesador.Rm.br.F &= (~F_C);return;} 
 					len = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1]);
 					retval=fread(value,1,len,fichero);
-					break;
+				break;
 				
 				case 0x2A: // pause if 48K
 					retval=fread(value,1,4,fichero);
@@ -1010,14 +1015,14 @@ void fastload_block_tzx (FILE * fichero) {
 						ordenador.pause = 1;
 						return;
 					}
-					break;
+				break;
 					
 				case 0x30: // text description
 					retval=fread(value,1,1,fichero); // length
 					if (retval!=1) {procesador.Rm.br.F &= (~F_C);return;} 
 					len = (unsigned int) value[0] ;
 					retval=fread(value,1,len,fichero);
-					break;
+				break;
 					
 				case 0x31: // show text
 					retval=fread(value,1,1,fichero);
@@ -1033,25 +1038,25 @@ void fastload_block_tzx (FILE * fichero) {
 					if (bucle<199) ordenador.osd_text[bucle] = value[0];
 					}
 					if (bucle>199) ordenador.osd_text[199]=0; else ordenador.osd_text[bucle]=0;
-					break;
+				break;
 					
 				case 0x32: // archive info
 					retval=fread(value,1,2,fichero); // length
 					if (retval!=2) {procesador.Rm.br.F &= (~F_C);return;} 
 					len = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1]);
 					retval=fread(value,1,len,fichero);
-					break;
+				break;
 				
 				case 0x33: // hardware info
 					retval=fread(value,1,1,fichero);
 					if (retval!=1) {procesador.Rm.br.F &= (~F_C);return;} 
 					len = (unsigned int) value[0] *3;
 					retval=fread(value,1,len,fichero);
-					break;
+				break;
 					
 				case 0x34: // emulation info					
 					retval=fread(value,1,8,fichero);
-					break;
+				break;
 					
 				case 0x35: // custom info					
 					retval=fread(value,1,16,fichero);
@@ -1059,11 +1064,11 @@ void fastload_block_tzx (FILE * fichero) {
 					if (retval!=4) {procesador.Rm.br.F &= (~F_C);return;} 
 					len = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1]) + 65536*((unsigned int) value[2]);// + 16777216*((unsigned int) value[3]);
 					retval=fread(value,1,len,fichero);
-					break;
+				break;
 					
 				default: // not supported
 					procesador.Rm.br.F &= (~F_C);return; //Tape error				
-					break;
+				break;
 			}
 		} while ((blockid!=0x10)&&(!feof(fichero)));
 
@@ -1151,8 +1156,6 @@ void fastload_block_tzx (FILE * fichero) {
 	procesador.Ra.br.F=0x45;
 	procesador.Rm.br.F |= F_C;	// Load OK
 	
-	//if (longitud==6913) sleep(2); //Screen
-	
 	byte_position=ftell(fichero);
 	
 	retval=fread (&blockid, 1, 1, fichero); //Read next id block
@@ -1164,9 +1167,10 @@ void fastload_block_tzx (FILE * fichero) {
 		{
 		retval=fread (value, 1, 5, fichero); //read till flag byte
 		if (retval==5)
-			if ((value[4]!=0x0)&&(value[4]!=0xFF)) blockid=0x11; //custom data 
+			if ((value[4]!=0x0)&&(value[4]!=0xFF)) blockid=0x1; //custom data
+			if ((value[4]==0x0)&&((value[2]+value[3]*256)!=0x13)) blockid=0x1; //custom data
 		}
-		if ((blockid==0x11)||(blockid==0x12)||(blockid==0x13)||(blockid==0x14)||(blockid==0x21)||(blockid==0x24))
+		if (blockid!=0x10)
 		{
 			//Anticipate auto ultra fast mode
 			if ((ordenador.turbo_state!= 1)&&(ordenador.turbo==1))
@@ -1176,6 +1180,10 @@ void fastload_block_tzx (FILE * fichero) {
 			ordenador.turbo_state=4;
 			}
 		ordenador.tape_start_countdwn=((unsigned int)pause[0]+256*(unsigned int)pause[1])/30+1; //autoplay countdown	
+		}
+		else if (ordenador.pause_instant_load) 
+		{
+		ordenador.pause_fastload_countdwn=((unsigned int)pause[0]+256*(unsigned int)pause[1])/20+1; //tzx pause
 		}
 		
 		fseek(fichero, byte_position, SEEK_SET);

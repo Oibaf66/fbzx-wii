@@ -176,6 +176,7 @@ struct computer {
 	FILE *tap_file;
 	unsigned char tape_fast_load; // 0 normal load; 1 fast load
 	unsigned char rewind_on_reset;
+	unsigned char pause_instant_load;
 	unsigned char current_tap[MAX_PATH_LENGTH];
 	unsigned char last_selected_file[MAX_PATH_LENGTH];
 	unsigned char last_selected_poke_file[MAX_PATH_LENGTH];
@@ -189,6 +190,7 @@ struct computer {
 	unsigned char tape_bits_at_end;
 	unsigned int tape_loop_counter;
 	unsigned int tape_start_countdwn;
+	unsigned int pause_fastload_countdwn;
 	long tape_loop_pos;
 
 	unsigned char tape_write; // 0 can't write; 1 can write

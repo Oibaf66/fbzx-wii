@@ -82,12 +82,14 @@ static const char *emulation_messages[] = {
 		/*03*/		"^|100%|50%|33%|25%|20%",
 		/*04*/		"Tape instant load",
 		/*05*/		"^|on|off",
-		/*06*/		"Turbo mode",
-		/*07*/		"^|off|auto|fast|ultrafast",
-		/*08*/		"Rewind tape on reset",
-		/*09*/		"^|on|off",	
-		/*10*/		"Precision",
+		/*06*/		"Instant load pause",
+		/*07*/		"^|on|off",
+		/*08*/		"Turbo mode",
+		/*09*/		"^|off|auto|fast|ultrafast",
+		/*10*/		"Rewind tape on reset",
 		/*11*/		"^|on|off",	
+		/*12*/		"Precision",
+		/*13*/		"^|on|off",	
 		NULL
 };
 
@@ -99,7 +101,7 @@ static const char *audio_messages[] = {
 		/*04*/		"^|on|off",	
 		/*05*/		"  ",
 		/*06*/		"Audio mode",
-		/*07*/		"^|mono|ABC|ACB|BAC",
+		/*07*/		"^|mono|ABC|ACB|BAC|CBA",
 		/*08		"  ", */
 		/*09		"Beeper low pass filter",*/
 		/*10		"^|0|1|2|3|4|5|6|7|max",*/
@@ -123,7 +125,7 @@ static const char *screen_messages[] = {
 
 static const  char *input_messages[] = {
 		/*00*/		"Joystick type",
-		/*01*/		"^|Cursor|Kempston|Sinclair1|Sinclair2",
+		/*01*/		"^|Cursor|Kempston|Sinclair1|Sinclair2|QAOP",
 		/*02*/		"Bind key to Wiimote",
 		/*03*/		"^|A|B|1|2|-|+",
 		/*04*/		"Bind key to Nunchuk",
@@ -393,11 +395,21 @@ static int manage_tape(int which)
 		case 3: //+3
 		case 2: //+2
 		case 1: //128k
+			ordenador.kbd_buffer_pointer=2;
+			if (ordenador.mport1 & 0x10) //ROM 48k
+			{
+			ordenador.keyboard_buffer[0][5]= SDLK_j;		//Load
+			ordenador.keyboard_buffer[1][5]= 0;
+			ordenador.keyboard_buffer[0][4]= SDLK_p;		//"
+			ordenador.keyboard_buffer[1][4]= SDLK_LCTRL;
+			ordenador.keyboard_buffer[0][3]= SDLK_p;		//"
+			ordenador.keyboard_buffer[1][3]= SDLK_LCTRL;
+			ordenador.kbd_buffer_pointer=5;
+			}
 			ordenador.keyboard_buffer[0][2]= SDLK_RETURN;	// Return
 			ordenador.keyboard_buffer[1][2]= 0;
 			ordenador.keyboard_buffer[0][1]= SDLK_F6;		//F6 - play
 			ordenador.keyboard_buffer[1][1]= 0;
-			ordenador.kbd_buffer_pointer=2;
 			break;
 		case 0: //48k
 		default:
@@ -432,7 +444,9 @@ static int manage_tape(int which)
 				ordenador.tape_current_mode=TAP_TRASH;
 				rewind_tape(ordenador.tap_file,1);		
 			}
-			msgInfo("Tape rewound",3000,NULL);
+			//msgInfo("Tape rewound",3000,NULL);
+			sprintf (ordenador.osd_text, "Rewind tape");			
+			ordenador.osd_time = 100;
 			retorno=-1;
 		break;
 	case 5: //Create
@@ -507,7 +521,7 @@ static void set_machine_model(int which)
 
 static int emulation_settings(void)
 {
-	unsigned int submenus[6],submenus_old[6];
+	unsigned int submenus[7],submenus_old[7];
 	int opt, i, retorno;
 	unsigned char old_mode, old_videosystem;
 	
@@ -518,12 +532,13 @@ static int emulation_settings(void)
 	submenus[0] = get_machine_model();
 	submenus[1] = jump_frames;
 	submenus[2] = !ordenador.tape_fast_load;
-	submenus[3] = ordenador.turbo;
-	submenus[4] = !ordenador.rewind_on_reset;
-	submenus[5] = !ordenador.precision;
+	submenus[3] = !ordenador.pause_instant_load;
+	submenus[4] = ordenador.turbo;
+	submenus[5] = !ordenador.rewind_on_reset;
+	submenus[6] = !ordenador.precision;
 
 	
-	for (i=0; i<6; i++) submenus_old[i] = submenus[i];
+	for (i=0; i<7; i++) submenus_old[i] = submenus[i];
 	old_mode=ordenador.mode128k;
 	old_videosystem = ordenador.videosystem;
 	
@@ -537,11 +552,13 @@ static int emulation_settings(void)
 	
 	jump_frames = submenus[1];
 	ordenador.tape_fast_load = !submenus[2];
-	ordenador.turbo = submenus[3];
-	ordenador.rewind_on_reset = !submenus[4];
+	ordenador.pause_instant_load = !submenus[3];
+	
+	ordenador.turbo = submenus[4];
+	ordenador.rewind_on_reset = !submenus[5];
 	
 	curr_frames=0;
-	if (submenus[3] != submenus_old[3])
+	if (submenus[4] != submenus_old[4])
 	{
 	switch(ordenador.turbo)
 	{
@@ -572,9 +589,9 @@ static int emulation_settings(void)
 	}
 	}
 	
-	if (submenus[5] != submenus_old[5])
+	if (submenus[6] != submenus_old[6])
 	{
-	ordenador.precision = !submenus[5];
+	ordenador.precision = !submenus[6];
 	ordenador.precision_old=ordenador.precision;
 	if (ordenador.turbo_state!=1)  //Tape is not loading with turbo mode
 	 if (ordenador.precision)

@@ -710,6 +710,7 @@ int save_config(struct computer *object, char *filename) {
 	fprintf(fconfig,"volume=%c%c",65+(object->volume),10);
 	fprintf(fconfig,"bw=%c%c",48+object->bw,10);
 	fprintf(fconfig,"tap_fast=%c%c",48+object->tape_fast_load,10);
+	fprintf(fconfig,"pause_instant_load=%c%c",48+object->pause_instant_load,10);
 	fprintf(fconfig,"rewind_on_reset=%c%c",48+object->rewind_on_reset,10);
 	fprintf(fconfig,"joypad1=%c%c",48+object->joypad_as_joystick[0],10);
 	fprintf(fconfig,"joypad2=%c%c",48+object->joypad_as_joystick[1],10);
@@ -888,7 +889,7 @@ int load_config(struct computer *object, char *filename) {
 	unsigned char volume=255,mode128k=255,issue=255,ntsc=255, joystick1=255,joystick2=255,ay_emul=255,mdr_active=255,
 	dblscan=255,framerate =255, screen =255, text=255, precision=255, bw=255, tap_fast=255, audio_mode=255,
 	joypad1=255, joypad2=255, rumble1=255, rumble2=255, joy_n=255, key_n=255, port=255, autoconf=255, turbo=225, vk_auto=255, vk_rumble=255,
-	rewind_on_reset=255;
+	rewind_on_reset=255, pause_instant_load =255;
 	
 	if (filename) strcpy(config_path,filename); 
 	else return -2;
@@ -986,6 +987,10 @@ int load_config(struct computer *object, char *filename) {
 			tap_fast=(line[9]-'0');
 			continue;
 		}
+		if (!strncmp(line,"pause_instant_load=",19)) {
+			pause_instant_load=(line[19]-'0');
+			continue;
+		}
 		if (!strncmp(line,"rewind_on_reset=",16)) {
 			rewind_on_reset=(line[16]-'0');
 			continue;
@@ -1043,16 +1048,16 @@ int load_config(struct computer *object, char *filename) {
 	if (ntsc<2) {
 		object->videosystem=ntsc;
 	}
-	if (joystick1<4) {
+	if (joystick1<5) {
 		object->joystick[0]=joystick1;
 	}
-	if (joystick2<4) {
+	if (joystick2<5) {
 		object->joystick[1]=joystick2;
 	}
 	if (ay_emul<2) {
 		object->ay_emul=ay_emul;
 	}
-	if (audio_mode<4) {
+	if (audio_mode<5) {
 		object->audio_mode=audio_mode;
 	}
 	if (mdr_active<2) {
@@ -1083,6 +1088,9 @@ int load_config(struct computer *object, char *filename) {
 	}
 	if (tap_fast<2) {
 		object->tape_fast_load=tap_fast;
+	}
+	if (pause_instant_load<2) {
+		object->pause_instant_load=pause_instant_load;
 	}
 	if (rewind_on_reset<2) {
 		object->rewind_on_reset=rewind_on_reset;
@@ -1531,10 +1539,13 @@ int main(int argc,char *argv[]) {
 		FAST_LOAD is 1, we must load the block in memory and return */
 
 		if((!ordenador.mdr_paged)&&(PC==0x056c) && (ordenador.tape_fast_load==1)) {
-			if(ordenador.tap_file!=NULL)
+			if (ordenador.tap_file!=NULL)
 				{
-				if (ordenador.tape_file_type==TAP_TAP) fastload_block_tap(ordenador.tap_file);
-				else fastload_block_tzx(ordenador.tap_file);
+				if (ordenador.pause_fastload_countdwn==0)
+					{
+					if (ordenador.tape_file_type==TAP_TAP) fastload_block_tap(ordenador.tap_file);
+					else fastload_block_tzx(ordenador.tap_file);
+					}
 				}
 			else {
 				sprintf(ordenador.osd_text,"No TAP file selected");

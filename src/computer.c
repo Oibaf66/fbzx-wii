@@ -119,6 +119,7 @@ void computer_init () { //Called only on start-up
 	ordenador.pause = 1;	// tape stop
 	ordenador.tape_fast_load = 1;	// fast load by default
 	ordenador.rewind_on_reset = 1; //Rewound on reset by default
+	ordenador.pause_instant_load = 0;
 	ordenador.tape_current_mode = TAP_TRASH;
 	ordenador.tap_file = NULL;
 
@@ -561,6 +562,7 @@ inline void show_screen (int tstados) {
 			curr_frames++;
 			if (ordenador.tape_start_countdwn==1) ordenador.pause=0; //Autoplay
 			if (ordenador.tape_start_countdwn>0) ordenador.tape_start_countdwn--;
+			if (ordenador.pause_fastload_countdwn>0) ordenador.pause_fastload_countdwn--;
 		}
 		return;
 	}
@@ -666,6 +668,7 @@ inline void show_screen (int tstados) {
 			if (ordenador.tape_start_countdwn==1) ordenador.pause=0; //Autoplay
 			
 			if (ordenador.tape_start_countdwn>0) ordenador.tape_start_countdwn--;
+			if (ordenador.pause_fastload_countdwn>0) ordenador.pause_fastload_countdwn--;
 				
 			if (ordenador.mustlock) {
 				SDL_UnlockSurface (ordenador.screen);
@@ -708,6 +711,7 @@ inline void show_screen_precision (int tstados) {
 			curr_frames++;
 			if (ordenador.tape_start_countdwn==1) ordenador.pause=0; //Autoplay
 			if (ordenador.tape_start_countdwn>0) ordenador.tape_start_countdwn--;
+			if (ordenador.pause_fastload_countdwn>0) ordenador.pause_fastload_countdwn--;
 		}
 		//if (ordenador.tstados_counter > 31) ordenador.interr = 0;
 		return;
@@ -911,6 +915,7 @@ inline void show_screen_precision (int tstados) {
 			if (ordenador.tape_start_countdwn==1) ordenador.pause=0; //Autoplay
 			
 			if (ordenador.tape_start_countdwn>0) ordenador.tape_start_countdwn--;
+			if (ordenador.pause_fastload_countdwn>0) ordenador.pause_fastload_countdwn--;
 				
 			if (ordenador.mustlock) {
 				SDL_UnlockSurface (ordenador.screen);
@@ -1247,45 +1252,63 @@ inline void read_keyboard () {
 
 		case SDLK_F9:
 			//Emulate load ""
-			if (ordenador.mode128k==4) //Spanish 128k
-			{
-			ordenador.keyboard_buffer[0][8]= SDLK_l;		
-			ordenador.keyboard_buffer[1][8]= 0;
-			ordenador.keyboard_buffer[0][7]= SDLK_o;		
-			ordenador.keyboard_buffer[1][7]= 0;
-			ordenador.keyboard_buffer[0][6]= SDLK_a;		
-			ordenador.keyboard_buffer[1][6]= 0;
-			ordenador.keyboard_buffer[0][5]= SDLK_d;		
-			ordenador.keyboard_buffer[1][5]= 0;
-			ordenador.keyboard_buffer[0][4]= SDLK_p;		//"	
-			ordenador.keyboard_buffer[1][4]= SDLK_LCTRL;
-			ordenador.keyboard_buffer[0][3]= SDLK_p;		//"	
-			ordenador.keyboard_buffer[1][3]= SDLK_LCTRL;
-			ordenador.keyboard_buffer[0][2]= SDLK_RETURN;	// Return
-			ordenador.keyboard_buffer[1][2]= 0;
-			ordenador.keyboard_buffer[0][1]= SDLK_F6;		//F6 - play
-			ordenador.keyboard_buffer[1][1]= 0;
-			ordenador.kbd_buffer_pointer=8;
-			}
-			else
-			{
-			ordenador.keyboard_buffer[0][5]= SDLK_j;		//Load
-			ordenador.keyboard_buffer[1][5]= 0;
-			ordenador.keyboard_buffer[0][4]= SDLK_p;		//"
-			ordenador.keyboard_buffer[1][4]= SDLK_LCTRL;
-			ordenador.keyboard_buffer[0][3]= SDLK_p;		//"
-			ordenador.keyboard_buffer[1][3]= SDLK_LCTRL;
-			ordenador.keyboard_buffer[0][2]= SDLK_RETURN;	// Return
-			ordenador.keyboard_buffer[1][2]= 0;
-			ordenador.keyboard_buffer[0][1]= SDLK_F6;		//F6
-			ordenador.keyboard_buffer[1][1]= 0;
-			ordenador.kbd_buffer_pointer=5;
-			}
-			
-			
 			countdown_buffer=8;
+			switch (ordenador.mode128k)
+			{
+			case 4://Spanish 128k
+				ordenador.keyboard_buffer[0][8]= SDLK_l;		
+				ordenador.keyboard_buffer[1][8]= 0;
+				ordenador.keyboard_buffer[0][7]= SDLK_o;		
+				ordenador.keyboard_buffer[1][7]= 0;
+				ordenador.keyboard_buffer[0][6]= SDLK_a;		
+				ordenador.keyboard_buffer[1][6]= 0;
+				ordenador.keyboard_buffer[0][5]= SDLK_d;		
+				ordenador.keyboard_buffer[1][5]= 0;
+				ordenador.keyboard_buffer[0][4]= SDLK_p;		//"	
+				ordenador.keyboard_buffer[1][4]= SDLK_LCTRL;
+				ordenador.keyboard_buffer[0][3]= SDLK_p;		//"	
+				ordenador.keyboard_buffer[1][3]= SDLK_LCTRL;
+				ordenador.keyboard_buffer[0][2]= SDLK_RETURN;	// Return
+				ordenador.keyboard_buffer[1][2]= 0;
+				ordenador.keyboard_buffer[0][1]= SDLK_F6;		//F6 - play
+				ordenador.keyboard_buffer[1][1]= 0;
+				ordenador.kbd_buffer_pointer=8;
 			break;
-
+			case 3: //+3
+			case 2: //+2
+			case 1: //128k
+				ordenador.kbd_buffer_pointer=2;
+				if (ordenador.mport1 & 0x10) //ROM 48k
+				{
+				ordenador.keyboard_buffer[0][5]= SDLK_j;		//Load
+				ordenador.keyboard_buffer[1][5]= 0;
+				ordenador.keyboard_buffer[0][4]= SDLK_p;		//"
+				ordenador.keyboard_buffer[1][4]= SDLK_LCTRL;
+				ordenador.keyboard_buffer[0][3]= SDLK_p;		//"
+				ordenador.keyboard_buffer[1][3]= SDLK_LCTRL;
+				ordenador.kbd_buffer_pointer=5;
+				}
+				ordenador.keyboard_buffer[0][2]= SDLK_RETURN;	// Return
+				ordenador.keyboard_buffer[1][2]= 0;
+				ordenador.keyboard_buffer[0][1]= SDLK_F6;		//F6 - play
+				ordenador.keyboard_buffer[1][1]= 0;
+			break;
+			case 0: //48k
+			default:
+				ordenador.keyboard_buffer[0][5]= SDLK_j;		//Load
+				ordenador.keyboard_buffer[1][5]= 0;
+				ordenador.keyboard_buffer[0][4]= SDLK_p;		//"
+				ordenador.keyboard_buffer[1][4]= SDLK_LCTRL;
+				ordenador.keyboard_buffer[0][3]= SDLK_p;		//"
+				ordenador.keyboard_buffer[1][3]= SDLK_LCTRL;
+				ordenador.keyboard_buffer[0][2]= SDLK_RETURN;	// Return
+				ordenador.keyboard_buffer[1][2]= 0;
+				ordenador.keyboard_buffer[0][1]= SDLK_F6;		//F6
+				ordenador.keyboard_buffer[1][1]= 0;
+				ordenador.kbd_buffer_pointer=5;
+			break;
+			}
+		break;	
 		case SDLK_F10:	// Reset emulator
 			ResetComputer ();
 		break;
@@ -1358,6 +1381,13 @@ inline void read_keyboard () {
 			if ((ordenador.joy_axis_x_state[joy_n] == JOY_LEFT)||(joybutton_matrix[joy_n][SDLK_LEFT])) ordenador.k12|= 16;
 			if (joybutton_matrix[joy_n][SDLK_LALT]) {ordenador.k12|= 1; fire_on[joy_n]=1;}//fire button
 		break;
+		case 4:	// QAOP
+			if ((ordenador.joy_axis_y_state[joy_n] == JOY_UP) ||(joybutton_matrix[joy_n][SDLK_UP]))ordenador.k10|=1;
+			if ((ordenador.joy_axis_y_state[joy_n] == JOY_DOWN)||(joybutton_matrix[joy_n][SDLK_DOWN])) ordenador.k9 |=1;
+			if ((ordenador.joy_axis_x_state[joy_n] == JOY_RIGHT)||(joybutton_matrix[joy_n][SDLK_RIGHT])) ordenador.k13|=1;
+			if ((ordenador.joy_axis_x_state[joy_n] == JOY_LEFT)||(joybutton_matrix[joy_n][SDLK_LEFT])) ordenador.k13|=2;
+			if (joybutton_matrix[joy_n][SDLK_LALT]) {ordenador.k15|=1; fire_on[joy_n]=1;}//fire button
+		break;
 		}
 	}
 	else
@@ -1393,6 +1423,13 @@ inline void read_keyboard () {
 			if ((ordenador.joy_axis_x_state[joy_n] == JOY_RIGHT)||(status_hat[joy_n] & SDL_HAT_RIGHT)) ordenador.k12|= 8;
 			if ((ordenador.joy_axis_x_state[joy_n] == JOY_LEFT)||(status_hat[joy_n] & SDL_HAT_LEFT)) ordenador.k12|= 16;
 			if (joybutton_matrix[joy_n][SDLK_LALT]) {ordenador.k12|= 1; fire_on[joy_n]=1;}//fire button
+		break;
+		case 4:	// QAOP
+			if ((ordenador.joy_axis_y_state[joy_n] == JOY_UP)||(status_hat[joy_n] & SDL_HAT_UP)) ordenador.k10|=1;
+			if ((ordenador.joy_axis_y_state[joy_n] == JOY_DOWN)||(status_hat[joy_n] & SDL_HAT_DOWN)) ordenador.k9 |=1;
+			if ((ordenador.joy_axis_x_state[joy_n] == JOY_RIGHT)||(status_hat[joy_n] & SDL_HAT_RIGHT)) ordenador.k13|=1;
+			if ((ordenador.joy_axis_x_state[joy_n] == JOY_LEFT)||(status_hat[joy_n] & SDL_HAT_LEFT)) ordenador.k13|=2;
+			if (joybutton_matrix[joy_n][SDLK_LALT]) {ordenador.k15|=1; fire_on[joy_n]=1;}//fire button
 		break;
 		}
 	}
@@ -1689,6 +1726,7 @@ void ResetComputer () {
 	
 	ordenador.precision=ordenador.precision_old; //in case the machine is reset during loading
 	ordenador.tape_start_countdwn=0;
+	ordenador.pause_fastload_countdwn=0;
 	curr_frames=0;
 	ordenador.tstados_counter=0;
 	ordenador.cicles_counter=0;
