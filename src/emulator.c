@@ -1057,7 +1057,7 @@ int load_config(struct computer *object, char *filename) {
 	if (ay_emul<2) {
 		object->ay_emul=ay_emul;
 	}
-	if (audio_mode<5) {
+	if (audio_mode<4) {
 		object->audio_mode=audio_mode;
 	}
 	if (mdr_active<2) {

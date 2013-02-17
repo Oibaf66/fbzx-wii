@@ -101,7 +101,7 @@ static const char *audio_messages[] = {
 		/*04*/		"^|on|off",	
 		/*05*/		"  ",
 		/*06*/		"Audio mode",
-		/*07*/		"^|mono|ABC|ACB|BAC|CBA",
+		/*07*/		"^|mono|ABC|ACB|BAC",
 		/*08		"  ", */
 		/*09		"Beeper low pass filter",*/
 		/*10		"^|0|1|2|3|4|5|6|7|max",*/
