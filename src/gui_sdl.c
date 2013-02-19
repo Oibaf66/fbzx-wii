@@ -199,6 +199,10 @@ static const char *confs_messages[] = {
 		/*05*/		"  ",
 		/*06*/		"Load confs automatically",
 		/*07*/		"^|on|off",
+		/*08*/		"  ",
+		/*09*/		"Ignore .z80 joystick confs",
+		/*10*/		"^|on|off",
+		
 		NULL
 };
 
@@ -1794,7 +1798,7 @@ static void save_load_general_configurations(int which)
 static void manage_configurations()
 {
 	int opt , retorno;
-	int submenus[3];
+	int submenus[4];
 	
 
 	memset(submenus, 0, sizeof(submenus));
@@ -1802,13 +1806,15 @@ static void manage_configurations()
 	retorno = -1; //Exit from menu as default
 	
 	submenus[2]=!ordenador.autoconf;
+	submenus[3]=!ordenador.ignore_z80_joy_conf;
 
 	opt = menu_select_title("Configurations file menu",
 			confs_messages, submenus);
 	if (opt < 0)
 		return;
 		
-	ordenador.autoconf=!submenus[2];	
+	ordenador.autoconf=!submenus[2];
+	ordenador.ignore_z80_joy_conf=!submenus[3];
 	
 	switch(opt)
 		{

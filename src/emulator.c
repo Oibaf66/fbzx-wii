@@ -718,6 +718,7 @@ int save_config(struct computer *object, char *filename) {
 	fprintf(fconfig,"rumble2=%c%c",48+object->rumble[1],10);
 	fprintf(fconfig,"port=%c%c",48+object->port,10);
 	fprintf(fconfig,"autoconf=%c%c",48+object->autoconf,10);
+	fprintf(fconfig,"ignore_z80_joy_conf=%c%c",48+object->ignore_z80_joy_conf,10);
 	fprintf(fconfig,"turbo=%c%c",48+object->turbo,10);
 	fprintf(fconfig,"vk_auto=%c%c",48+object->vk_auto,10);
 	fprintf(fconfig,"vk_rumble=%c%c",48+object->vk_rumble,10);
@@ -889,7 +890,7 @@ int load_config(struct computer *object, char *filename) {
 	unsigned char volume=255,mode128k=255,issue=255,ntsc=255, joystick1=255,joystick2=255,ay_emul=255,mdr_active=255,
 	dblscan=255,framerate =255, screen =255, text=255, precision=255, bw=255, tap_fast=255, audio_mode=255,
 	joypad1=255, joypad2=255, rumble1=255, rumble2=255, joy_n=255, key_n=255, port=255, autoconf=255, turbo=225, vk_auto=255, vk_rumble=255,
-	rewind_on_reset=255, pause_instant_load =255;
+	rewind_on_reset=255, pause_instant_load =255, ignore_z80_joy_conf=255;
 	
 	if (filename) strcpy(config_path,filename); 
 	else return -2;
@@ -1019,6 +1020,10 @@ int load_config(struct computer *object, char *filename) {
 			autoconf=line[9]-'0';
 			continue;
 		}
+		if (!strncmp(line,"ignore_z80_joy_conf=",20)) {
+			ignore_z80_joy_conf=line[20]-'0';
+			continue;
+		}
 		if (!strncmp(line,"turbo=",6)) {
 			turbo=line[6]-'0';
 			continue;
@@ -1112,6 +1117,9 @@ int load_config(struct computer *object, char *filename) {
 	}
 	if (autoconf<2) {
 		object->autoconf=autoconf;
+	}
+	if (ignore_z80_joy_conf<2) {
+		object->ignore_z80_joy_conf=ignore_z80_joy_conf;
 	}
 	if (turbo<2) {
 		object->turbo=turbo;

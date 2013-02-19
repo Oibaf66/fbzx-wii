@@ -208,7 +208,7 @@ void virtkey_ir_run(void)
 	int key_h = 64/RATIO;
 	int border_x = VirtualKeyboard.sel_x/RATIO;
 	int border_y = VirtualKeyboard.sel_y/RATIO;
-	int key = 0;
+	int key_sel = 0;
 	SDL_Joystick *joy;
 	static int joy_bottons_last[4];
 	static char countdown_rumble=0;
@@ -223,7 +223,7 @@ void virtkey_ir_run(void)
 		(SDL_JoystickGetButton(joy, 3) && !joy_bottons_last[1]) ||  /* 2 */
 		(SDL_JoystickGetButton(joy, 9) && !joy_bottons_last[2]) ||  /* CA */
 		(SDL_JoystickGetButton(joy, 10) && !joy_bottons_last[3]))   /* CB */
-	key = KEY_SELECT;
+	key_sel = KEY_SELECT;
 				
 	joy_bottons_last[0]=SDL_JoystickGetButton(joy, 0) ;   /* A */
 	joy_bottons_last[1]	=SDL_JoystickGetButton(joy, 3) ;  /* 2 */
@@ -231,7 +231,7 @@ void virtkey_ir_run(void)
 	joy_bottons_last[3]	=SDL_JoystickGetButton(joy, 10) ; /* CB */
 
 	
-	if (key==KEY_SELECT)
+	if (key_sel==KEY_SELECT)
 	{	
 		SDL_GetMouseState(&xm, &ym);
 		x = (xm-border_x);
@@ -272,7 +272,8 @@ void virtkey_ir_run(void)
 			SDL_ShowCursor(SDL_DISABLE);
 			draw_vk();
 			SDL_ShowCursor(SDL_ENABLE);
-		}	
+		}
+	key_sel=0;
 	}
 }
 

@@ -173,7 +173,7 @@ void computer_init () { //Called only on start-up
 	strcpy (ordenador.SmbShare, "Share");
 	strcpy (ordenador.SmbIp, "192.168.0.1");
 	ordenador.autoconf=0;
-	
+	ordenador.ignore_z80_joy_conf=0;
 	ordenador.cpufreq = 3500000; // values for 48K mode
 	ordenador.fetch_state =0;
 	ordenador.last_selected_poke_file[0]='\0';

@@ -144,6 +144,8 @@ struct computer {
 	signed char ay_envel_value;
 	unsigned char ay_envel_way;
 	//unsigned char sound_current_value;
+	
+	//Z80 instruction variables
 	unsigned int wr;
 	unsigned int r_fetch;
 	unsigned int io;
@@ -245,6 +247,10 @@ struct computer {
 	unsigned char vk_auto;
 	unsigned char vk_rumble;
 	unsigned char vk_is_active;
+	unsigned char autoconf;
+	unsigned char ignore_z80_joy_conf;
+	
+	//Port variables
 	unsigned char port; //SD, USB, SMB or FTP
 	unsigned char smb_enable;
 	unsigned char SmbUser[32]; 
@@ -258,7 +264,7 @@ struct computer {
 	unsigned char FTPIp[64];
 	unsigned char FTPPassive;
 	unsigned short FTPPort;
-	unsigned char autoconf;
+	
 };
 
 void computer_init();

@@ -1187,7 +1187,7 @@ void fastload_block_tzx (FILE * fichero) {
 			jump_frames=7;
 			ordenador.turbo_state=4;
 			}
-		ordenador.tape_start_countdwn=((unsigned int)pause[0]+256*(unsigned int)pause[1])/30+1; //autoplay countdown	
+		ordenador.tape_start_countdwn=((unsigned int)pause[0]+256*(unsigned int)pause[1])/20+1; //autoplay countdown	
 		}
 		else if (ordenador.pause_instant_load) 
 		{

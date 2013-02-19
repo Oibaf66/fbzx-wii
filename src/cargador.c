@@ -597,7 +597,7 @@ void load_snap(struct z80snapshot *snap) {
     break;
   }
   
-  ordenador.joystick[0]=snap->joystick; //Only one Joystick in Z80 file
+  if (ordenador.ignore_z80_joy_conf==0) ordenador.joystick[0]=snap->joystick; //Only one Joystick in Z80 file
 
   procesador.Rm.br.A=snap->A;
   procesador.Rm.br.F=snap->F;
