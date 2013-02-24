@@ -121,6 +121,7 @@ void computer_init () { //Called only on start-up
 	ordenador.rewind_on_reset = 1; //Rewound on reset by default
 	ordenador.pause_instant_load = 0;
 	ordenador.tape_current_mode = TAP_TRASH;
+	ordenador.next_block= NOBLOCK;
 	ordenador.tap_file = NULL;
 
 	ordenador.osd_text[0] = 0;
@@ -1243,6 +1244,7 @@ inline void read_keyboard () {
 		case SDLK_F5:   // STOP tape
 			//if ((ordenador.tape_fast_load == 0))
 				ordenador.pause = 1;
+				ordenador.tape_start_countdwn=0;
 			break;
 
 		case SDLK_F6:	// PLAY tape

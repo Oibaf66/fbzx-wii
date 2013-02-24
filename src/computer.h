@@ -34,6 +34,7 @@ extern char salir;
 enum tapmodes {TAP_GUIDE, TAP_DATA, TAP_PAUSE, TAP_TRASH, TAP_STOP, TAP_PAUSE2, TZX_PURE_TONE,
 	TZX_SEQ_PULSES, TAP_FINAL_BIT, TAP_PAUSE3};
 enum taptypes {TAP_TAP, TAP_TZX};
+enum  block_type {NOBLOCK, PROG, VAR, DATA};
 
 int countdown_buffer;
 
@@ -165,6 +166,7 @@ struct computer {
 	// tape global variables
 
 	enum tapmodes tape_current_mode;
+	enum block_type next_block; 
 	unsigned char pause; // 1=tape stop
 	enum taptypes tape_file_type;
 	unsigned int tape_counter0;

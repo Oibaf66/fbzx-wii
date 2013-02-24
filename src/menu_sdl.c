@@ -435,7 +435,7 @@ void menu_print_font(SDL_Surface *screen, int r, int g, int b,
 		lenght = strlen(buf); 
 		if (lenght>max_string)
 		{
-			strcpy (buf + max_string-4, buf + lenght-4); 
+			strcpy (buf + max_string-8, buf + lenght-8); 
 		}
 	}
 	/* Fixup multi-menu option look */

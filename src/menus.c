@@ -638,6 +638,7 @@ void taps_menu() {
 		case SDLK_2:
 			fin=0;
 			ordenador.pause=1;
+			ordenador.tape_start_countdwn=0;
 			if(ordenador.tap_file!=NULL) {
 				ordenador.tape_current_mode=TAP_TRASH;
 				rewind_tape(ordenador.tap_file,1);		
@@ -647,6 +648,7 @@ void taps_menu() {
 		break;
 		case SDLK_3:
 			ordenador.pause=1;
+			ordenador.tape_start_countdwn=0;
 			ordenador.tape_fast_load=1-ordenador.tape_fast_load;
 			if(ordenador.tap_file!=NULL) {
 				ordenador.tape_current_mode=TAP_TRASH;
@@ -692,6 +694,7 @@ void select_tapfile() {
 
 	ordenador.tape_current_bit=0;
 	ordenador.tape_current_mode=TAP_TRASH;
+	ordenador.next_block= NOBLOCK;
 
 	if(ordenador.tap_file!=NULL) {
 		fclose(ordenador.tap_file);

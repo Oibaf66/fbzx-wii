@@ -432,6 +432,7 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 						retval=fread(&value,1,1,fichero);
 					if(ordenador.mode128k==0) {
 						ordenador.pause = 1;
+						ordenador.tape_start_countdwn=0;
 						return;
 					}
 					break;
@@ -534,6 +535,7 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 	switch (ordenador.tape_current_mode) {
 	case TAP_FINAL_BIT:
 		ordenador.tape_current_mode = TAP_TRASH;
+		ordenador.next_block= NOBLOCK;
 		break;
 	case TAP_GUIDE:	// guide tone
 		if (ordenador.tape_counter_rep) {	// still into guide tone
@@ -605,6 +607,7 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 		} else {
 			ordenador.tape_counter_rep = 0;
 			ordenador.tape_current_mode = TAP_TRASH;	// read new block
+			ordenador.next_block= NOBLOCK;
 		}
 		break;
 	case TAP_PAUSE2:	// pause and stop
@@ -615,6 +618,7 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 		} else {
 			ordenador.tape_counter_rep = 0;
 			ordenador.tape_current_mode = TAP_TRASH;	// read new block
+			ordenador.next_block= NOBLOCK;
 			ordenador.pause = 1;
 		}
 		break;
@@ -626,6 +630,7 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 			ordenador.tape_counter1 = 0; // new pulse			
 		} else
 			ordenador.tape_current_mode = TAP_TRASH;	// next ID
+			ordenador.next_block= NOBLOCK;
 		break;
 	case TZX_SEQ_PULSES:
 		ordenador.tape_current_bit = 1 - ordenador.tape_current_bit; // invert current bit
@@ -637,11 +642,13 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 			ordenador.tape_counter1 = 0;
 		} else
 			ordenador.tape_current_mode = TAP_TRASH;	// next ID		
+			ordenador.next_block= NOBLOCK;		
 		break;
 			
 	case TAP_STOP:
 		ordenador.tape_current_bit = 0;
 		ordenador.tape_current_mode = TAP_TRASH;	// initialize
+		ordenador.next_block= NOBLOCK;
 		ordenador.pause = 1;	// pause it
 		break;
 	default:
@@ -659,7 +666,9 @@ void rewind_tape(FILE *fichero,unsigned char pause) {
 	if(ordenador.tape_file_type==TAP_TZX)
 		for(thebucle=0;thebucle<10;thebucle++)
 			retval=fread(&value,1,1,ordenador.tap_file); // jump over the header
+	ordenador.next_block= NOBLOCK;		
 	ordenador.pause=pause;
+	if (pause) ordenador.tape_start_countdwn=0; //Stop tape play countdown
 }
 
 unsigned char file_empty(FILE *fichero) {
@@ -897,7 +906,7 @@ void fastload_block_tzx (FILE * fichero) {
    */
    
 	unsigned int longitud, len, bucle, number_bytes, byte_position;
-	unsigned char value[65536], empty, blockid, parity, pause[2];	
+	unsigned char value[65536], empty, blockid, parity, pause[2],flag_byte;	
 	int retval, retval2;
 	
 	//ordenador.other_ret = 1;	// next instruction must be RET
@@ -933,7 +942,7 @@ void fastload_block_tzx (FILE * fichero) {
 	do	{
 		retval=fread (&blockid, 1, 1, fichero); //Read id block
 		if (feof (fichero)) // end of file?
-			{			
+			{
 			sprintf (ordenador.osd_text, "Rewind tape");			
 			ordenador.osd_time = 100;
 			rewind_tape(fichero, 1);
@@ -953,8 +962,38 @@ void fastload_block_tzx (FILE * fichero) {
 					return;
 					}
 				longitud = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1]);
+				byte_position=ftell(fichero);
+				retval=fread (&flag_byte, 1, 1, fichero);
+				if (retval!=1) {procesador.Rm.br.F &= (~F_C);return;}
+				switch(flag_byte)
+					{
+					case 0x00: //header
+						retval=fread (value, 1, 17, fichero);
+						if (retval!=17) {procesador.Rm.br.F &= (~F_C);return;}
+						switch(value[0]	) //Type
+							{
+							case 0x00:
+								ordenador.next_block=PROG;
+							break;
+							case 0X01:
+							case 0X02:
+							case 0X03:
+								ordenador.next_block=DATA;
+							break;
+							default: //??
+								ordenador.next_block=NOBLOCK;
+							break;
+							}
 					break;
-					
+					case 0xFF: //data
+						ordenador.next_block=NOBLOCK;
+					break;
+					default: //Custom data
+							ordenador.next_block=NOBLOCK;
+					break;
+					}
+				fseek(fichero, byte_position, SEEK_SET);	
+				break;	
 					case 0x11: // turbo 
 					retval=fread(value,1,0x0F, fichero);
 					retval=fread (value, 1,3 ,fichero);	// read length of current block
@@ -989,7 +1028,7 @@ void fastload_block_tzx (FILE * fichero) {
 				case 0x20: // pause
 					retval=fread(value,1,2,fichero);
 					if (retval!=2) {procesador.Rm.br.F &= (~F_C);return;} 
-					if (!value[0]&&!value[1]) {procesador.Rm.br.F &= (~F_C);return;} //stop the tape
+					if (!value[0]&&!value[1]) {return;} //stop the tape
 				break;
 					
 				case 0x21: // group start
@@ -1020,6 +1059,7 @@ void fastload_block_tzx (FILE * fichero) {
 					retval=fread(value,1,4,fichero);
 					if(ordenador.mode128k==0) {
 						ordenador.pause = 1;
+						ordenador.tape_start_countdwn=0;
 						return;
 					}
 				break;
@@ -1168,7 +1208,6 @@ void fastload_block_tzx (FILE * fichero) {
 	
 	retval=fread (&blockid, 1, 1, fichero); //Read next id block
 
-	
 	if (!feof(fichero)) 
 	{
 		if (blockid==0x10) 
@@ -1177,22 +1216,26 @@ void fastload_block_tzx (FILE * fichero) {
 		if (retval==5)
 			if ((value[4]!=0x0)&&(value[4]!=0xFF)) blockid=0x1; //custom data
 			if ((value[4]==0x0)&&((value[2]+value[3]*256)!=0x13)) blockid=0x1; //custom data
+			if ((value[4]==0xFF)&&(ordenador.next_block==NOBLOCK)) blockid=0x2; //standard data
+			//printf("TZX: ID_fast2: %X en %d\n",blockid,byte_position+1);
+			//printf("TZX: next block: %X \n",ordenador.next_block);
 		}
 		if (blockid!=0x10)
 		{
 			//Anticipate auto ultra fast mode
 			if ((ordenador.turbo_state!= 1)&&(ordenador.turbo==1))
 			{
-			update_frequency(10000000);
+			update_frequency(11000000);
 			jump_frames=7;
 			ordenador.turbo_state=4;
 			}
-		ordenador.tape_start_countdwn=((unsigned int)pause[0]+256*(unsigned int)pause[1])/20+1; //autoplay countdown	
+		ordenador.tape_start_countdwn=((unsigned int)pause[0]+256*(unsigned int)pause[1])/20+1; //autoplay countdown
+		if (ordenador.tape_start_countdwn<10) ordenador.tape_start_countdwn=10; //in case the pause is too short 
 		}
 		else if (ordenador.pause_instant_load) 
 		{
-			if (ordenador.turbo==0) ordenador.pause_fastload_countdwn=((unsigned int)pause[0]+256*(unsigned int)pause[1])/20+1; //tzx pause
-			else ordenador.pause_fastload_countdwn=((unsigned int)pause[0]+256*(unsigned int)pause[1])/60+1;
+			if (ordenador.turbo==0) ordenador.pause_fastload_countdwn=((unsigned int)pause[0]+256*(unsigned int)pause[1])/20; //tzx pause
+			else ordenador.pause_fastload_countdwn=((unsigned int)pause[0]+256*(unsigned int)pause[1])/60;
 		}
 		
 		fseek(fichero, byte_position, SEEK_SET);

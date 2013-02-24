@@ -237,6 +237,13 @@ byte Z80free_Rd (register word Addr) {
 	return ((byte)memory[Addr]);
 
 }
+
+byte Z80free_Rd_fetch (register word Addr) {
+
+	return ((byte)memory[Addr]);
+
+}
+
 void Z80free_Wr (register word Addr, register byte Value) {
 
 	memory[Addr]=(unsigned char) Value;

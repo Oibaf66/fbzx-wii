@@ -251,6 +251,7 @@ static void insert_tape()
 	
 	ordenador.tape_current_bit=0;
 	ordenador.tape_current_mode=TAP_TRASH;
+	ordenador.next_block= NOBLOCK;
 	
 	if(ordenador.tap_file!=NULL) {
 		fclose(ordenador.tap_file);
@@ -440,10 +441,12 @@ static int manage_tape(int which)
 	case 3: //Stop
 		//if (ordenador.tape_fast_load == 0)
 				ordenador.pause = 1;
+				ordenador.tape_start_countdwn=0;
 		retorno=-1;		
 		break;
 	case 4: //Rewind
 			ordenador.pause=1;
+			ordenador.tape_start_countdwn=0;
 			if(ordenador.tap_file!=NULL) {
 				ordenador.tape_current_mode=TAP_TRASH;
 				rewind_tape(ordenador.tap_file,1);		
