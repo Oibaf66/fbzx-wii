@@ -167,7 +167,7 @@ struct computer {
 
 	enum tapmodes tape_current_mode;
 	enum block_type next_block; 
-	unsigned char pause; // 1=tape stop
+	unsigned char tape_stop; // 1=tape stop
 	enum taptypes tape_file_type;
 	unsigned int tape_counter0;
 	unsigned int tape_counter1;

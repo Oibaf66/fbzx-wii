@@ -41,7 +41,7 @@ char elbit=0;
 
 inline void tape_read(FILE *fichero, int tstados) {
 
-	if(ordenador.pause)
+	if(ordenador.tape_stop)
 	{
 		if ((ordenador.turbo_state != 0)&&(ordenador.turbo==1))
 			{
@@ -79,9 +79,14 @@ inline void tape_read_tap (FILE * fichero, int tstados) {
 	int retval;
 		
 	if (fichero == NULL)
+		{
+		sprintf (ordenador.osd_text, "No tape selected");
+		ordenador.osd_time = 100;
+		ordenador.tape_stop=1; //Stop the tape
 		return;
+		}
 
-	if (!ordenador.pause) {
+	if (!ordenador.tape_stop) {
 		if (ordenador.tape_current_mode == TAP_TRASH) {		// initialize a new block						
 			retval=fread (&value, 1, 1, fichero);
 			retval=fread (&value2, 1, 1, fichero);	// read block longitude
@@ -183,7 +188,7 @@ inline void tape_read_tap (FILE * fichero, int tstados) {
 			break;
 		case TAP_STOP:
 			ordenador.tape_current_mode = TAP_TRASH;	// initialize
-			ordenador.pause = 1;	// pause it
+			ordenador.tape_stop = 1;	// pause it
 			break;
 		default:
 			break;
@@ -199,7 +204,15 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 	static unsigned int bucle,bucle2;
 	int retval;
 	
-	if ((fichero == NULL)||(ordenador.pause))
+	if (fichero == NULL)
+		{
+		sprintf (ordenador.osd_text, "No tape selected");
+		ordenador.osd_time = 100;
+		ordenador.tape_stop=1; //Stop the tape
+		return;
+		}
+	
+	if (ordenador.tape_stop)
 		return;
 
 	if (ordenador.tape_current_mode == TAP_TRASH) {		// initialize a new block
@@ -431,7 +444,7 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 					for(bucle=0;bucle<4;bucle++)
 						retval=fread(&value,1,1,fichero);
 					if(ordenador.mode128k==0) {
-						ordenador.pause = 1;
+						ordenador.tape_stop = 1;
 						ordenador.tape_start_countdwn=0;
 						return;
 					}
@@ -619,7 +632,7 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 			ordenador.tape_counter_rep = 0;
 			ordenador.tape_current_mode = TAP_TRASH;	// read new block
 			ordenador.next_block= NOBLOCK;
-			ordenador.pause = 1;
+			ordenador.tape_stop = 1;
 		}
 		break;
 	case TZX_PURE_TONE:
@@ -649,7 +662,7 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 		ordenador.tape_current_bit = 0;
 		ordenador.tape_current_mode = TAP_TRASH;	// initialize
 		ordenador.next_block= NOBLOCK;
-		ordenador.pause = 1;	// pause it
+		ordenador.tape_stop = 1;	// pause it
 		break;
 	default:
 		break;
@@ -667,7 +680,7 @@ void rewind_tape(FILE *fichero,unsigned char pause) {
 		for(thebucle=0;thebucle<10;thebucle++)
 			retval=fread(&value,1,1,ordenador.tap_file); // jump over the header
 	ordenador.next_block= NOBLOCK;		
-	ordenador.pause=pause;
+	ordenador.tape_stop=pause;
 	if (pause) ordenador.tape_start_countdwn=0; //Stop tape play countdown
 }
 
@@ -905,29 +918,17 @@ void fastload_block_tzx (FILE * fichero) {
    * Other registers unchanged.
    */
    
-	unsigned int longitud, len, bucle, number_bytes, byte_position;
+	unsigned int longitud, len, bucle, number_bytes, byte_position, byte_position2, retorno;
 	unsigned char value[65536], empty, blockid, parity, pause[2],flag_byte;	
-	int retval, retval2;
+	int retval;
 	
-	//ordenador.other_ret = 1;	// next instruction must be RET
-	procesador.PC=0x5e2;
 	longitud =0;
 	pause[0]=pause[1]=0;
 
-	if (!(procesador.Ra.br.F & F_C)) { // if Carry=0, is VERIFY, so return OK
-		procesador.Rm.br.F |= F_C;	 // verify OK
-		procesador.Rm.wr.IX += procesador.Rm.wr.DE;
-		procesador.Rm.wr.DE = 0;
-		return;
-	}
-	
-	procesador.Rm.br.B=0;
-	procesador.Rm.br.L=0x01;
-
 	empty=file_empty(fichero);
 
-	
 	if ((fichero == NULL)||(empty)) {
+		procesador.PC=0x5e2;
 		procesador.Rm.br.F &= (~F_C);	// Load error
 		procesador.Rm.wr.IX += procesador.Rm.wr.DE;
 		procesador.Rm.wr.DE = 0;
@@ -940,6 +941,8 @@ void fastload_block_tzx (FILE * fichero) {
 	}
 		
 	do	{
+		retorno=0;
+		byte_position=ftell(fichero);
 		retval=fread (&blockid, 1, 1, fichero); //Read id block
 		if (feof (fichero)) // end of file?
 			{
@@ -952,20 +955,20 @@ void fastload_block_tzx (FILE * fichero) {
 		switch(blockid) {
 				case 0x10: // classic tape block
 				retval=fread (pause, 1, 2, fichero); //pause lenght
-				retval2=fread (value, 1, 2, fichero);	// read length of current block
-				if ((retval!=2)||(retval2!=2))
+				retval=fread (value, 1, 2, fichero);	// read length of current block
+				byte_position2=ftell(fichero);
+				retval=fread (&flag_byte, 1, 1, fichero);
+				if ((retval!=1))
 					{			
 					procesador.Rm.br.F &= (~F_C);	// Load error
 					procesador.Rm.wr.IX += procesador.Rm.wr.DE;
 					procesador.Rm.wr.DE = 0;
 					printf("TZX: Read file error\n");
 					return;
-					}
+					}	
 				longitud = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1]);
-				byte_position=ftell(fichero);
-				retval=fread (&flag_byte, 1, 1, fichero);
-				if (retval!=1) {procesador.Rm.br.F &= (~F_C);return;}
-				switch(flag_byte)
+					
+					switch(flag_byte)
 					{
 					case 0x00: //header
 						retval=fread (value, 1, 17, fichero);
@@ -992,60 +995,45 @@ void fastload_block_tzx (FILE * fichero) {
 							ordenador.next_block=NOBLOCK;
 					break;
 					}
-				fseek(fichero, byte_position, SEEK_SET);	
+				retorno=1;		
+				fseek(fichero, byte_position2, SEEK_SET);	
 				break;	
 					case 0x11: // turbo 
-					retval=fread(value,1,0x0F, fichero);
-					retval=fread (value, 1,3 ,fichero);	// read length of current block
-					if (retval!=3) {procesador.Rm.br.F &= (~F_C);return;}
-					longitud = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1])+ 65536 * ((unsigned int) value[2]);
-					for(bucle=0;bucle<longitud;bucle++)
-						retval=fread(value,1,1, fichero);
+					retorno=2;
 				break;
 					
 				case 0x12: // pure tone
-					retval=fread(value,1,4,fichero);
+					retorno=2;
 				break;
 
 				case 0x13: // multiple pulses
-					retval=fread(value,1,1,fichero); // number of pulses
-					if (retval!=1) {procesador.Rm.br.F &= (~F_C);return;} 
-					if(value[0] != 0)
-						{
-						retval=fread(&value,1,2,fichero); // length of pulse in T-states
-						}
+					retorno=2;
 				break;
 				
 				case 0x14: // turbo tape block					
-					retval=fread(value,1,0x07, fichero);
-					retval=fread (value, 1, 3, fichero);	// read length of current block
-					if (retval!=3) {procesador.Rm.br.F &= (~F_C);return;} 
-					longitud = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1])+ 65536 * ((unsigned int) value[2]);
-					for(bucle=0;bucle<longitud;bucle++)
-						retval=fread(value,1,1, fichero);
+					retorno=2;	
 				break;
 
 				case 0x20: // pause
 					retval=fread(value,1,2,fichero);
 					if (retval!=2) {procesador.Rm.br.F &= (~F_C);return;} 
-					if (!value[0]&&!value[1]) {return;} //stop the tape
+					if (!value[0]&&!value[1]) {retorno=2;} //stop the tape
 				break;
 					
 				case 0x21: // group start
-					retval=fread(value,1,1,fichero);
-					if (retval!=1) {procesador.Rm.br.F &= (~F_C);return;} 
-					len = (unsigned int) value[0];
-					retval=fread(value,1,len,fichero);
+					retorno=2;	
 				break;
 					
 				case 0x22: // group end
+					retorno=2;
 				break;
 				
 				case 0x24: // loop start
-					retval=fread(value,1,2, fichero);
+					retorno=2;
 				break;
 				
 				case 0x25: // loop end
+					retorno=2;
 				break;
 				
 				case 0x28: // select block
@@ -1056,12 +1044,7 @@ void fastload_block_tzx (FILE * fichero) {
 				break;
 				
 				case 0x2A: // pause if 48K
-					retval=fread(value,1,4,fichero);
-					if(ordenador.mode128k==0) {
-						ordenador.pause = 1;
-						ordenador.tape_start_countdwn=0;
-						return;
-					}
+					retorno=2;
 				break;
 					
 				case 0x30: // text description
@@ -1114,16 +1097,35 @@ void fastload_block_tzx (FILE * fichero) {
 				break;
 					
 				default: // not supported
-					procesador.Rm.br.F &= (~F_C);return; //Tape error				
+					retorno=2;				
 				break;
 			}
-		} while ((blockid!=0x10)&&(!feof(fichero)));
+		} while ((retorno==0)&&(!feof(fichero)));
 
-		if (feof(fichero)) {procesador.Rm.br.F &= (~F_C);return;}
+		if (feof(fichero)) {retorno=2;}
+		
+		if (retorno==2)
+		{
+			fseek(fichero, byte_position, SEEK_SET);
+			ordenador.tape_stop=1; //Start the tape
+		return;
+		}
 		
 		//Fast load routine
+	
+	procesador.PC=0x5e2;
+	
+	if (!(procesador.Ra.br.F & F_C)) { // if Carry=0, is VERIFY, so return OK
+		procesador.Rm.br.F |= F_C;	 // verify OK
+		procesador.Rm.wr.IX += procesador.Rm.wr.DE;
+		procesador.Rm.wr.DE = 0;
+		return;
+	}
+	
+	procesador.Rm.br.B=0;
+	procesador.Rm.br.L=0x01;	
 		
-	retval=fread (value, 1,1, fichero); //Flag Byte
+	retval=fread (&flag_byte, 1,1, fichero); //Flag Byte
 	if (retval!=1)
 		{
 		procesador.Rm.br.F &= (~F_C);	// Load error
@@ -1134,9 +1136,9 @@ void fastload_block_tzx (FILE * fichero) {
 		}
 
 	longitud--;
-	printf("TZX: Flag_byte_fast: %X en %ld\n",value[0],ftell(fichero));
+	printf("TZX: Flag_byte_fast: %X en %ld\n",flag_byte,ftell(fichero));
 	
-	if (value[0] != procesador.Ra.br.A) // different flag
+	if (flag_byte != procesador.Ra.br.A) // different flag
 		{
 		procesador.Rm.br.F &= (~F_C);	// Load error
 		procesador.Rm.wr.IX += procesador.Rm.wr.DE;
@@ -1146,7 +1148,7 @@ void fastload_block_tzx (FILE * fichero) {
 		return;
 		}
 			
-	parity=(byte) value[0];	
+	parity=(byte) flag_byte;	
 		
 	if ((longitud-1)!=procesador.Rm.wr.DE) 
 		{

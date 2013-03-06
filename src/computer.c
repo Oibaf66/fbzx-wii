@@ -87,7 +87,7 @@ inline void emulate (int tstados) {
 	play_sound (tstados);
 	tape_read (ordenador.tap_file, tstados);
 	microdrive_emulate(tstados);
-	if (!ordenador.pause) {
+	if (!ordenador.tape_stop) {
 		if (ordenador.tape_readed)
 			ordenador.sound_bit = 1;
 		else
@@ -116,7 +116,7 @@ void computer_init () { //Called only on start-up
 	ordenador.precision_old = 1;
 
 	ordenador.tape_readed = 0;
-	ordenador.pause = 1;	// tape stop
+	ordenador.tape_stop = 1;	// tape stop
 	ordenador.tape_fast_load = 1;	// fast load by default
 	ordenador.rewind_on_reset = 1; //Rewound on reset by default
 	ordenador.pause_instant_load = 0;
@@ -561,7 +561,7 @@ inline void show_screen (int tstados) {
 			ordenador.interr = 1;
 			if ((ordenador.turbo_state == 0) || (curr_frames%7 == 0)) ordenador.readkeyboard = 1;
 			curr_frames++;
-			if (ordenador.tape_start_countdwn==1) ordenador.pause=0; //Autoplay
+			if (ordenador.tape_start_countdwn==1) ordenador.tape_stop=0; //Autoplay
 			if (ordenador.tape_start_countdwn>0) ordenador.tape_start_countdwn--;
 			if (ordenador.pause_fastload_countdwn>0) ordenador.pause_fastload_countdwn--;
 		}
@@ -666,7 +666,7 @@ inline void show_screen (int tstados) {
 				}*/
 			}
 			
-			if (ordenador.tape_start_countdwn==1) ordenador.pause=0; //Autoplay
+			if (ordenador.tape_start_countdwn==1) ordenador.tape_stop=0; //Autoplay
 			
 			if (ordenador.tape_start_countdwn>0) ordenador.tape_start_countdwn--;
 			if (ordenador.pause_fastload_countdwn>0) ordenador.pause_fastload_countdwn--;
@@ -710,7 +710,7 @@ inline void show_screen_precision (int tstados) {
 			ordenador.interr = 1;
 			ordenador.readkeyboard = 1;
 			curr_frames++;
-			if (ordenador.tape_start_countdwn==1) ordenador.pause=0; //Autoplay
+			if (ordenador.tape_start_countdwn==1) ordenador.tape_stop=0; //Autoplay
 			if (ordenador.tape_start_countdwn>0) ordenador.tape_start_countdwn--;
 			if (ordenador.pause_fastload_countdwn>0) ordenador.pause_fastload_countdwn--;
 		}
@@ -913,7 +913,7 @@ inline void show_screen_precision (int tstados) {
 				}*/
 			}
 			
-			if (ordenador.tape_start_countdwn==1) ordenador.pause=0; //Autoplay
+			if (ordenador.tape_start_countdwn==1) ordenador.tape_stop=0; //Autoplay
 			
 			if (ordenador.tape_start_countdwn>0) ordenador.tape_start_countdwn--;
 			if (ordenador.pause_fastload_countdwn>0) ordenador.pause_fastload_countdwn--;
@@ -1243,13 +1243,13 @@ inline void read_keyboard () {
 
 		case SDLK_F5:   // STOP tape
 			//if ((ordenador.tape_fast_load == 0))
-				ordenador.pause = 1;
+				ordenador.tape_stop = 1;
 				ordenador.tape_start_countdwn=0;
 			break;
 
 		case SDLK_F6:	// PLAY tape
 			//if (ordenador.tape_fast_load == 0)
-				ordenador.pause = 0;
+				ordenador.tape_stop = 0;
 			break;		
 
 		case SDLK_F9:
@@ -1553,7 +1553,7 @@ inline void read_keyboard () {
 		ordenador.js = ordenador.jk;
 	
 	if (joybutton_matrix[0][SDLK_F6] && (ordenador.tape_fast_load == 0))
-				ordenador.pause = 0; //Play the tape
+				ordenador.tape_stop = 0; //Play the tape
 				
 	//Virtual Keyboard
 	
@@ -1706,7 +1706,7 @@ void ResetComputer () {
 	
 	microdrive_reset();
 	
-	ordenador.pause = 1;
+	ordenador.tape_stop = 1;
 	
 	if (ordenador.rewind_on_reset)
 	{		
@@ -2046,7 +2046,7 @@ void Z80free_Out (register word Port, register byte Value) {
 		ordenador.port254 = (unsigned char) Value;
 		ordenador.border = (((unsigned char) Value) & 0x07);
 
-		if (ordenador.pause) {
+		if (ordenador.tape_stop) {
 			if (Value & 0x10)
 				ordenador.sound_bit = 1;
 			else
@@ -2098,7 +2098,7 @@ void Z80free_Out_fake (register word Port, register byte Value) {
 		ordenador.port254 = (unsigned char) Value;
 		ordenador.border = (((unsigned char) Value) & 0x07);
 
-		if (ordenador.pause) {
+		if (ordenador.tape_stop) {
 			if (Value & 0x10)
 				ordenador.sound_bit = 1;
 			else
@@ -2196,7 +2196,7 @@ byte Z80free_In (register word Port) {
 		if (!(temporal_io & 0x8000))
 			pines &= ordenador.s15;
 
-		if (ordenador.pause) {
+		if (ordenador.tape_stop) {
 			if (ordenador.issue == 2)	{
 				if (ordenador.port254 & 0x18)
 					pines |= 0x40;

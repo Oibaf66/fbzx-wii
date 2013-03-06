@@ -1555,7 +1555,7 @@ int main(int argc,char *argv[]) {
 					else 
 						{
 						ordenador.tape_start_countdwn=0; //Stop tape play countdown
-						if (ordenador.pause ==1) fastload_block_tzx(ordenador.tap_file);
+						if (ordenador.tape_stop ==1) fastload_block_tzx(ordenador.tap_file);
 						}
 					}
 				}

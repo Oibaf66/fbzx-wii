@@ -632,12 +632,12 @@ void taps_menu() {
 			fin=0;
 		break;
 		case SDLK_1:
-			//ordenador.pause=1;
+			//ordenador.tape_stop=1;
 			select_tapfile();
 		break;
 		case SDLK_2:
 			fin=0;
-			ordenador.pause=1;
+			ordenador.tape_stop=1;
 			ordenador.tape_start_countdwn=0;
 			if(ordenador.tap_file!=NULL) {
 				ordenador.tape_current_mode=TAP_TRASH;
@@ -647,7 +647,7 @@ void taps_menu() {
 			ordenador.osd_time=50;			
 		break;
 		case SDLK_3:
-			ordenador.pause=1;
+			ordenador.tape_stop=1;
 			ordenador.tape_start_countdwn=0;
 			ordenador.tape_fast_load=1-ordenador.tape_fast_load;
 			if(ordenador.tap_file!=NULL) {
