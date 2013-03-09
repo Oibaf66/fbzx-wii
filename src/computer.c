@@ -1109,7 +1109,6 @@ inline void read_keyboard () {
 	enum joystate_x {JOY_CENTER_X, JOY_LEFT, JOY_RIGHT};
 	enum joystate_y {JOY_CENTER_Y, JOY_UP, JOY_DOWN};
 	int joy_axis_x[2],joy_axis_y[2], joy_n, joybutton_n; 
-	static unsigned char joybutton_matrix[2][322];
 	unsigned char status_hat[2];
 	int fire_on[2];
 	fire_on[0]=0;

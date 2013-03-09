@@ -37,6 +37,7 @@ enum taptypes {TAP_TAP, TAP_TZX};
 enum  block_type {NOBLOCK, PROG, VAR, DATA};
 
 int countdown_buffer;
+unsigned char joybutton_matrix[2][322];
 
 struct computer {
 

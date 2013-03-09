@@ -53,6 +53,7 @@ extern FILE *fdebug;
 
 static SDL_Surface *image_kbd, *image_sym, *image_caps,*image_kbd_small, *image_sym_small, *image_caps_small, *tmp_surface ;
 static int vkb_is_init;
+static int key_code;
 
 extern struct computer ordenador;
 void clean_screen(); 
@@ -202,7 +203,6 @@ struct virtkey* get_key()
 
 void virtkey_ir_run(void)
 { 
-	int key_code;
 	int x,y,xm, ym, i=0;
 	int key_w = 50/RATIO;
 	int key_h = 64/RATIO;
@@ -224,6 +224,13 @@ void virtkey_ir_run(void)
 		(SDL_JoystickGetButton(joy, 9) && !joy_bottons_last[2]) ||  /* CA */
 		(SDL_JoystickGetButton(joy, 10) && !joy_bottons_last[3]))   /* CB */
 	key_sel = KEY_SELECT;
+	
+	if ((!SDL_JoystickGetButton(joy, 0) && joy_bottons_last[0]) ||      /* A */
+		(!SDL_JoystickGetButton(joy, 3) && joy_bottons_last[1]) ||  /* 2 */
+		(!SDL_JoystickGetButton(joy, 9) && joy_bottons_last[2]) ||  /* CA */
+		(!SDL_JoystickGetButton(joy, 10) && joy_bottons_last[3]))   /* CB */
+	key_sel = KEY_DESELECT;
+	
 				
 	joy_bottons_last[0]=SDL_JoystickGetButton(joy, 0) ;   /* A */
 	joy_bottons_last[1]	=SDL_JoystickGetButton(joy, 3) ;  /* 2 */
@@ -248,32 +255,48 @@ void virtkey_ir_run(void)
 			virtkey_t *key = &keys[i];
 				
 			if ((key->sdl_code == SDLK_LSHIFT) && !keys[3 * KEY_COLS + 8 ].is_on)
-			keys[3 * KEY_COLS + 0 ].is_on = !keys[3 * KEY_COLS + 0 ].is_on; //Caps Shit
+				keys[3 * KEY_COLS + 0 ].is_on = !keys[3 * KEY_COLS + 0 ].is_on; //Caps Shit
 			else if ((key->sdl_code == SDLK_LCTRL) && !keys[3 * KEY_COLS + 0 ].is_on) 
-			keys[3 * KEY_COLS + 8 ].is_on = !keys[3 * KEY_COLS + 8 ].is_on; //Sym Shift
+				keys[3 * KEY_COLS + 8 ].is_on = !keys[3 * KEY_COLS + 8 ].is_on; //Sym Shift
 			else {
-			key->caps_on = keys[3 * KEY_COLS + 0 ].is_on;
-			key->sym_on = keys[3 * KEY_COLS + 8 ].is_on;
-			keys[3 * KEY_COLS + 0 ].is_on = 0; //Caps Shit
-			keys[3 * KEY_COLS + 8 ].is_on = 0; //Sym Shift
+				key->caps_on = keys[3 * KEY_COLS + 0 ].is_on;
+				key->sym_on = keys[3 * KEY_COLS + 8 ].is_on;
 			}
 	
 			key_code = key->sdl_code;
 	
-			ordenador.kbd_buffer_pointer=1;
-			countdown_buffer=8;
-			ordenador.keyboard_buffer[0][1]= key_code;
-			if 	(key->caps_on) ordenador.keyboard_buffer[1][1]= SDLK_LSHIFT; 
-			else if (key->sym_on) ordenador.keyboard_buffer[1][1]= SDLK_LCTRL; 
-			else ordenador.keyboard_buffer[1][1]= 0;
-	
+			if ((key_code!=SDLK_LSHIFT)&&(key_code!=SDLK_LCTRL))
+			{
+				if 	(key->caps_on) joybutton_matrix[0][SDLK_LSHIFT]=1;
+				else if (key->sym_on) joybutton_matrix[0][SDLK_LCTRL]=1;
+				joybutton_matrix[0][key_code]=1;
+			}
+			
 			printf ("Push Event: keycode %d\n", key_code);
 			
 			SDL_ShowCursor(SDL_DISABLE);
 			draw_vk();
 			SDL_ShowCursor(SDL_ENABLE);
 		}
-	key_sel=0;
+	}
+	
+	if (key_sel==KEY_DESELECT)
+	{	
+		joybutton_matrix[0][key_code]=0;
+		joybutton_matrix[0][SDLK_LSHIFT]=0;
+		joybutton_matrix[0][SDLK_LCTRL]=0; 
+		
+		if ((key_code!=SDLK_LSHIFT)&&(key_code!=SDLK_LCTRL))
+		{
+			keys[3 * KEY_COLS + 0 ].is_on = 0; //Caps Shit
+			keys[3 * KEY_COLS + 8 ].is_on = 0; //Sym Shift
+		}
+		
+		SDL_ShowCursor(SDL_DISABLE);
+		draw_vk();
+		SDL_ShowCursor(SDL_ENABLE);
+		
+	key_code=0;
 	}
 }
 
@@ -290,4 +313,11 @@ void virtkey_ir_deactivate(void)
 {
 	ordenador.vk_is_active=0;
 	SDL_ShowCursor(SDL_DISABLE);
+	
+	joybutton_matrix[0][key_code]=0;
+	joybutton_matrix[0][SDLK_LSHIFT]=0;
+	joybutton_matrix[0][SDLK_LCTRL]=0; 	
+	keys[3 * KEY_COLS + 0 ].is_on = 0; //Caps Shit
+	keys[3 * KEY_COLS + 8 ].is_on = 0; //Sym Shift
+	key_code=0;
 }
