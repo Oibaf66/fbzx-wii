@@ -83,6 +83,7 @@ inline void tape_read_tap (FILE * fichero, int tstados) {
 		sprintf (ordenador.osd_text, "No tape selected");
 		ordenador.osd_time = 100;
 		ordenador.tape_stop=1; //Stop the tape
+		ordenador.tape_stop_fast=1; //Stop the tape
 		return;
 		}
 
@@ -189,6 +190,7 @@ inline void tape_read_tap (FILE * fichero, int tstados) {
 		case TAP_STOP:
 			ordenador.tape_current_mode = TAP_TRASH;	// initialize
 			ordenador.tape_stop = 1;	// pause it
+			ordenador.tape_stop_fast = 1;	// pause it
 			break;
 		default:
 			break;
@@ -209,6 +211,7 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 		sprintf (ordenador.osd_text, "No tape selected");
 		ordenador.osd_time = 100;
 		ordenador.tape_stop=1; //Stop the tape
+		ordenador.tape_stop_fast = 1;	// pause it
 		return;
 		}
 	
@@ -445,7 +448,7 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 						retval=fread(&value,1,1,fichero);
 					if(ordenador.mode128k==0) {
 						ordenador.tape_stop = 1;
-						ordenador.tape_start_countdwn=0;
+						ordenador.tape_stop_fast = 1;	// pause it
 						return;
 					}
 					break;
@@ -633,6 +636,7 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 			ordenador.tape_current_mode = TAP_TRASH;	// read new block
 			ordenador.next_block= NOBLOCK;
 			ordenador.tape_stop = 1;
+			ordenador.tape_stop_fast = 1;	// pause it
 		}
 		break;
 	case TZX_PURE_TONE:
@@ -663,6 +667,7 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 		ordenador.tape_current_mode = TAP_TRASH;	// initialize
 		ordenador.next_block= NOBLOCK;
 		ordenador.tape_stop = 1;	// pause it
+		ordenador.tape_stop_fast = 1;	// pause it
 		break;
 	default:
 		break;
@@ -681,6 +686,7 @@ void rewind_tape(FILE *fichero,unsigned char pause) {
 			retval=fread(&value,1,1,ordenador.tap_file); // jump over the header
 	ordenador.next_block= NOBLOCK;		
 	ordenador.tape_stop=pause;
+	ordenador.tape_stop_fast=pause;
 	if (pause) ordenador.tape_start_countdwn=0; //Stop tape play countdown
 }
 
@@ -1044,7 +1050,9 @@ void fastload_block_tzx (FILE * fichero) {
 				break;
 				
 				case 0x2A: // pause if 48K
-					retorno=2;
+					ordenador.tape_stop_fast=1;
+					fseek(fichero, byte_position, SEEK_SET);
+					return;
 				break;
 					
 				case 0x30: // text description
@@ -1107,7 +1115,7 @@ void fastload_block_tzx (FILE * fichero) {
 		if (retorno==2)
 		{
 			fseek(fichero, byte_position, SEEK_SET);
-			ordenador.tape_stop=1; //Start the tape
+			ordenador.tape_stop=0; //Start the tape
 		return;
 		}
 		

@@ -1546,7 +1546,7 @@ int main(int argc,char *argv[]) {
 		/* if PC is 0x056c, a call to LD_BYTES has been made, so if
 		FAST_LOAD is 1, we must load the block in memory and return */
 
-		if((!ordenador.mdr_paged)&&(PC==0x056c) && (ordenador.tape_fast_load==1)) {
+		if((!ordenador.mdr_paged)&&(PC==0x056c) && (ordenador.tape_fast_load==1)&&(ordenador.tape_stop_fast == 0)) {
 			if (ordenador.tap_file!=NULL)
 				{
 				if (ordenador.pause_fastload_countdwn==0)

@@ -631,13 +631,16 @@ void taps_menu() {
 		case SDLK_ESCAPE: // to exit the help
 			fin=0;
 		break;
-		case SDLK_1:
-			//ordenador.tape_stop=1;
+		case SDLK_1: //select tape
+			ordenador.tape_stop=1;
+			ordenador.tape_stop_fast = 1;
+			ordenador.tape_start_countdwn=0;
 			select_tapfile();
 		break;
-		case SDLK_2:
+		case SDLK_2: //rewind tape
 			fin=0;
 			ordenador.tape_stop=1;
+			ordenador.tape_stop_fast = 1;
 			ordenador.tape_start_countdwn=0;
 			if(ordenador.tap_file!=NULL) {
 				ordenador.tape_current_mode=TAP_TRASH;
@@ -646,8 +649,9 @@ void taps_menu() {
 			sprintf(ordenador.osd_text,"Tape rewound");
 			ordenador.osd_time=50;			
 		break;
-		case SDLK_3:
+		case SDLK_3: //Instant load settings
 			ordenador.tape_stop=1;
+			ordenador.tape_stop_fast = 1;
 			ordenador.tape_start_countdwn=0;
 			ordenador.tape_fast_load=1-ordenador.tape_fast_load;
 			if(ordenador.tap_file!=NULL) {

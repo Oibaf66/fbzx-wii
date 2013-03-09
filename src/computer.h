@@ -168,6 +168,8 @@ struct computer {
 	enum tapmodes tape_current_mode;
 	enum block_type next_block; 
 	unsigned char tape_stop; // 1=tape stop
+	unsigned char tape_stop_fast; // 1=tape stop
+	unsigned char stop_tape_start_countdown; // 1=tape stop start countdown
 	enum taptypes tape_file_type;
 	unsigned int tape_counter0;
 	unsigned int tape_counter1;

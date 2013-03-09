@@ -117,6 +117,8 @@ void computer_init () { //Called only on start-up
 
 	ordenador.tape_readed = 0;
 	ordenador.tape_stop = 1;	// tape stop
+	ordenador.tape_stop_fast = 1;	// tape stop
+	ordenador.stop_tape_start_countdown =0;
 	ordenador.tape_fast_load = 1;	// fast load by default
 	ordenador.rewind_on_reset = 1; //Rewound on reset by default
 	ordenador.pause_instant_load = 0;
@@ -562,7 +564,7 @@ inline void show_screen (int tstados) {
 			if ((ordenador.turbo_state == 0) || (curr_frames%7 == 0)) ordenador.readkeyboard = 1;
 			curr_frames++;
 			if (ordenador.tape_start_countdwn==1) ordenador.tape_stop=0; //Autoplay
-			if (ordenador.tape_start_countdwn>0) ordenador.tape_start_countdwn--;
+			if ((ordenador.tape_start_countdwn>0)&&(ordenador.stop_tape_start_countdown ==0)) ordenador.tape_start_countdwn--;
 			if (ordenador.pause_fastload_countdwn>0) ordenador.pause_fastload_countdwn--;
 		}
 		return;
@@ -668,7 +670,7 @@ inline void show_screen (int tstados) {
 			
 			if (ordenador.tape_start_countdwn==1) ordenador.tape_stop=0; //Autoplay
 			
-			if (ordenador.tape_start_countdwn>0) ordenador.tape_start_countdwn--;
+			if ((ordenador.tape_start_countdwn>0)&&(ordenador.stop_tape_start_countdown ==0)) ordenador.tape_start_countdwn--;
 			if (ordenador.pause_fastload_countdwn>0) ordenador.pause_fastload_countdwn--;
 				
 			if (ordenador.mustlock) {
@@ -711,7 +713,7 @@ inline void show_screen_precision (int tstados) {
 			ordenador.readkeyboard = 1;
 			curr_frames++;
 			if (ordenador.tape_start_countdwn==1) ordenador.tape_stop=0; //Autoplay
-			if (ordenador.tape_start_countdwn>0) ordenador.tape_start_countdwn--;
+			if ((ordenador.tape_start_countdwn>0)&&(ordenador.stop_tape_start_countdown ==0)) ordenador.tape_start_countdwn--;
 			if (ordenador.pause_fastload_countdwn>0) ordenador.pause_fastload_countdwn--;
 		}
 		//if (ordenador.tstados_counter > 31) ordenador.interr = 0;
@@ -915,7 +917,7 @@ inline void show_screen_precision (int tstados) {
 			
 			if (ordenador.tape_start_countdwn==1) ordenador.tape_stop=0; //Autoplay
 			
-			if (ordenador.tape_start_countdwn>0) ordenador.tape_start_countdwn--;
+			if ((ordenador.tape_start_countdwn>0)&&(ordenador.stop_tape_start_countdown ==0)) ordenador.tape_start_countdwn--;
 			if (ordenador.pause_fastload_countdwn>0) ordenador.pause_fastload_countdwn--;
 				
 			if (ordenador.mustlock) {
@@ -1244,12 +1246,15 @@ inline void read_keyboard () {
 		case SDLK_F5:   // STOP tape
 			//if ((ordenador.tape_fast_load == 0))
 				ordenador.tape_stop = 1;
-				ordenador.tape_start_countdwn=0;
+				ordenador.tape_stop_fast = 1;
+				ordenador.stop_tape_start_countdown = 1;
 			break;
 
 		case SDLK_F6:	// PLAY tape
-			//if (ordenador.tape_fast_load == 0)
+			if (ordenador.tape_fast_load == 0)
 				ordenador.tape_stop = 0;
+				ordenador.tape_stop_fast = 0;
+				ordenador.stop_tape_start_countdown = 0;
 			break;		
 
 		case SDLK_F9:
@@ -1552,8 +1557,12 @@ inline void read_keyboard () {
 		ordenador.s15 = (ordenador.s15 & 0xE0)| (ordenador.k15 ^ 0x1F);
 		ordenador.js = ordenador.jk;
 	
-	if (joybutton_matrix[0][SDLK_F6] && (ordenador.tape_fast_load == 0))
-				ordenador.tape_stop = 0; //Play the tape
+	if (joybutton_matrix[0][SDLK_F6]) //Play the tape
+		{
+			ordenador.tape_stop_fast = 0;
+			if (ordenador.tape_fast_load == 0) ordenador.tape_stop = 0;
+			ordenador.stop_tape_start_countdown = 0;
+		} 
 				
 	//Virtual Keyboard
 	
@@ -1707,6 +1716,8 @@ void ResetComputer () {
 	microdrive_reset();
 	
 	ordenador.tape_stop = 1;
+	ordenador.tape_stop_fast = 1;
+	ordenador.stop_tape_start_countdown = 0;
 	
 	if (ordenador.rewind_on_reset)
 	{		

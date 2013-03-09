@@ -439,18 +439,22 @@ static int manage_tape(int which)
 		retorno=-1;
 		break;	
 	case 2: //Play
-		//if (ordenador.tape_fast_load == 0)
+		if (ordenador.tape_fast_load == 0)
 				ordenador.tape_stop = 0;
+				ordenador.tape_stop_fast = 0;
+				ordenador.stop_tape_start_countdown = 0;
 		retorno=-1;
 		break;
 	case 3: //Stop
 		//if (ordenador.tape_fast_load == 0)
 				ordenador.tape_stop = 1;
-				ordenador.tape_start_countdwn=0;
+				ordenador.tape_stop_fast = 1;
+				ordenador.stop_tape_start_countdown = 1;
 		retorno=-1;		
 		break;
 	case 4: //Rewind
 			ordenador.tape_stop=1;
+			ordenador.tape_stop_fast = 1;
 			ordenador.tape_start_countdwn=0;
 			if(ordenador.tap_file!=NULL) {
 				ordenador.tape_current_mode=TAP_TRASH;
