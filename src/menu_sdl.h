@@ -53,7 +53,7 @@ void print_font(SDL_Surface *screen, int r, int g, int b, int x, int y, const ch
 int menu_select_title(const char *title, const char **pp_msgs, int *p_submenus);
 int menu_select(const char **pp_msgs, int *p_submenus);
 const char *menu_select_file(char *dir_path,const char *selected_file, int draw_scr);
-
+const char *menu_select_browser(unsigned int tape_pos);
 
 uint32_t menu_wait_key_press();
 

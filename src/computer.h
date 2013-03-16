@@ -36,8 +36,8 @@ enum tapmodes {TAP_GUIDE, TAP_DATA, TAP_PAUSE, TAP_TRASH, TAP_STOP, TAP_PAUSE2, 
 enum taptypes {TAP_TAP, TAP_TZX};
 enum  block_type {NOBLOCK, PROG, VAR, DATA};
 
-int countdown_buffer;
-unsigned char joybutton_matrix[2][322];
+extern int countdown_buffer;
+extern unsigned char joybutton_matrix[2][322];
 
 struct computer {
 
@@ -180,6 +180,7 @@ struct computer {
 	unsigned char tape_readed;
 	unsigned int tape_byte_counter;
 	unsigned int tape_pause_at_end;
+	unsigned int tape_position;
 	FILE *tap_file;
 	unsigned char tape_fast_load; // 0 normal load; 1 fast load
 	unsigned char rewind_on_reset;

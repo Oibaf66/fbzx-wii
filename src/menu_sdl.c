@@ -41,6 +41,7 @@
 #include "characters.h"
 
 #include "minizip/unzip.h"
+#include "tape_browser.h"
 
 #if defined(GEKKO)
 # include <wiiuse/wpad.h> 
@@ -669,7 +670,12 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_siz
 				menu_print_font(screen, 0x40,0x40,0x40,
 						x_start, y_start + y, msg, font_size, max_string);
 			else if (p_menu->cur_sel == i) /* Selected - color */
-				{menu_print_font(screen, 0,200,0,
+					{
+					if (msg[0] == ']') 
+					menu_print_font(screen, 0,200,0,
+						x_start, y_start + y, msg+1, font_size,max_string ); //do not show ']'
+					else	
+					menu_print_font(screen, 0,200,0,
 						x_start, y_start + y, msg, font_size,max_string );
 					selected_file = msg;	
 					}	
@@ -700,6 +706,10 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_siz
 					break;							
 				}
 			}
+			else if (msg[0] == ']')
+				menu_print_font(screen, 0,0,255,
+							x_start, y_start + y, msg+1, font_size, max_string);
+			
 			else /* Otherwise white */
 				menu_print_font(screen, 0x40,0x40,0x40,
 						x_start, y_start + y, msg, font_size, max_string);
@@ -1279,10 +1289,33 @@ static const char *menu_select_file_internal_zip(char *path,
 	return write_filename;
 }
 
-static const char *menu_select_file_internal(char *dir_path,
-		int x, int y, int x2, int y2, const char *selected_file, int draw_scr)
+const char **get_file_list_browser(unsigned int tape_pos, unsigned int *block_pos)
 {
-	const char **file_list = get_file_list(dir_path);
+	unsigned int loop;
+	char **browser_list_menu;
+	
+	browser_list_menu = (char**)malloc((MAX_BROWSER_ITEM+1) * sizeof(char*));
+	browser_list_menu[0] = NULL;
+
+	for(loop=0;browser_list[loop]!=NULL;loop++)
+	{
+	browser_list_menu[loop]=malloc(24+32+8);
+	if (browser_list[loop]->position==tape_pos)
+		{
+		sprintf(browser_list_menu[loop],"]%03d %s   %s",loop,browser_list[loop]->block_type, browser_list[loop]->info);
+		*block_pos=loop;
+		}
+	else
+		sprintf(browser_list_menu[loop],"%03d %s   %s",loop,browser_list[loop]->block_type, browser_list[loop]->info);
+	}
+	browser_list_menu[loop]=NULL;
+	return (const char **) browser_list_menu;
+}
+
+static const char *menu_select_file_internal(char *dir_path,
+		int x, int y, int x2, int y2, const char *selected_file, int draw_scr, unsigned int tape_pos)
+{
+	const char **file_list; 
 	char *sel;
 	char *out;
 	char *out_zip;
@@ -1291,11 +1324,15 @@ static const char *menu_select_file_internal(char *dir_path,
 	int opt;
 	int i;
 	char buf[64];
+	unsigned int block_pos;
+	
+	if (strcmp(dir_path,"browser")) file_list = get_file_list(dir_path);  else file_list = get_file_list_browser(tape_pos, &block_pos);
 	
 	if (file_list == NULL)
 		return NULL;
-
-	if (selected_file) 
+		
+	if (!strcmp(dir_path,"browser")) opt = menu_select_sized("Select block", file_list, NULL, block_pos, x, y, x2, y2, NULL, NULL ,16, draw_scr);
+	else if (selected_file) 
 	{
 		ptr_selected_file= strrchr(selected_file,'/');
 		if (ptr_selected_file) ptr_selected_file++;
@@ -1317,6 +1354,8 @@ static const char *menu_select_file_internal(char *dir_path,
 	if (!sel)
 		return NULL;
 		
+	if (!strcmp(dir_path,"browser")) return sel;	
+		
 	if (!strcmp(sel,"[..]")) //selected "[..]"
 	{
 		free((void*)sel);
@@ -1336,7 +1375,7 @@ static const char *menu_select_file_internal(char *dir_path,
 
         	/* Remove trailing ] */
         	sel[len-1] = '\0';
-			if ((strlen(dir_path) + len) < 2049) 
+			if ((strlen(dir_path) + len) < MAX_PATH_LENGTH) 
 			{
 			strcat(dir_path, "/");
 			strcat(dir_path, sel+1);
@@ -1367,7 +1406,7 @@ static const char *menu_select_file_internal(char *dir_path,
 	if(!strcmp(out_zip,"[..]")) 
 		{
 		free(out_zip);
-		return menu_select_file_internal (dir_path, x, y, x2, y2, selected_file, draw_scr);
+		return menu_select_file_internal (dir_path, x, y, x2, y2, selected_file, draw_scr, 0);
 		}
 	else return out_zip;
 	}
@@ -1379,8 +1418,15 @@ const char *menu_select_file(char *dir_path,const char *selected_file, int draw_
 	if (dir_path == NULL)
 		dir_path = "";
 	return menu_select_file_internal(dir_path,
-			0, 20/RATIO, FULL_DISPLAY_X, FULL_DISPLAY_Y - 20/RATIO, selected_file, draw_scr);
+			0, 20/RATIO, FULL_DISPLAY_X, FULL_DISPLAY_Y - 20/RATIO, selected_file, draw_scr, 0);
 }
+
+const char *menu_select_browser(unsigned int tape_pos)
+{
+	return menu_select_file_internal("browser",
+			0, 20/RATIO, FULL_DISPLAY_X, FULL_DISPLAY_Y - 20/RATIO, NULL, 0, tape_pos);
+}
+
 
 static TTF_Font *read_font(const char *path, int font_size)
 {

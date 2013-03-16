@@ -89,6 +89,7 @@ inline void tape_read_tap (FILE * fichero, int tstados) {
 
 	if (!ordenador.tape_stop) {
 		if (ordenador.tape_current_mode == TAP_TRASH) {		// initialize a new block						
+			ordenador.tape_position=ftell(fichero);
 			retval=fread (&value, 1, 1, fichero);
 			retval=fread (&value2, 1, 1, fichero);	// read block longitude
 			if (feof (fichero)) {
@@ -220,6 +221,7 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 
 	if (ordenador.tape_current_mode == TAP_TRASH) {		// initialize a new block
 		done = 0;
+		ordenador.tape_position=ftell(fichero);
 		do {
 			retval=fread(&value,1,1,fichero); // read block ID
 			printf("TZX:ID_normal: %X en %ld\n",value,ftell(fichero));
@@ -680,10 +682,11 @@ void rewind_tape(FILE *fichero,unsigned char pause) {
 	unsigned char value;
 	int retval;
 	
-	rewind (ordenador.tap_file);
+	rewind (fichero);
 	if(ordenador.tape_file_type==TAP_TZX)
 		for(thebucle=0;thebucle<10;thebucle++)
 			retval=fread(&value,1,1,ordenador.tap_file); // jump over the header
+	ordenador.tape_position=ftell(fichero);
 	ordenador.next_block= NOBLOCK;		
 	ordenador.tape_stop=pause;
 	ordenador.tape_stop_fast=pause;
@@ -743,6 +746,7 @@ void save_file(FILE *fichero) {
 	procesador.Rm.wr.IX++;
 	procesador.Rm.wr.IX++;
 	fseek(fichero,position,SEEK_SET); // put position at end
+	ordenador.tape_position = position;
 	
 	if(ordenador.tape_fast_load==1) //if we want fast load, we assume we want fast save too
 		ordenador.other_ret = 1;	// next instruction must be RET
@@ -804,7 +808,7 @@ void fastload_block_tap (FILE * fichero) {
 		ordenador.osd_time = 100;
 		return;
 	}
-
+	ordenador.tape_position=ftell(fichero);
 	retval=fread (value, 1, 2, fichero);	// read length of current block
 		if (feof (fichero))	{			// end of file?
 			sprintf (ordenador.osd_text, "Rewind tape");			
@@ -948,6 +952,7 @@ void fastload_block_tzx (FILE * fichero) {
 		
 	do	{
 		retorno=0;
+		ordenador.tape_position=ftell(fichero);
 		byte_position=ftell(fichero);
 		retval=fread (&blockid, 1, 1, fichero); //Read id block
 		if (feof (fichero)) // end of file?
@@ -977,8 +982,8 @@ void fastload_block_tzx (FILE * fichero) {
 					switch(flag_byte)
 					{
 					case 0x00: //header
-						retval=fread (value, 1, 17, fichero);
-						if (retval!=17) {procesador.Rm.br.F &= (~F_C);return;}
+						retval=fread (value, 1, 18, fichero);
+						if (retval!=18) {procesador.Rm.br.F &= (~F_C);return;}
 						switch(value[0]	) //Type
 							{
 							case 0x00:

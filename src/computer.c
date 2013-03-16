@@ -48,6 +48,9 @@ extern FILE *fdebug;
  #endif
 #endif
 
+int countdown_buffer;
+unsigned char joybutton_matrix[2][322];
+
 void update_npixels()
 {
 ordenador.npixels= 1;

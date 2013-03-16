@@ -31,6 +31,7 @@
 #include "emulator.h"
 #include "VirtualKeyboard.h"
 #include "tape.h"
+#include "tape_browser.h"
 #include "menus.h"
 #include "cargador.h"
 #include "characters.h"
@@ -58,7 +59,7 @@ void clean_screen();
 
 static const char *main_menu_messages[] = {
 		/*00*/		"Tape",
-		/*01*/		"^|Insert|Load|Play|Stop|Rewind|Create|Delete",
+		/*01*/		"^|Insert|Load|Play|Stop|Rewind|Create|Del|Browse",
 		/*02*/		"Snapshot",
 		/*03*/		"^|Load|Save|Delete",
 		/*04*/		"#1---------------------------------------------",
@@ -229,6 +230,37 @@ void maybe_load_conf(const char *filename)
 	
 }
 
+static void tape_browser()
+{
+	unsigned int tape_position, block_n_int;
+	const char *row_selected; 
+	char block_n[4];
+	
+	row_selected = menu_select_browser(ordenador.tape_position);
+	
+	if (row_selected==NULL) // Aborted
+		return; 
+	
+	if (row_selected[0]==']') strncpy(block_n, row_selected+1,3);
+	else strncpy(block_n, row_selected,3);
+	
+	block_n[3]=0;
+	
+	block_n_int=atoi(block_n);
+	
+	if ((block_n_int<0)||(block_n_int >(MAX_BROWSER_ITEM-1))) return;
+	
+	tape_position=browser_list[block_n_int]->position;
+ 
+	ordenador.tape_current_bit=0;
+	ordenador.tape_current_mode=TAP_TRASH;
+	ordenador.next_block= NOBLOCK;
+	
+	fseek(ordenador.tap_file, tape_position, SEEK_SET);
+	ordenador.tape_position = tape_position;
+	free((void*)row_selected);
+}
+
 static void insert_tape()
 {
 	unsigned char char_id[11];
@@ -292,10 +324,13 @@ static void insert_tape()
 	if((!strncmp(char_id,"ZXTape!",7)) && (char_id[7]==0x1A)&&(char_id[8]==1)) {
 		ordenador.tape_file_type = TAP_TZX;
 		rewind_tape(ordenador.tap_file,1);
+		browser_tzx(ordenador.tap_file);
 	} else {
 		ordenador.tape_file_type = TAP_TAP;
 		rewind_tape(ordenador.tap_file,1);
+		browser_tap(ordenador.tap_file);
 	}
+	
 }
 
 static void delete_tape()
@@ -471,7 +506,10 @@ static int manage_tape(int which)
 		break;	
 	case 6: //Delete
 		delete_tape();
-		break;	
+		break;
+	case 7: //Browser
+		tape_browser();
+		break;
 	default:
 		break;
 	}
