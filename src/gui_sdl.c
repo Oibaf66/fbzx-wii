@@ -234,17 +234,19 @@ static void tape_browser()
 {
 	unsigned int tape_position, block_n_int;
 	const char *row_selected; 
-	char block_n[4];
+	char block_n[5];
+	
+	if (browser_list[0]==NULL) {msgInfo("No tape inserted",3000,NULL);return;}
 	
 	row_selected = menu_select_browser(ordenador.tape_position);
 	
 	if (row_selected==NULL) // Aborted
 		return; 
 	
-	if (row_selected[0]==']') strncpy(block_n, row_selected+1,3);
-	else strncpy(block_n, row_selected,3);
+	if (row_selected[0]==']') strncpy(block_n, row_selected+1,4);
+	else strncpy(block_n, row_selected,4);
 	
-	block_n[3]=0;
+	block_n[4]=0;
 	
 	block_n_int=atoi(block_n);
 	

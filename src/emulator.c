@@ -38,6 +38,7 @@
 #include "tape.h"
 #include "microdrive.h"
 #include "menu_sdl.h"
+#include "tape_browser.h"
 #include <dirent.h>
 
 
@@ -1614,6 +1615,8 @@ int main(int argc,char *argv[]) {
 	DeInitUSB();
 	fatUnmount(0);
 	#endif
+	
+	free_browser();
 	
 	return 0;
 }

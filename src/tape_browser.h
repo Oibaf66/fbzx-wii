@@ -20,18 +20,26 @@
 #ifndef H_TAPE_BROWSER
 #define H_TAPE_BROWSER
 
-#define MAX_BROWSER_ITEM 1000
-
+#define MAX_BROWSER_ITEM 2500
+#define MAX_SELECT_ITEM 63
 
 struct browser {
 	unsigned int position;
 	char block_type[24];
+	char info[36];
+};
+
+struct tape_select {
+	unsigned int offset;
 	char info[32]; 
 };
 
+extern struct tape_select *block_select_list[MAX_SELECT_ITEM+1];
 extern struct browser *browser_list[MAX_BROWSER_ITEM+1];
 
 void browser_tap (FILE *);
 void browser_tzx (FILE *);
+int select_block(FILE * fichero);
+void free_browser();
 
 #endif

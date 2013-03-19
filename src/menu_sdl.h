@@ -74,4 +74,6 @@ int ask_value_sdl(int *final_value,int y_coord,int max_value);
 
 int ask_filename_sdl(char *nombre_final,int y_coord,char *extension, char *path, char *name);
 
+const char *menu_select_tape_block();
+
 #endif /* !__MENU_H__ */

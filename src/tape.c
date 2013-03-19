@@ -23,6 +23,7 @@
 #include "emulator.h"
 #include "menus.h"
 #include "tape.h"
+#include "tape_browser.h"
 
 #ifdef DEBUG
 extern FILE *fdebug;
@@ -204,7 +205,7 @@ inline void tape_read_tap (FILE * fichero, int tstados) {
 inline void tape_read_tzx (FILE * fichero, int tstados) {
 
 	static unsigned char value, value2,value3,value4,done;
-	static unsigned int bucle,bucle2;
+	static unsigned int bucle,bucle2, byte_position;
 	int retval;
 	
 	if (fichero == NULL)
@@ -221,8 +222,8 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 
 	if (ordenador.tape_current_mode == TAP_TRASH) {		// initialize a new block
 		done = 0;
-		ordenador.tape_position=ftell(fichero);
 		do {
+			ordenador.tape_position=ftell(fichero);
 			retval=fread(&value,1,1,fichero); // read block ID
 			printf("TZX:ID_normal: %X en %ld\n",value,ftell(fichero));
 			if(feof(fichero))
@@ -438,11 +439,17 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 					break;
 				
 				case 0x28: // select block
-					retval=fread(&value2,1,1,fichero);
-					retval=fread(&value3,1,1,fichero); 
-					bucle2 = ((unsigned int) value2) + 256 * ((unsigned int) value3);
-					for(bucle=0;bucle<bucle2;bucle++)
-						retval=fread(&value3,1,1,fichero);
+					byte_position=ftell(fichero);
+					retval=select_block(fichero);
+					if (retval)
+					{
+						fseek(fichero, byte_position, SEEK_SET);
+						retval=fread(&value2,1,1,fichero);
+						retval=fread(&value3,1,1,fichero); 
+						bucle2 = ((unsigned int) value2) + 256 * ((unsigned int) value3);
+						for(bucle=0;bucle<bucle2;bucle++)
+							retval=fread(&value3,1,1,fichero);
+					}	
 					break;
 				
 				case 0x2A: // pause if 48K
@@ -994,7 +1001,7 @@ void fastload_block_tzx (FILE * fichero) {
 							case 0X03:
 								ordenador.next_block=DATA;
 							break;
-							default: //??
+							default: //Custom header
 								ordenador.next_block=NOBLOCK;
 							break;
 							}
@@ -1048,10 +1055,16 @@ void fastload_block_tzx (FILE * fichero) {
 				break;
 				
 				case 0x28: // select block
-					retval=fread(value,1,2,fichero);
-					if (retval!=2) {procesador.Rm.br.F &= (~F_C);return;} 
-					len = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1]);
-					retval=fread(value,1,len,fichero);
+					byte_position2=ftell(fichero);
+					retval=select_block(fichero);
+					if (retval)
+					{
+						fseek(fichero, byte_position2, SEEK_SET);
+						retval=fread(value,1,2,fichero);
+						if (retval!=2) {procesador.Rm.br.F &= (~F_C);return;} 
+						len = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1]);
+						retval=fread(value,1,len,fichero);
+					}
 				break;
 				
 				case 0x2A: // pause if 48K

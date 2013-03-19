@@ -1294,22 +1294,41 @@ const char **get_file_list_browser(unsigned int tape_pos, unsigned int *block_po
 	unsigned int loop;
 	char **browser_list_menu;
 	
+	*block_pos=0;
+	
 	browser_list_menu = (char**)malloc((MAX_BROWSER_ITEM+1) * sizeof(char*));
 	browser_list_menu[0] = NULL;
 
 	for(loop=0;browser_list[loop]!=NULL;loop++)
 	{
-	browser_list_menu[loop]=malloc(24+32+8);
+	browser_list_menu[loop]=malloc(24+36+9);
 	if (browser_list[loop]->position==tape_pos)
 		{
-		sprintf(browser_list_menu[loop],"]%03d %s   %s",loop,browser_list[loop]->block_type, browser_list[loop]->info);
+		sprintf(browser_list_menu[loop],"]%04d %s   %s",loop,browser_list[loop]->block_type, browser_list[loop]->info);
 		*block_pos=loop;
 		}
 	else
-		sprintf(browser_list_menu[loop],"%03d %s   %s",loop,browser_list[loop]->block_type, browser_list[loop]->info);
+		sprintf(browser_list_menu[loop],"%04d %s   %s",loop,browser_list[loop]->block_type, browser_list[loop]->info);
 	}
 	browser_list_menu[loop]=NULL;
 	return (const char **) browser_list_menu;
+}
+
+const char **get_file_list_select_block()
+{
+	unsigned int loop;
+	char **block_list_menu;
+	
+	block_list_menu = (char**)malloc((MAX_SELECT_ITEM+1) * sizeof(char*));
+	block_list_menu[0] = NULL;
+
+	for(loop=0;block_select_list[loop]!=NULL;loop++)
+	{
+		block_list_menu[loop]=malloc(32);
+		sprintf(block_list_menu[loop],"%02d %s",loop, block_select_list[loop]->info);
+	}
+	block_list_menu[loop]=NULL;
+	return (const char **) block_list_menu;
 }
 
 static const char *menu_select_file_internal(char *dir_path,
@@ -1326,12 +1345,15 @@ static const char *menu_select_file_internal(char *dir_path,
 	char buf[64];
 	unsigned int block_pos;
 	
-	if (strcmp(dir_path,"browser")) file_list = get_file_list(dir_path);  else file_list = get_file_list_browser(tape_pos, &block_pos);
+	if (!strcmp(dir_path,"browser")) file_list =  get_file_list_browser(tape_pos, &block_pos);  
+	else if (!strcmp(dir_path,"select_block")) file_list = get_file_list_select_block();  
+    else file_list = get_file_list(dir_path);
 	
 	if (file_list == NULL)
 		return NULL;
 		
-	if (!strcmp(dir_path,"browser")) opt = menu_select_sized("Select block", file_list, NULL, block_pos, x, y, x2, y2, NULL, NULL ,16, draw_scr);
+	if (!strcmp(dir_path,"browser")) opt = menu_select_sized("Select block", file_list, NULL, block_pos, x, y, x2, y2, NULL, NULL ,16, 0);
+	else if (!strcmp(dir_path,"select_block")) opt = menu_select_sized("Select program", file_list, NULL, 0, x, y, x2, y2, NULL, NULL ,16, 0);
 	else if (selected_file) 
 	{
 		ptr_selected_file= strrchr(selected_file,'/');
@@ -1354,7 +1376,7 @@ static const char *menu_select_file_internal(char *dir_path,
 	if (!sel)
 		return NULL;
 		
-	if (!strcmp(dir_path,"browser")) return sel;	
+	if (!strcmp(dir_path,"browser")||!strcmp(dir_path,"select_block")) return sel;	
 		
 	if (!strcmp(sel,"[..]")) //selected "[..]"
 	{
@@ -1425,6 +1447,13 @@ const char *menu_select_browser(unsigned int tape_pos)
 {
 	return menu_select_file_internal("browser",
 			0, 20/RATIO, FULL_DISPLAY_X, FULL_DISPLAY_Y - 20/RATIO, NULL, 0, tape_pos);
+}
+
+const char *menu_select_tape_block()
+{
+	SDL_FillRect(screen, 0, SDL_MapRGB(screen->format, 0, 0, 0));
+	return menu_select_file_internal("select_block",
+			0, 20/RATIO, FULL_DISPLAY_X, FULL_DISPLAY_Y - 20/RATIO, NULL, 0, 0);
 }
 
 
