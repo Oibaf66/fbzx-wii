@@ -40,7 +40,8 @@ struct tape_select *block_select_list[MAX_SELECT_ITEM+1];
 void browser_tzx (FILE * fichero) {
 
 	unsigned int longitud, len, bucle, byte_position, retorno, block_number;
-	unsigned char value[65536], empty, blockid, pause[2], flag_byte;	
+	unsigned char value[65536], empty, blockid, pause[2], flag_byte;
+	char block_jump[2];
 	int retval, retval2;
 	
 	longitud =0;
@@ -196,7 +197,7 @@ void browser_tzx (FILE * fichero) {
 					if (longitud==0) strcpy(browser_list[block_number]->block_type,"Stop the Tape      ");
 					else
 						{ 
-						strcpy(browser_list[block_number]->block_type,"Pause:             ");
+						strcpy(browser_list[block_number]->block_type,"Pause              ");
 						sprintf(browser_list[block_number]->info,"%d ms", longitud);
 						}
 				break;
@@ -216,6 +217,13 @@ void browser_tzx (FILE * fichero) {
 					strcpy(browser_list[block_number]->block_type,"Group end          ");
 				break;
 				
+				case 0x23: // jump to block
+					strcpy(browser_list[block_number]->block_type,"Jump to block      ");
+					retval=fread(block_jump,1,2,fichero);
+					if (retval!=2) {retorno=1;break;}
+					sprintf(browser_list[block_number]->info,"Block: %d", ((int) block_jump[0]) + 256*((int) block_jump[1]) + ((int) block_number));
+				break;
+
 				case 0x24: // loop start
 					strcpy(browser_list[block_number]->block_type,"Loop start         ");
 					retval=fread(value,1,2, fichero);
@@ -302,7 +310,7 @@ void browser_tzx (FILE * fichero) {
 					
 				default: // not supported
 					strcpy(browser_list[block_number]->block_type,"Not supported");
-					retorno=1; //Tape error				
+					retorno=1; //Error				
 				break;
 			}
 			block_number++;
@@ -421,7 +429,7 @@ browser_list[block_number]=NULL;
 
 int select_block(FILE * fichero)
 {
-	unsigned int longitud, bucle, byte_position, block_number,nblocks,offset, blk_sel_pos;
+	unsigned int longitud, bucle, block_number,nblocks,offset, blk_sel_pos;
 	unsigned char value[64], len_text;	
 	int retval;
 	
@@ -434,14 +442,14 @@ int select_block(FILE * fichero)
 		block_select_list[bucle]=NULL;
 	}
 	
-	byte_position=ftell(fichero)-1;
-	
-	//search for select block
+	//search for select block position
 	for(blk_sel_pos=0; 
-	((browser_list[blk_sel_pos]!=NULL)&&(blk_sel_pos<MAX_BROWSER_ITEM)&&(browser_list[blk_sel_pos]->position!=byte_position)); 
+	((blk_sel_pos<MAX_BROWSER_ITEM)&&(browser_list[blk_sel_pos]!=NULL)&&(browser_list[blk_sel_pos]->position!=ordenador.tape_position)); 
 	blk_sel_pos++);
 	
-	if (browser_list[blk_sel_pos]->position!=byte_position) return -1;
+	if (browser_list[blk_sel_pos]==NULL) return -1;
+	
+	if (browser_list[blk_sel_pos]->position!=ordenador.tape_position) return -1;
 	
 	retval=fread(value,1,3,fichero);
 	if (retval!=3) {return -1;} 
@@ -473,7 +481,7 @@ int select_block(FILE * fichero)
 	block_select_list[block_number]=NULL;	
 	if (feof(fichero)) return -1;
 	
-	unsigned int tape_position, block_n_int;
+	unsigned int block_n_int;
 	const char *row_selected; 
 	char block_n[3];
 	
@@ -488,20 +496,49 @@ int select_block(FILE * fichero)
 	
 	block_n_int=atoi(block_n);
 	
-	if ((block_n_int<0)||(block_n_int >(MAX_SELECT_ITEM-1))) return -1;
+	if ((block_n_int<0)||(block_n_int >(MAX_SELECT_ITEM-1))||block_select_list[block_n_int]==NULL) return -1;
 	
 	if ((block_select_list[block_n_int]->offset+blk_sel_pos) > (MAX_BROWSER_ITEM-1)) return -1;
 	
-	tape_position=browser_list[block_select_list[block_n_int]->offset+blk_sel_pos]->position;
+	if (browser_list[block_select_list[block_n_int]->offset+blk_sel_pos]==NULL) return -1;
+	
+	ordenador.tape_position=browser_list[block_select_list[block_n_int]->offset+blk_sel_pos]->position;
  
 	ordenador.tape_current_bit=0;
 	ordenador.tape_current_mode=TAP_TRASH;
 	ordenador.next_block= NOBLOCK;
 	
-	fseek(ordenador.tap_file, tape_position, SEEK_SET);
-	ordenador.tape_position = tape_position;
+	fseek(ordenador.tap_file, ordenador.tape_position, SEEK_SET);
 	free((void*)row_selected);
 	
+	return 0;
+}
+
+int jump_to_block(FILE * fichero, int blocks_to_jump)
+{
+
+	int blk_sel_pos, dest_block;
+
+	
+	//search for block position
+	for(blk_sel_pos=0; 
+	((blk_sel_pos<MAX_BROWSER_ITEM)&&(browser_list[blk_sel_pos]!=NULL)&&(browser_list[blk_sel_pos]->position!=ordenador.tape_position)); 
+	blk_sel_pos++);
+	
+	if (browser_list[blk_sel_pos]==NULL) return -1;
+	
+	if (browser_list[blk_sel_pos]->position!=ordenador.tape_position) return -1;
+	
+	dest_block=blk_sel_pos+blocks_to_jump;
+	
+	if ((dest_block<0)||(dest_block>MAX_BROWSER_ITEM)) return -1;
+	
+	if (browser_list[dest_block]==NULL) return -1;
+	
+	fseek(fichero, browser_list[dest_block]->position, SEEK_SET);
+	
+	ordenador.tape_position = browser_list[dest_block]->position;
+
 	return 0;
 }
 

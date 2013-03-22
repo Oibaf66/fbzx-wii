@@ -1747,7 +1747,7 @@ char *select_file(char *path,enum LOAD_FILE_TYPES kind) {
 	unsigned char fin,read,*salida;
 	int bucle,ancho,numitems,selected,from,longitud;
 
-	salida=(unsigned char *)malloc(2049);
+	salida=(unsigned char *)malloc(MAX_PATH_LENGTH);
 	salida[0]=0;
 
 	ancho=screen->w;
@@ -2018,6 +2018,6 @@ if (freq == 0)
 	}
 else ordenador.cpufreq = freq;
 
-ordenador.tst_sample=(ordenador.cpufreq + ordenador.freq/2)/ordenador.freq;
+ordenador.tst_sample=(ordenador.cpufreq + (ordenador.freq*N_SAMPLES/2))/(ordenador.freq*N_SAMPLES);
 
 }

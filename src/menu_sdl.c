@@ -344,7 +344,6 @@ static const char **get_file_list(const char *base_dir)
 	int cur = 0;
 	struct dirent *de;
 	int cnt = 16;
-	int i;
 
 	if (!d)
 		return NULL;
@@ -371,6 +370,7 @@ static const char **get_file_list(const char *base_dir)
 			size_t len = strlen(de->d_name) + 4;
 
 			p = (char*)malloc( len );
+			if (p==NULL) break; //Terminate the list
 			snprintf(p, len, "[%s]", de->d_name);
 			file_list[cur++] = p;
 			file_list[cur] = NULL;
@@ -380,6 +380,7 @@ static const char **get_file_list(const char *base_dir)
 			char *p;
 
 			p = strdup(de->d_name);
+			if (p==NULL) break; //Terminate the list
 			file_list[cur++] = p;
 			file_list[cur] = NULL;
 		}
@@ -388,15 +389,8 @@ static const char **get_file_list(const char *base_dir)
 		{
 			cnt = cnt + 32;
 			realloc_file_list = (const char**)realloc(file_list, cnt * sizeof(char*));
-			if (realloc_file_list) file_list = realloc_file_list; else
-				{
-				/* Cleanup everything - file_list is NULL-terminated */
-				for ( i = 0; file_list[i]; i++ )
-				free((void*)file_list[i]);
-				free(file_list);
-				closedir(d);
-				return NULL;
-				}
+			if (realloc_file_list) file_list = realloc_file_list; else break;
+				
 		}
 	}
 	closedir(d);

@@ -28,6 +28,7 @@
 
 #define KB_BUFFER_LENGHT 10
 #define MAX_PATH_LENGTH 256
+#define N_SAMPLES 4
 
 extern char salir;
 

@@ -57,8 +57,8 @@ inline void tape_read(FILE *fichero, int tstados) {
 	//Auto ultra fast mode
 	if ((ordenador.turbo_state != 1)&&(ordenador.turbo==1))
 	{
-		if (ordenador.tape_file_type==TAP_TAP) update_frequency(13000000);
-		else update_frequency(11000000);
+		if (ordenador.tape_file_type==TAP_TAP) update_frequency(12500000);
+		else update_frequency(10500000);
 		jump_frames=7;
 		ordenador.precision_old=ordenador.precision;
 		ordenador.precision =0;
@@ -207,6 +207,7 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 	static unsigned char value, value2,value3,value4,done;
 	static unsigned int bucle,bucle2, byte_position;
 	int retval;
+	char block_jump[2];
 	
 	if (fichero == NULL)
 		{
@@ -423,6 +424,11 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 					
 				case 0x22: // group end
 					break;
+					
+				case 0x23: // jump to block
+					retval=fread(block_jump,1,2,fichero);
+					jump_to_block(fichero, (int) block_jump[0] + 256*((int) block_jump[1]));
+				break;
 				
 				case 0x24: // loop start
 					retval=fread(&value2,1,1,fichero);
@@ -938,6 +944,7 @@ void fastload_block_tzx (FILE * fichero) {
 	unsigned int longitud, len, bucle, number_bytes, byte_position, byte_position2, retorno;
 	unsigned char value[65536], empty, blockid, parity, pause[2],flag_byte;	
 	int retval;
+	char block_jump[2];
 	
 	longitud =0;
 	pause[0]=pause[1]=0;
@@ -1039,11 +1046,19 @@ void fastload_block_tzx (FILE * fichero) {
 				break;
 					
 				case 0x21: // group start
-					retorno=2;	
+					retval=fread(value,1,1,fichero);
+					if (retval!=1) {procesador.Rm.br.F &= (~F_C);return;} 
+					len = (unsigned int) value[0];
+					retval=fread(value,1,len,fichero);	
 				break;
 					
 				case 0x22: // group end
-					retorno=2;
+				break;
+				
+				case 0x23: // jump to block
+					retval=fread(block_jump,1,2,fichero);
+					if (retval!=2) {procesador.Rm.br.F &= (~F_C);return;} 
+					jump_to_block(fichero, (int) block_jump[0] + 256*((int) block_jump[1]));
 				break;
 				
 				case 0x24: // loop start

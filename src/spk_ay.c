@@ -24,7 +24,8 @@
 #include "sound.h"
 #include <stdlib.h>
 
-unsigned int beeper = 0;
+unsigned int beeper = 0, lvalue_sum=0, rvalue_sum=0 ;
+unsigned char sample_count = 0;
 
 /* emulates the AY-3-8912 during TSTADOS tstates */
 
@@ -314,22 +315,11 @@ inline void play_ay (unsigned int tstados) {
 
 inline void play_sound (unsigned int tstados) {
 
-	int lvalue, rvalue;
-
 	ordenador.tstados_counter_sound += tstados;
 
 	while (ordenador.tstados_counter_sound >= ordenador.tst_sample)	{
 
 		ordenador.tstados_counter_sound -= ordenador.tst_sample;
-		
-		/*
-		//Low pass filter
-		if (ordenador.sound_bit)
-		{
-			if (beeper<480) beeper = beeper + ordenador.low_filter; //Sound bit volume max 480*vol	
-		}			
-		else if (beeper>0) beeper = beeper - ordenador.low_filter;
-		*/
 		
 		if (ordenador.sound_bit)
 		{
@@ -340,46 +330,55 @@ inline void play_sound (unsigned int tstados) {
 
 		//Each channel max 256*vol
 		
-		if (ordenador.ay_emul)
+		if ((ordenador.ay_emul)&&(!ordenador.turbo_state))
 		{
 			switch (ordenador.audio_mode)
 			{
 				case 0: //Mono
-				lvalue = (beeper + ordenador.vol_a  + ordenador.vol_b +ordenador.vol_c)*ordenador.volume;	
-				rvalue = (beeper + ordenador.vol_a  + ordenador.vol_b +ordenador.vol_c)*ordenador.volume;
+				lvalue_sum = lvalue_sum + (beeper + ordenador.vol_a  + ordenador.vol_b +ordenador.vol_c)*ordenador.volume;	
+				rvalue_sum = rvalue_sum + (beeper + ordenador.vol_a  + ordenador.vol_b +ordenador.vol_c)*ordenador.volume;
 				break;
 				case 1: //ABC
-				lvalue = (beeper + ordenador.vol_a*2  + ordenador.vol_b)*ordenador.volume;	
-				rvalue = (beeper + ordenador.vol_b + ordenador.vol_c*2)*ordenador.volume;
+				lvalue_sum = lvalue_sum + (beeper + ordenador.vol_a*2  + ordenador.vol_b)*ordenador.volume;	
+				rvalue_sum = rvalue_sum + (beeper + ordenador.vol_b + ordenador.vol_c*2)*ordenador.volume;
 				break;
 				case 2: //ACB
-				lvalue = (beeper + ordenador.vol_a*2  + ordenador.vol_c)*ordenador.volume;	
-				rvalue = (beeper + ordenador.vol_c + ordenador.vol_b*2)*ordenador.volume;
+				lvalue_sum = lvalue_sum + (beeper + ordenador.vol_a*2  + ordenador.vol_c)*ordenador.volume;	
+				rvalue_sum = rvalue_sum + (beeper + ordenador.vol_c + ordenador.vol_b*2)*ordenador.volume;
 				break;
 				case 3: //BAC
-				lvalue = (beeper + ordenador.vol_b*2  + ordenador.vol_a)*ordenador.volume;	
-				rvalue = (beeper + ordenador.vol_a + ordenador.vol_c*2)*ordenador.volume;
+				lvalue_sum = lvalue_sum + (beeper + ordenador.vol_b*2  + ordenador.vol_a)*ordenador.volume;	
+				rvalue_sum = rvalue_sum + (beeper + ordenador.vol_a + ordenador.vol_c*2)*ordenador.volume;
 				break;
 				default: //No emulation
-				rvalue = beeper*ordenador.volume;
-				lvalue = beeper*ordenador.volume;
+				lvalue_sum = lvalue_sum + beeper*ordenador.volume;
+				rvalue_sum = rvalue_sum + beeper*ordenador.volume;
 				break;
 			}
 		}
 		else
 		{
-			rvalue = beeper*ordenador.volume;
-			lvalue = beeper*ordenador.volume;
+			lvalue_sum = lvalue_sum + beeper*ordenador.volume;
+			rvalue_sum = rvalue_sum + beeper*ordenador.volume;
 		}
+	
 		
-		*ordenador.current_buffer =	(rvalue<<16)|(lvalue);
-		ordenador.current_buffer++;
+		if (sample_count==(N_SAMPLES-1))
+		{
 		
-		ordenador.sound_cuantity++;
+			*ordenador.current_buffer =	((rvalue_sum/N_SAMPLES)<<16)|(lvalue_sum/N_SAMPLES);
+			ordenador.current_buffer++;
+		
+			ordenador.sound_cuantity++;
 
-		if (ordenador.sound_cuantity == ordenador.buffer_len) {		// buffer filled
-			sound_play();
-			ordenador.sound_cuantity = 0;
+			if (ordenador.sound_cuantity == ordenador.buffer_len) {		// buffer filled
+				sound_play();
+				ordenador.sound_cuantity = 0;
+			}
+		sample_count=0;
+		lvalue_sum=0;
+		rvalue_sum=0;
 		}
+		else sample_count++;
 	}
 }
