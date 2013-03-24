@@ -57,7 +57,7 @@ inline void tape_read(FILE *fichero, int tstados) {
 	//Auto ultra fast mode
 	if ((ordenador.turbo_state != 1)&&(ordenador.turbo==1))
 	{
-		if (ordenador.tape_file_type==TAP_TAP) update_frequency(12500000);
+		if (ordenador.tape_file_type==TAP_TAP) update_frequency(12000000);
 		else update_frequency(10500000);
 		jump_frames=7;
 		ordenador.precision_old=ordenador.precision;
@@ -723,7 +723,7 @@ unsigned char file_empty(FILE *fichero) {
 void save_file(FILE *fichero) {
 
 	long position;
-	unsigned char xor,salir;
+	unsigned char xor,salir_s;
 	byte dato;
 	int longitud;
 			
@@ -743,18 +743,18 @@ void save_file(FILE *fichero) {
 
 	xor^=procesador.Rm.br.A;
 
-	salir = 0;
+	salir_s = 0;
 	do {
 		if (procesador.Rm.wr.DE == 0)
-			salir = 2;
-		if (!salir) {
+			salir_s = 2;
+		if (!salir_s) {
 			dato=Z80free_Rd_fake(procesador.Rm.wr.IX); // read data
 			fprintf(fichero,"%c",dato);
 			xor^=dato;
 			procesador.Rm.wr.IX++;			
 			procesador.Rm.wr.DE--;			
 		}
-	} while (!salir);
+	} while (!salir_s);
 	fprintf(fichero,"%c",xor);
 	procesador.Rm.wr.IX++;
 	procesador.Rm.wr.IX++;
@@ -1268,7 +1268,7 @@ void fastload_block_tzx (FILE * fichero) {
 			//Anticipate auto ultra fast mode
 			if ((ordenador.turbo_state!= 1)&&(ordenador.turbo==1))
 			{
-			update_frequency(11000000);
+			update_frequency(10500000);
 			jump_frames=7;
 			ordenador.turbo_state=4;
 			}

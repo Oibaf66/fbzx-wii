@@ -32,6 +32,7 @@
 #include "characters.h"
 #include "menus.h"
 #include "tape.h"
+#include "tape_browser.h"
 #include <SDL/SDL.h>
 
 
@@ -314,7 +315,7 @@ void help_menu() {
 
 	clean_screen();
 
-	print_string(fbuffer,"FBZX Wii (1.0)",-1,20,15,0,ancho);
+	print_string(fbuffer,"FBZX Wii (10.0)",-1,20,15,0,ancho);
 	print_string(fbuffer,"Available keys",-1,50,14,0,ancho);
 	print_string(fbuffer,"Shift:Caps Shift    Ctrl:Symbol Shift",-1,95,11,0,ancho);
 
@@ -734,9 +735,11 @@ void select_tapfile() {
 	if((!strncmp(char_id,"ZXTape!",7)) && (char_id[7]==0x1A)&&(char_id[8]==1)) {
 		ordenador.tape_file_type = TAP_TZX;
 		rewind_tape(ordenador.tap_file,1);
+		browser_tzx(ordenador.tap_file);
 	} else {
 		ordenador.tape_file_type = TAP_TAP;
 		rewind_tape(ordenador.tap_file,1);
+		browser_tap(ordenador.tap_file);
 	}
 
 	clean_screen();
