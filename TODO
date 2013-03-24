@@ -9,6 +9,5 @@ TO-DO list (in any particular order)
 -Add +3 disk drive emulation
 -Add Disciple/PlusD emulation
 -Add emulation for Russian spectrums (scorpion & pentagon).
--Add a TAP manager, to allow to go to a specific block into the TAP file.
 -Add support for mouse, emulating the AMX Mouse.
 

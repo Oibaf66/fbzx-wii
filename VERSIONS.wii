@@ -1,3 +1,26 @@
+version 10:
+	* Tape browser
+	* TZX "select block" block
+ 	* TZX "jump to block" block
+	* TZX messages shown on the screen
+	* Instant load for TZX files too
+	* Improved instant load routine: most of TAP files can be instant loaded now
+	* Keys can be kept pressed in Virtual Keyboard
+	* QAOP joystick
+	* 16 bit sound
+	* Linear interpolation anti aliasing sound filter
+	* Removed crackling in menu change
+	* Mic bit emulation (Cobra's Arc speach works now)
+	* Option to have pause between blocks in instant load
+	* Option to disable tape rewind on reset
+	* Option to ignore joystick configuration of z80 files
+	* Tape stops on reset
+	* Fixed bug in emulation precision option saving
+	* Other minor fixings and improvements 
+
+		-- Fabio Olimpieri <fabio.olimpieri@tin.it> Mar 24 2013
+
+
 version 9:
 	* Virtual keyboard does not stop the emulation
 	* Support for installation on usb device

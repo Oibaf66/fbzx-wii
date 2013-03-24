@@ -1,4 +1,4 @@
-WHAT EMULATES RIGHT IN FBZX?
+WHAT EMULATES RIGHT IN FBZX WII?
 
 -Screen timmings in 48K and 128K mode.
 -Screen generation, so border efects and even attribute changing efects
@@ -13,7 +13,14 @@ WHAT EMULATES RIGHT IN FBZX?
 -Snow efect when I register points between 64 and 127.
 -Emulation of Interface I and Microdrive (only one drive).
 -Memory contention
--Emulates Spanish 128K from Investronica/Sinclair
--Allows to insert POKE values in memory (inmunity, infinite lives...)
+-Emulates Spanish 128K from Investronica/Sinclair, the Amstrad Plus 2, the Amstrad Plus 2A and NTSC 48k
+-Allows to insert POKE values an files in memory (inmunity, infinite lives...)
 -Can load and save SCR snapshots
 -ULAPlus support
+-Z80 snapshots, both loading and saving, and loading SNA snapshots. 
+-TAP (both read and write) and TZX (only read) tape files, supporting 
+-Fast loading and instant speed loading
+-ZIP archive files 
+-Tape browser
+-FTP client for loading games from internet repositories (e.g. WOS). 
+

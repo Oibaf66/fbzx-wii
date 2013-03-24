@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
   <app version="1">
     <name>FBZX Wii</name>
-    <coder>Oibaf</coder>
-    <version>9.0</version>
-    <release_date>20130120</release_date>
+    <coder>Oibaf (Fabio Olimpieri)</coder>
+    <version>10.0</version>
+    <release_date>20130324</release_date>
     <short_description>ZX Spectrum Emulator</short_description>
-    <long_description>A ZX Spectrum emulator for FrameBuffer written by Sergio Costas, see http://www.rastersoft.com/fbzx.html.
-The port to Wii was done by Fabio Olimpieri.
+    <long_description>A ZX Spectrum emulator. 
+The project is based on FBZX originally written by Sergio Costas (http://www.rastersoft.com/fbzx.html). 
 
 USAGE
 ------
@@ -22,7 +22,7 @@ The easiest way to play a game is to load a snapshot (.z80 and .sna files).
 
 You can also insert a tape file (.tap and .tzx) and then load the file in the tape menu (it simulates the command Load "").
  
-If you have problems with a .tap file, likely the TAP file has a program which uses a custom routine to load the blocks; in this case, try to disable the "Tap instant load" function.
+If you have problems with a file loading, likely the file has a program which uses a custom routine to load the blocks; in this case, try to disable the "Instant load" option.
  
 If you want to speed up the tape file loading (both for .tzx file and .tap file with "tap instant load" disabled), try to enable "auto turbo mode" which speeds up the emulator while loading.
 
