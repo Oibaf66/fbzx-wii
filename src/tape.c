@@ -76,8 +76,9 @@ inline void tape_read(FILE *fichero, int tstados) {
 
 inline void tape_read_tap (FILE * fichero, int tstados) {
 
-	static unsigned char value, value2;
-	int retval;
+	static unsigned char value; 
+	static unsigned char value2;
+	static int retval;
 		
 	if (fichero == NULL)
 		{
@@ -206,8 +207,8 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 
 	static unsigned char value, value2,value3,value4,done;
 	static unsigned int bucle,bucle2, byte_position;
-	int retval;
-	char block_jump[2];
+	static int retval;
+	static char block_jump[2];
 	
 	if (fichero == NULL)
 		{
@@ -249,7 +250,6 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 						ordenador.tape_pause_at_end=10; // to avoid problems
 					ordenador.tape_pause_at_end *= 3500;
 					retval=fread (&value, 1, 1, fichero);
-					
 					retval=fread (&value2, 1, 1, fichero);	// read block longitude
 					if (feof (fichero)) {
 						rewind_tape(fichero,1);
@@ -722,12 +722,10 @@ unsigned char file_empty(FILE *fichero) {
 
 void save_file(FILE *fichero) {
 
-	long position;
 	unsigned char xor,salir_s;
 	byte dato;
 	int longitud;
 			
-	position=ftell(fichero); // store current position
 	fseek(fichero,0,SEEK_END); // put position at end
 	xor=0;
 	
@@ -758,12 +756,11 @@ void save_file(FILE *fichero) {
 	fprintf(fichero,"%c",xor);
 	procesador.Rm.wr.IX++;
 	procesador.Rm.wr.IX++;
-	fseek(fichero,position,SEEK_SET); // put position at end
-	ordenador.tape_position = position;
 	
-	if(ordenador.tape_fast_load==1) //if we want fast load, we assume we want fast save too
-		ordenador.other_ret = 1;	// next instruction must be RET
+	create_browser_tap(ordenador.tap_file);
 	
+	if(ordenador.tape_fast_load==1) //if we want fast load, we assume we want fast save too	
+		procesador.PC=0x555; // next instruction must be RET
 	return;
 }
 
@@ -794,7 +791,6 @@ void fastload_block_tap (FILE * fichero) {
 	unsigned char value[65536], empty, parity;	
 	int retval;
 
-	//ordenador.other_ret = 1;	// next instruction must be RET
 	procesador.PC=0x5e2;
 
 	if (!(procesador.Ra.br.F & F_C)) { // if Carry=0, is VERIFY, so return OK

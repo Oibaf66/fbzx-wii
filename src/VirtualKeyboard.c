@@ -30,8 +30,10 @@
 #include "VirtualKeyboard.h"
 #include "menu_sdl.h"
 #include<SDL/SDL_image.h>
-#include <wiiuse/wpad.h>
 
+#ifdef GEKKO
+#include <wiiuse/wpad.h>
+#endif
 
 #define K(name, sdl_code) \
   { name, sdl_code, 0 ,0, 0}
@@ -210,7 +212,7 @@ void virtkey_ir_run(void)
 	int border_y = VirtualKeyboard.sel_y/RATIO;
 	int key_sel = 0;
 	SDL_Joystick *joy;
-	static int joy_bottons_last[4];
+	static int joy_bottons_last[5];
 	static char countdown_rumble=0;
 	
 	#ifdef GEKKO
@@ -222,21 +224,31 @@ void virtkey_ir_run(void)
 	if ((SDL_JoystickGetButton(joy, 0) && !joy_bottons_last[0]) ||      /* A */
 		(SDL_JoystickGetButton(joy, 3) && !joy_bottons_last[1]) ||  /* 2 */
 		(SDL_JoystickGetButton(joy, 9) && !joy_bottons_last[2]) ||  /* CA */
-		(SDL_JoystickGetButton(joy, 10) && !joy_bottons_last[3]))   /* CB */
-	key_sel = KEY_SELECT;
+		(SDL_JoystickGetButton(joy, 10) && !joy_bottons_last[3])   /* CB */
+	#ifndef GEKKO	
+		||((SDL_GetMouseState(NULL, NULL)&SDL_BUTTON(1))&& !joy_bottons_last[4])//mouse left button
+	#endif	
+		) key_sel = KEY_SELECT;
+	
 	
 	if ((!SDL_JoystickGetButton(joy, 0) && joy_bottons_last[0]) ||      /* A */
 		(!SDL_JoystickGetButton(joy, 3) && joy_bottons_last[1]) ||  /* 2 */
 		(!SDL_JoystickGetButton(joy, 9) && joy_bottons_last[2]) ||  /* CA */
-		(!SDL_JoystickGetButton(joy, 10) && joy_bottons_last[3]))   /* CB */
-	key_sel = KEY_DESELECT;
+		(!SDL_JoystickGetButton(joy, 10) && joy_bottons_last[3])   /* CB */
+	#ifndef GEKKO	
+		||(!(SDL_GetMouseState(NULL, NULL)&SDL_BUTTON(1)) && joy_bottons_last[4]) //mouse left button
+	#endif	
+		) key_sel = KEY_DESELECT;
+	
 	
 				
 	joy_bottons_last[0]=SDL_JoystickGetButton(joy, 0) ;   /* A */
 	joy_bottons_last[1]	=SDL_JoystickGetButton(joy, 3) ;  /* 2 */
 	joy_bottons_last[2]	=SDL_JoystickGetButton(joy, 9) ;  /* CA */
 	joy_bottons_last[3]	=SDL_JoystickGetButton(joy, 10) ; /* CB */
-
+	#ifndef GEKKO
+	joy_bottons_last[4] =SDL_GetMouseState(NULL, NULL)&SDL_BUTTON(1); //mouse left button
+	#endif
 	
 	if (key_sel==KEY_SELECT)
 	{	

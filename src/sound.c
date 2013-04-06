@@ -24,12 +24,14 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <SDL/SDL_audio.h>
+
 
 //char tabla[1024];
 
 #include <fcntl.h>
 #ifndef GEKKO 
-#include <sys/ioctl.h>
+//#include <sys/ioctl.h>
 #endif
 
 #ifdef DEBUG
@@ -70,6 +72,11 @@ pa_simple *pulse_s;
 int started_sound_asnd;
 #endif
 
+unsigned char started_sound_sdl;
+unsigned char buffer0_occupied;
+unsigned char buffer1_occupied;
+unsigned char buffer_reading;
+
 enum e_soundtype sound_type;
 
 int sound_init() {
@@ -79,11 +86,21 @@ int sound_init() {
 		case SOUND_NO: // No sound; simulate 8bits mono
 			printf("No Sound\n");
 			ordenador.sign=0;
-			ordenador.format=0;
-			ordenador.channels=1;
+			ordenador.format=1;
+			ordenador.channels=2;
 			ordenador.freq=48000;
 			ordenador.buffer_len=4800; // will wait 1/10 second
 			return (0);
+		break;
+		case SOUND_SDL:
+			printf("Trying SDL sound\n");
+			if(0==sound_init_sdl()) {
+				sound_type=SOUND_SDL;
+				return 0;
+			} else {
+				printf("Failed\n");
+				return -1;
+			}
 		break;
 #ifdef D_SOUND_PULSE
 		case SOUND_PULSEAUDIO:
@@ -138,6 +155,13 @@ int sound_init() {
 		break;
 		}
 	}
+	
+printf("Trying SDL sound\n");
+	if(0==sound_init_sdl()) {
+		sound_type=SOUND_SDL;
+		return 0;
+	}	
+	
 #ifdef D_SOUND_PULSE
 	printf("Trying PulseAudio\n");
 	if(0==sound_init_pulse()) {
@@ -170,6 +194,58 @@ int sound_init() {
 	}
 #endif
 	return -1;
+}
+
+void sdlcallback(void *unused, Uint8 *stream, int len)
+{
+	int i;
+	len=len/4;
+
+	for(i=0;i<len;i++) //len = ordenador.buffer_len
+	{
+		if (buffer_reading==0)
+			{
+			*((unsigned int *)stream) =sound[0][i];
+			sound[0][i]=0;
+			}
+		else
+			{
+			*((unsigned int *)stream) =sound[1][i];
+			sound[1][i]=0;
+			}
+		stream=stream+4;
+	}
+		
+	//change reading buffer
+	if (buffer_reading==0) {buffer0_occupied=0;if (buffer1_occupied) buffer_reading=1;} 
+	else {buffer1_occupied=0;if (buffer0_occupied) buffer_reading=0;}
+
+}
+
+int sound_init_sdl() {
+	
+	SDL_AudioSpec fmt;
+
+	ordenador.sign=0;
+	ordenador.format=1; //16 bit
+	ordenador.channels=2; //stereo
+	ordenador.freq=48000;
+	ordenador.buffer_len=4096;
+	
+	 /* Set 16-bit stereo audio at 48Khz */
+    fmt.freq = ordenador.freq;
+    fmt.format = AUDIO_U16LSB; //unsigned Little endian
+    fmt.channels = ordenador.channels;
+    fmt.samples = ordenador.buffer_len; //number of samples
+    fmt.callback = sdlcallback;
+    fmt.userdata = NULL;
+	
+	started_sound_sdl=0;
+
+    /* Open the audio device and start playing sound! */
+    if (SDL_OpenAudio(&fmt, NULL) < 0 ) return -1;
+
+	return 0;
 }
 
 #ifdef GEKKO
@@ -465,6 +541,24 @@ void sound_play() {
 		usleep(75000); // wait 1/20 second
 		return;
 	break;
+	case SOUND_SDL: // SDL
+		if (!started_sound_sdl) {
+		SDL_PauseAudio(0);
+		ordenador.current_buffer = sound[0];
+		buffer0_occupied=1;
+		started_sound_sdl = 1;
+		buffer_reading=0;
+		}
+		//Double buffer
+		while ((buffer0_occupied)&&(buffer1_occupied)){usleep(1000);}; //Wait for one buffer to be free
+		if (!buffer0_occupied) //Buffer 0 is now free
+			{buffer0_occupied=1;
+			ordenador.current_buffer = sound[0]; }
+		else //Buffer 1 is now free
+			{buffer1_occupied=1;
+			ordenador.current_buffer = sound[1]; }
+		return;
+	break;
 #ifdef D_SOUND_OSS
 	case SOUND_OSS: // OSS
 		retval=write(audio_fd,ordenador.current_buffer,ordenador.buffer_len*ordenador.increment);
@@ -522,6 +616,9 @@ void sound_close() {
 
 	switch(sound_type) {
 	case SOUND_NO:
+	break;
+	case SOUND_SDL:
+	SDL_CloseAudio();
 	break;
 #ifdef D_SOUND_OSS
 	case SOUND_OSS:

@@ -37,7 +37,7 @@ extern FILE *fdebug;
 struct browser *browser_list[MAX_BROWSER_ITEM+1];
 struct tape_select *block_select_list[MAX_SELECT_ITEM+1];
 
-void browser_tzx (FILE * fichero) {
+void create_browser_tzx (FILE * fichero) {
 
 	unsigned int longitud, len, bucle, byte_position, retorno, block_number;
 	unsigned char value[65536], empty, blockid, pause[2], flag_byte;
@@ -49,21 +49,7 @@ void browser_tzx (FILE * fichero) {
 	
 	blockid=0;
 	flag_byte=0;
-	empty=file_empty(fichero);
 	
-	if (fichero == NULL) 
-	{
-		sprintf (ordenador.osd_text, "No tape selected");
-		ordenador.osd_time = 100;
-		return;
-	}
-		
-	if(empty)
-	{
-		sprintf (ordenador.osd_text, "Tape file empty");
-		return;
-	}
-			
 	//Free the browser list
 	for(bucle=0; ((browser_list[bucle]!=NULL)&&(bucle<MAX_BROWSER_ITEM)); bucle++)
 	{
@@ -71,6 +57,14 @@ void browser_tzx (FILE * fichero) {
 		browser_list[bucle]=NULL;
 	}
 	
+	if (fichero == NULL) return;
+	
+	empty=file_empty(fichero);
+	
+	if (empty) return;
+	
+	rewind_tape(fichero,1);
+
 	retorno=0;
 	block_number=0;
 	do	{
@@ -321,27 +315,11 @@ browser_list[block_number]=NULL;
 }
 
 
-void browser_tap (FILE * fichero) {
+void create_browser_tap (FILE * fichero) {
    
 	unsigned int longitud, bucle, block_number, byte_position ;
 	unsigned char value[65536], empty, flag_byte;	
 	int retval, retorno;
-
-	empty=file_empty(fichero);
-
-	
-	if (fichero == NULL) 
-	{
-		sprintf (ordenador.osd_text, "No tape selected");
-		ordenador.osd_time = 100;
-		return;
-	}
-		
-	if(empty)
-	{
-		sprintf (ordenador.osd_text, "Tape file empty");
-		return;
-	}
 	
 	//Free the browser list
 	for(bucle=0; ((browser_list[bucle]!=NULL)&&(bucle<MAX_BROWSER_ITEM)); bucle++)
@@ -349,6 +327,14 @@ void browser_tap (FILE * fichero) {
 		free (browser_list[bucle]);
 		browser_list[bucle]=NULL;
 	}
+	
+	if (fichero == NULL) return;
+	
+	empty=file_empty(fichero);
+	
+	if (empty) return;
+	
+	rewind_tape(fichero,1);
 	
 	flag_byte=0;
 	retorno=0;

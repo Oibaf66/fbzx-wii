@@ -90,9 +90,9 @@ struct computer {
 	int start_contention; //start tstados for contention
 	//int end_contention; //end tstados for contention
 	
-	unsigned char screen_snow; // 0-> no emulate snow; 1-> emulate snow
+	//unsigned char screen_snow; // 0-> no emulate snow; 1-> emulate snow
 	unsigned char fetch_state;
-	//unsigned char contended_zone; // 0-> no contention; 1-> contention possible
+	unsigned char contended_zone; // 0-> no contention; 1-> contention possible
 	int cicles_counter; // counts how many pixel clock cicles passed since las interrupt
 
 	char ulaplus; // 0 = inactive; 1 = active
@@ -237,7 +237,7 @@ struct computer {
 	unsigned char interr;
 	unsigned char readkeyboard;
 	unsigned char mustlock;
-	unsigned char other_ret; // 0=no change; 1=memory returns RET (201)
+	//unsigned char other_ret; // 0=no change; 1=memory returns RET (201)
 
 	unsigned char turbo;
 	unsigned char turbo_state;

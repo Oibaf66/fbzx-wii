@@ -28,7 +28,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <signal.h>
-#include <sys/wait.h>
+//#include <sys/wait.h>
 #include "tape.h"
 #include "microdrive.h"
 #include "Virtualkeyboard.h"
@@ -73,16 +73,6 @@ inline byte bus_empty () {
 /* calls all the routines that emulates the computer, runing them for 'tstados'
    tstates */
 
-inline void emulate_screen (int tstados) {
-	
-	if(((procesador.I & 0xC0) == 0x40)&&(ordenador.mode128k!=3)) { // (procesador.I>=0x40)&&(procesador.I<=0x7F)
-		ordenador.screen_snow=1;
-	} else
-		ordenador.screen_snow=0;
-		
-	if (ordenador.precision) show_screen_precision (tstados);
-	else show_screen(tstados);
-}
 
 inline void emulate (int tstados) {
 
@@ -131,8 +121,6 @@ void computer_init () { //Called only on start-up
 
 	ordenador.osd_text[0] = 0;
 	ordenador.osd_time = 0;
-
-	ordenador.other_ret = 0;
 
 	ordenador.s8 = ordenador.s9 = ordenador.s10 = ordenador.s11 =
 	ordenador.s12 = ordenador.s13 = ordenador.s14 =
@@ -468,7 +456,7 @@ void register_screen (SDL_Surface * pantalla) {
 	ordenador.contador_flash = 0;
 	ordenador.readed = 0;
 
-	//ordenador.contended_zone=0;
+	ordenador.contended_zone=0;
 	ordenador.cicles_counter=0;
 	
 	ordenador.tstados_counter_sound = 0;
@@ -591,6 +579,8 @@ inline void show_screen (int tstados) {
 			|| (ordenador.currpix < 48) || (ordenador.currpix > 303)) {
 			
 			// is border
+			
+			ordenador.contended_zone=0;
 				
 			if (ordenador.ulaplus) {
 				paint_pixels (255, ordenador.border+24, 0,1);	// paint 8 pixels with BORDER color
@@ -603,6 +593,8 @@ inline void show_screen (int tstados) {
 		} else {
 
 			// is user area. We search for ink and paper colours
+			
+			ordenador.contended_zone=1;
 			
 			temporal = ordenador.memoria[(*ordenador.p_translt2) + ordenador.video_offset];	// attributes
 			ordenador.bus_value = temporal;
@@ -621,13 +613,7 @@ inline void show_screen (int tstados) {
 				fflash = temporal & 0x80;	// flash flag
 			}
 
-			// Snow Effect
-
-			if(ordenador.screen_snow) {
-				temporal3 = ordenador.memoria[(((*ordenador.p_translt) + (ordenador.video_offset))&0xFFFFFF80)+(procesador.R&0x7F)];	// data with snow
-				ordenador.screen_snow=0; // no more snow for now
-			} else
-				temporal3 = ordenador.memoria[(*ordenador.p_translt) + ordenador.video_offset];	// bitmap
+			temporal3 = ordenador.memoria[(*ordenador.p_translt) + ordenador.video_offset];	// bitmap
 				
 			ordenador.p_translt++;
 			ordenador.p_translt2++;
@@ -1127,7 +1113,8 @@ inline void read_keyboard () {
 	SDL_PollEvent (&evento);
 
 	if (pevento->type==SDL_QUIT) {
-		salir = 0;
+		printf("SDL_QUIT event\n");
+			salir = 0;
 		return;
 	}
 	
@@ -1334,8 +1321,16 @@ inline void read_keyboard () {
 			sprintf (ordenador.osd_text, " Volume: %d ",ordenador.volume);
 			ordenador.osd_time = 50;
 			break;
+		case SDLK_MENU: //Call FBZX wii menu
+			if (ordenador.vk_is_active) virtkey_ir_deactivate();
+			main_menu();
+			break;	
+		case SDLK_RCTRL: //Activate virtual keyboard
+			if (!ordenador.vk_auto)
+			{if (!ordenador.vk_is_active)  virtkey_ir_activate(); else virtkey_ir_deactivate();}
+		break;
 		}
-
+		
 	// reorder joystick if screen is rotated
 		
 	if(ordenador.zaurus_mini==2) {
@@ -1489,7 +1484,7 @@ inline void read_keyboard () {
 		#endif
 		
 	if (ordenador.key[SDLK_SPACE]|| joybutton_matrix[0][SDLK_SPACE] || joybutton_matrix[1][SDLK_SPACE]) ordenador.k15|=1;
-	if (ordenador.key[SDLK_RCTRL]||ordenador.key[SDLK_LCTRL]|| joybutton_matrix[0][SDLK_LCTRL] || joybutton_matrix[1][SDLK_LCTRL]) ordenador.k15|=2; //Symbol shift
+	if (ordenador.key[SDLK_LCTRL]|| joybutton_matrix[0][SDLK_LCTRL] || joybutton_matrix[1][SDLK_LCTRL]) ordenador.k15|=2; //Symbol shift
 	if (ordenador.key[SDLK_m] || joybutton_matrix[0][SDLK_m] || joybutton_matrix[1][SDLK_m]) ordenador.k15|=4;
 	if (ordenador.key[SDLK_n] || joybutton_matrix[0][SDLK_n] || joybutton_matrix[1][SDLK_n]) ordenador.k15|=8;
 	if (ordenador.key[SDLK_b] || joybutton_matrix[0][SDLK_b] || joybutton_matrix[1][SDLK_b]) ordenador.k15|=16;
@@ -1756,27 +1751,50 @@ void do_contention() {
 
 	static int ccicles;
 	
+	if (ordenador.contended_zone==0) return;
+	
+	if (ordenador.mode128k==3) //+3
+		{
+		ccicles=(ordenador.cicles_counter-ordenador.start_contention)%8;
+		
+		if (ccicles>6) return;
+		ordenador.contention+=7-ccicles;
+		show_screen(7-ccicles);
+		}
+	else //64k/128k/+2
+		{
+		ccicles=(ordenador.cicles_counter-ordenador.start_contention)%8;
+		
+		if (ccicles>5) return;
+		ordenador.contention+=6-ccicles;
+		show_screen(6-ccicles);
+		}
+	
+}
+
+void do_contention_precision() {
+
+	static int ccicles;
+	
 	if ((ordenador.currline < ordenador.upper_border_line ) || (ordenador.currline >= ordenador.lower_border_line)
 			|| (ordenador.currpix < 40) || (ordenador.currpix > 295)) return;
 	
 	
 	if (ordenador.mode128k==3) //+3
 		{
-		if (ordenador.precision) ccicles=((ordenador.currpix-28)/2)%8; //44-16
-		else ccicles=(ordenador.cicles_counter-ordenador.start_contention)%8;
+		ccicles=((ordenador.currpix-28)/2)%8; //44-16
 		
 		if (ccicles>6) return;
 		ordenador.contention+=7-ccicles;
-		emulate_screen(7-ccicles);
+		show_screen_precision(7-ccicles);
 		}
 	else //64k/128k/+2
 		{
-		if (ordenador.precision) ccicles=((ordenador.currpix-40)/2)%8;
-		else ccicles=(ordenador.cicles_counter-ordenador.start_contention)%8;
+		ccicles=((ordenador.currpix-40)/2)%8;
 		
 		if (ccicles>5) return;
 		ordenador.contention+=6-ccicles;
-		emulate_screen(6-ccicles);
+		show_screen_precision(6-ccicles);
 		}
 	
 }
@@ -1788,26 +1806,26 @@ void Z80free_Wr (register word Addr, register byte Value) {
 	switch (Addr & 0xC000) {
 	case 0x0000:
 	// only writes in the first 16K if we are in +3 mode and bit0 of mport2 is 1
-		if (ordenador.precision) emulate_screen(3);
+		if (ordenador.precision) show_screen_precision(3);
 		if ((ordenador.mode128k == 3) && (1 == (ordenador.mport2 & 0x01)))
 			*(ordenador.block0 + Addr) = (unsigned char) Value;
 	break;
 
 	case 0x4000:
-		do_contention();
-		if (ordenador.precision) emulate_screen(3); 
+		if (ordenador.precision) {do_contention_precision();show_screen_precision(3); }
+		else do_contention();
 		*(ordenador.block1 + Addr) = (unsigned char) Value;
 	break;
 	
 	case 0x8000:
-		if (ordenador.precision) emulate_screen(3); 
+		if (ordenador.precision) show_screen_precision(3); 
 		*(ordenador.block2 + Addr) = (unsigned char) Value;
 	break;
 	
 	case 0xC000:
 		if (ordenador.precision) {
-		if (((ordenador.mode128k==1)||(ordenador.mode128k==2)||(ordenador.mode128k==4))&&(ordenador.mport1 & 0x01)) do_contention();
-		emulate_screen(3); 
+		if (((ordenador.mode128k==1)||(ordenador.mode128k==2)||(ordenador.mode128k==4))&&(ordenador.mport1 & 0x01)) do_contention_precision();
+		show_screen_precision(3); 
 		}
 		*(ordenador.block3 + Addr) = (unsigned char) Value;
 	break;
@@ -1845,36 +1863,29 @@ byte Z80free_Rd_fetch (register word Addr) {
 	if((ordenador.mdr_active)&&(ordenador.mdr_paged)&&(Addr<8192)) // Interface I
 		return((byte)ordenador.shadowrom[Addr]);
 	
-	switch (ordenador.other_ret) {
-	case 1:
-		ordenador.other_ret = 0;
-		return (201);	// RET instruction
-	break;
-
-	default:
 	ordenador.r_fetch+=4;	
 		switch (Addr & 0xC000) {
 		case 0x0000:
-			if (ordenador.precision) {ordenador.fetch_state=4;emulate_screen (4);}
+			if (ordenador.precision) {ordenador.fetch_state=4;show_screen_precision (4);}
 			return ((byte) (*(ordenador.block0 + Addr)));
 		break;
 
 		case 0x4000:
-			do_contention();
-			if (ordenador.precision) {ordenador.fetch_state=4;emulate_screen (4);}
+			if (ordenador.precision) {do_contention_precision();ordenador.fetch_state=4;show_screen_precision (4);}
+			else do_contention();
 			return ((byte) (*(ordenador.block1 + Addr)));
 		break;
 
 		case 0x8000:
-			if (ordenador.precision) {ordenador.fetch_state=4;emulate_screen (4);}
+			if (ordenador.precision) {ordenador.fetch_state=4;show_screen_precision (4);}
 			return ((byte) (*(ordenador.block2 + Addr)));
 		break;
 
 		case 0xC000:
 			if (ordenador.precision) {
-			if (((ordenador.mode128k==1)||(ordenador.mode128k==2)||(ordenador.mode128k==4))&&(ordenador.mport1 & 0x01)) do_contention();
+			if (((ordenador.mode128k==1)||(ordenador.mode128k==2)||(ordenador.mode128k==4))&&(ordenador.mport1 & 0x01)) do_contention_precision();
 			ordenador.fetch_state=4;
-			emulate_screen (4);
+			show_screen_precision (4);
 			}
 			return ((byte) (*(ordenador.block3 + Addr)));
 		break;
@@ -1884,9 +1895,6 @@ byte Z80free_Rd_fetch (register word Addr) {
 			exit (1);
 			return 0;
 		}
-		
-		break;
-	}
 }
 
 byte Z80free_Rd (register word Addr) {
@@ -1894,35 +1902,28 @@ byte Z80free_Rd (register word Addr) {
 	if((ordenador.mdr_active)&&(ordenador.mdr_paged)&&(Addr<8192)) // Interface I
 		return((byte)ordenador.shadowrom[Addr]);
 	
-	switch (ordenador.other_ret) {
-	case 1:
-		ordenador.other_ret = 0;
-		return (201);	// RET instruction
-	break;
-
-	default:
 		ordenador.wr+=3;
 		switch (Addr & 0xC000) {
 		case 0x0000:
-			if (ordenador.precision) emulate_screen (3);
+			if (ordenador.precision) show_screen_precision (3);
 			return ((byte) (*(ordenador.block0 + Addr)));
 		break;
 
 		case 0x4000:
-			do_contention();
-			if (ordenador.precision) emulate_screen (3);
+			if (ordenador.precision) {do_contention_precision();show_screen_precision (3);}
+			else do_contention();
 			return ((byte) (*(ordenador.block1 + Addr)));
 		break;
 
 		case 0x8000:
-			if (ordenador.precision) emulate_screen (3);
+			if (ordenador.precision) show_screen_precision (3);
 			return ((byte) (*(ordenador.block2 + Addr)));
 		break;
 
 		case 0xC000:
 			if (ordenador.precision) {
-			if (((ordenador.mode128k==1)||(ordenador.mode128k==2)||(ordenador.mode128k==4))&&(ordenador.mport1 & 0x01)) do_contention();
-			emulate_screen (3);
+			if (((ordenador.mode128k==1)||(ordenador.mode128k==2)||(ordenador.mode128k==4))&&(ordenador.mport1 & 0x01)) do_contention_precision();
+			show_screen_precision (3);
 			}
 			return ((byte) (*(ordenador.block3 + Addr)));
 		break;
@@ -1932,19 +1933,11 @@ byte Z80free_Rd (register word Addr) {
 			exit (1);
 			return 0;
 		}
-		break;
-	}
 }
 
 byte Z80free_Rd_fake (register word Addr) {
 	
-switch (ordenador.other_ret) {
-	case 1:
-		ordenador.other_ret = 0;
-		return (201);	// RET instruction
-	break;
 
-	default:
 		switch (Addr & 0xC000) {
 		case 0x0000:
 			return ((byte) (*(ordenador.block0 + Addr)));
@@ -1967,9 +1960,6 @@ switch (ordenador.other_ret) {
 			exit (1);
 			return 0;
 		}
-		break;
-	}
-	
 }
 
 void set_palete_entry(unsigned char entry, byte Value) {
@@ -2007,21 +1997,21 @@ void Z80free_Out (register word Port, register byte Value) {
 		{
 		case 0:
 		if ((Port & 0xC000) == 0x4000) // (Port>=0x4000)&&(Port<0x8000)
-			{if ((Port&0x0001)==0 ||(Port == 0xBF3B)||(Port == 0xFF3B)) {do_contention();emulate_screen(1);do_contention();ordenador.io+=1;} 
-			else {do_contention();emulate_screen(1);do_contention();emulate_screen(1);do_contention();emulate_screen(1);do_contention();ordenador.io+=3;}
+			{if ((Port&0x0001)==0 ||(Port == 0xBF3B)||(Port == 0xFF3B)) {do_contention_precision();show_screen_precision(1);do_contention_precision();ordenador.io+=1;} 
+			else {do_contention_precision();show_screen_precision(1);do_contention_precision();show_screen_precision(1);do_contention_precision();show_screen_precision(1);do_contention_precision();ordenador.io+=3;}
 			}
 		else
-			if ((Port&0x0001)==0 ||(Port == 0xBF3B)||(Port == 0xFF3B)) {emulate_screen(1);do_contention();ordenador.io+=1;}
+			if ((Port&0x0001)==0 ||(Port == 0xBF3B)||(Port == 0xFF3B)) {show_screen_precision(1);do_contention_precision();ordenador.io+=1;}
 		break;
 		case 1:
 		case 2:
 		case 4:
 		if (((Port & 0xC000) == 0x4000)||((ordenador.mport1 & 0x01)&&((Port & 0xC000) == 0xC000))) // (Port>=0xc000)&&(Port<=0xffff)
-			{if ((Port&0x0001)==0 ||(Port == 0xBF3B)||(Port == 0xFF3B)) {do_contention();emulate_screen(1);do_contention();ordenador.io+=1;} 
-			else {do_contention();emulate_screen(1);do_contention();emulate_screen(1);do_contention();emulate_screen(1);do_contention();ordenador.io+=3;}
+			{if ((Port&0x0001)==0 ||(Port == 0xBF3B)||(Port == 0xFF3B)) {do_contention_precision();show_screen_precision(1);do_contention_precision();ordenador.io+=1;} 
+			else {do_contention_precision();show_screen_precision(1);do_contention_precision();show_screen_precision(1);do_contention_precision();show_screen_precision(1);do_contention_precision();ordenador.io+=3;}
 			}
 		else
-			if ((Port&0x0001)==0 ||(Port == 0xBF3B)||(Port == 0xFF3B)) {emulate_screen(1);do_contention();ordenador.io+=1;}		
+			if ((Port&0x0001)==0 ||(Port == 0xBF3B)||(Port == 0xFF3B)) {show_screen_precision(1);do_contention_precision();ordenador.io+=1;}		
 		break;
 		case 3:
 		break; //no io contention in +3
@@ -2151,29 +2141,29 @@ byte Z80free_In (register word Port) {
 		{
 		case 0:
 		if ((Port & 0xC000) == 0x4000) // (Port>=0x4000)&&(Port<0x8000)
-			{if ((Port&0x0001)==0 ||(Port == 0xBF3B)||(Port == 0xFF3B)) {do_contention();emulate_screen(1);do_contention();emulate_screen(3);} 
-			else {do_contention();emulate_screen(1);do_contention();emulate_screen(1);do_contention();emulate_screen(1);do_contention();emulate_screen(1);}
+			{if ((Port&0x0001)==0 ||(Port == 0xBF3B)||(Port == 0xFF3B)) {do_contention_precision();show_screen_precision(1);do_contention_precision();show_screen_precision(3);} 
+			else {do_contention_precision();show_screen_precision(1);do_contention_precision();show_screen_precision(1);do_contention_precision();show_screen_precision(1);do_contention_precision();show_screen_precision(1);}
 			}
 		else
-			if ((Port&0x0001)==0 ||(Port == 0xBF3B)||(Port == 0xFF3B)) {emulate_screen(1);do_contention();emulate_screen(3);}
-			else emulate_screen(4);
+			if ((Port&0x0001)==0 ||(Port == 0xBF3B)||(Port == 0xFF3B)) {show_screen_precision(1);do_contention_precision();show_screen_precision(3);}
+			else show_screen_precision(4);
 		break;
 		case 1:
 		case 2:
 		case 4:
 		if (((Port & 0xC000) == 0x4000)||((ordenador.mport1 & 0x01)&&((Port & 0xC000) == 0xC000))) // (Port>=0xc000)&&(Port<=0xffff)
-			{if ((Port&0x0001)==0 ||(Port == 0xBF3B)||(Port == 0xFF3B)) {do_contention();emulate_screen(1);do_contention();emulate_screen(3);} 
-			else {do_contention();emulate_screen(1);do_contention();emulate_screen(1);do_contention();emulate_screen(1);do_contention();emulate_screen(1);}
+			{if ((Port&0x0001)==0 ||(Port == 0xBF3B)||(Port == 0xFF3B)) {do_contention_precision();show_screen_precision(1);do_contention_precision();show_screen_precision(3);} 
+			else {do_contention_precision();show_screen_precision(1);do_contention_precision();show_screen_precision(1);do_contention_precision();show_screen_precision(1);do_contention_precision();show_screen_precision(1);}
 			}
 		else
-			if ((Port&0x0001)==0 ||(Port == 0xBF3B)||(Port == 0xFF3B)) {emulate_screen(1);do_contention();emulate_screen(3);}
-			else emulate_screen(4);
+			if ((Port&0x0001)==0 ||(Port == 0xBF3B)||(Port == 0xFF3B)) {show_screen_precision(1);do_contention_precision();show_screen_precision(3);}
+			else show_screen_precision(4);
 		break;
 		case 3:
-		emulate_screen(4);//no io contention in +3
+		show_screen_precision(4);//no io contention in +3
 		break; 
 		default:
-		emulate_screen(4);
+		show_screen_precision(4);
 		break;
 		}
 	}

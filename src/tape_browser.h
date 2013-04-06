@@ -37,8 +37,8 @@ struct tape_select {
 extern struct tape_select *block_select_list[MAX_SELECT_ITEM+1];
 extern struct browser *browser_list[MAX_BROWSER_ITEM+1];
 
-void browser_tap (FILE *);
-void browser_tzx (FILE *);
+void create_browser_tap (FILE *);
+void create_browser_tzx (FILE *);
 int select_block(FILE * fichero);
 int jump_to_block(FILE * fichero, int blocks_to_jump);
 void free_browser();

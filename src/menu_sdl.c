@@ -86,14 +86,10 @@ static SDL_Surface *real_screen;
 #define IS_SUBMENU(p_msg) ( (p_msg)[0] == '^' )
 #define IS_TEXT(p_msg) ( (p_msg)[0] == '#' || (p_msg)[0] == ' ' )
 #define IS_MARKER(p_msg) ( (p_msg)[0] == '@' )
+#define FONT_PATH "/fbzx-wii/fbzx/FreeMono.ttf"
 
 static int is_inited = 0;
 static TTF_Font *menu_font16, *menu_font20, *menu_font8, *menu_font10;
-#if defined(GEKKO)
-#define FONT_PATH "/fbzx-wii/fbzx/FreeMono.ttf"
-#else
-#define FONT_PATH "FreeMono.ttf"
-#endif
 
 int fh, fw;
 
@@ -1035,10 +1031,6 @@ uint32_t menu_wait_key_press()
 				case SDLK_PAGEUP:
 					keys |= KEY_PAGEUP;
 					break;
-				case SDLK_RETURN:
-				case SDLK_SPACE:
-					keys |= KEY_SELECT;
-					break;
 				case SDLK_HOME:
 				case SDLK_ESCAPE:
 					keys |= KEY_ESCAPE;
@@ -1047,14 +1039,28 @@ uint32_t menu_wait_key_press()
 					break;
 				}
 				break;
-				case SDL_QUIT:
-					exit(0);
+			case SDL_KEYUP:
+				switch (ev.key.keysym.sym)
+				{
+				case SDLK_RETURN:
+				case SDLK_SPACE:
+					keys |= KEY_SELECT;
 					break;
 				default:
 					break;
-
-			}
+				}
+				break;
+			case SDL_QUIT:
+				exit(0);
+				break;
+			#ifndef GEKKO
+			case SDL_MOUSEBUTTONDOWN:
+				if (ev.button.button==SDL_BUTTON_LEFT) keys |= KEY_SELECT;
 			break;
+			#endif
+			default:
+					break;
+			}
 		}
 
 		if (keys != 0)
@@ -1456,7 +1462,7 @@ static TTF_Font *read_font(const char *path, int font_size)
 	TTF_Font *out;
 	SDL_RWops *rw;
 	Uint8 *data = (Uint8*)malloc(1 * 1024*1024);
-	FILE *fp = fopen(path, "r");
+	FILE *fp = fopen(path, "rb");
 
 	if (!data) {
 		fprintf(stderr, "Malloc failed\n");

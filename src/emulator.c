@@ -48,8 +48,6 @@
 #include <ogc/usbstorage.h>
 #include <network.h>
 #include <smb.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include "tinyFTP/ftp_devoptab.h"
 #endif
 
@@ -82,7 +80,7 @@ char load_path_scr1[MAX_PATH_LENGTH];
 char load_path_poke[MAX_PATH_LENGTH];
 
 unsigned int colors[80];
-unsigned int jump_frames,curr_frames;
+unsigned int jump_frames,curr_frames, turbo_n;
 
 static SDL_Surface *image;
 
@@ -96,6 +94,10 @@ unsigned char tmpismade = 0;
 extern int FULL_DISPLAY_X; //640
 extern int FULL_DISPLAY_Y; //480
 extern int RATIO; 
+
+#ifdef MINGW
+#define mkdir(name, mode) mkdir(name)
+#endif
 
 #if defined(GEKKO)
 
@@ -322,13 +324,11 @@ FILE *myfopen(char *filename,char *mode) {
 	if (fichero!=NULL) {
 		return (fichero);
 	}
-	#ifdef GEKKO
 	sprintf(tmp,"/fbzx-wii/%s",filename);
 	fichero=fopen(tmp,mode);
 	if (fichero!=NULL) {
 		return (fichero);
 	}
-	#endif
 	
 	return (NULL);
 }
@@ -341,7 +341,7 @@ char *load_a_rom(char **filenames) {
 	int size;
 	
 	for(pointer=filenames;*pointer!=NULL;pointer++) {
-		fichero=myfopen(*pointer,"r");
+		fichero=myfopen(*pointer,"rb");
 		if(fichero==NULL) {
 			return (*pointer);
 		}
@@ -433,10 +433,10 @@ void load_rom(char type) {
 	break;
 	}
   
-	fichero=myfopen("spectrum-roms/if1-2.rom","r"); // load Interface1 ROM
+	fichero=myfopen("spectrum-roms/if1-2.rom","rb"); // load Interface1 ROM
 	if(fichero==NULL) {
 		// try legacy name
-		fichero=myfopen("spectrum-roms/if1-v2.rom","r");
+		fichero=myfopen("spectrum-roms/if1-v2.rom","rb");
 		if(fichero==NULL) {
 			printf("Can't open Interface1 ROM file\n");
 			exit(1);
@@ -471,21 +471,18 @@ int set_video_mode()
 		VIDEO_Configure(rmode);
 		VIDEO_Flush();
 		VIDEO_WaitVSync();
-		
+#endif 		
 		return 0;
-	
-
-		#endif 
 }		
 
 void init_sdl()
 {
 int retorno, bucle; 
 
-//if (sound_type!=3)
-	retorno=SDL_Init(SDL_INIT_VIDEO);
-	/*else
-		retorno=SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO);*/
+if (sound_type==SOUND_SDL)
+	retorno=SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO);
+	else
+		retorno=SDL_Init(SDL_INIT_VIDEO);
 	if(retorno!=0) {
 		printf("Can't initialize SDL library. Exiting\n");
 		exit(1);
@@ -558,16 +555,13 @@ void init_sound()
 int bucle, bucle2,ret2;
 // sound initialization
 
-	if (sound_type==SOUND_AUTOMATIC) {
-		ret2=sound_init(1); // check all sound systems
-	} else {
-		ret2=sound_init(0); // try with the one specified in command line
-	}
+	ret2=sound_init(); // check all sound systems or the selected sound
+	
 	if(ret2==0) {
 		sound_aborted=0;
 	} else { // if fails, run without sound
 		sound_type=SOUND_NO;
-		sound_init(0);
+		sound_init();
 		sound_aborted=1;
 	}
 	printf("Init sound\n");
@@ -578,16 +572,23 @@ int bucle, bucle2,ret2;
 	
 	for(bucle2=0;bucle2<NUM_SNDBUF;bucle2++) {
 		//ASND Required alligned memory with padding
+		#ifdef GEKKO
 		sound[bucle2]=(unsigned int *)memalign(32,ordenador.buffer_len*ordenador.increment+32);
 		for(bucle=0;bucle<ordenador.buffer_len+8;bucle++)
 			sound[bucle2][bucle]=0; 
+		#else
+		sound[bucle2]=(unsigned int *) calloc(ordenador.buffer_len+1,ordenador.increment);
+		for(bucle=0;bucle<ordenador.buffer_len;bucle++)
+			sound[bucle2][bucle]=0;
+		#endif		
 	}
-
 	printf("Init sound 2\n");
 	ordenador.tst_sample=(ordenador.cpufreq + (ordenador.freq*N_SAMPLES/2))/(ordenador.freq*N_SAMPLES);
 }
 
 void end_system() {
+	
+	printf("Quitting...\n");
 	
 	sound_close();
 	
@@ -598,6 +599,17 @@ void end_system() {
 		fclose(ordenador.tap_file);
 
 	SDL_Quit();
+	
+	if (!chdir(path_tmp)) {chdir("/"); remove_dir(path_tmp);} //remove the tmp directory if it exists
+	
+	#ifdef GEKKO
+	if (smbismount) CloseShare();
+	if (ftpismount) CloseFTP();
+	DeInitUSB();
+	fatUnmount(0);
+	#endif
+	
+	free_browser();
 }
 
 void load_main_game(char *nombre) {
@@ -618,7 +630,7 @@ void load_main_game(char *nombre) {
 	if ((0==strcasecmp(".tap",puntero))||(0==strcasecmp(".tzx",puntero))) {
 		char char_id[10];
 		ordenador.tape_write = 0; // by default, can't record
-		ordenador.tap_file=fopen(nombre,"r+"); // read and write
+		ordenador.tap_file=fopen(nombre,"r+b"); // read and write
 		if(ordenador.tap_file==NULL)
 			return;
 
@@ -738,7 +750,7 @@ int save_config_game(struct computer *object, char *filename, int overwrite) {
 	unsigned char key, joy_n;
 	FILE *fconfig;
 	
-	fconfig=fopen(filename,"r");
+	fconfig=fopen(filename,"rb");
 	if((fconfig!=NULL)&&(!overwrite)) {
     fclose(fconfig);
     return -1; // file already exists
@@ -774,7 +786,7 @@ void load_config_network(struct computer *object) {
 	unsigned char smb_enable=0, ftp_enable=0, FTPPassive=0;
 	unsigned int FTPPort=21;
 	
-	fconfig = fopen("/fbzx-wii/fbzx.net","r");
+	fconfig = fopen("/fbzx-wii/fbzx.net","rb");
 	if (fconfig==NULL) {
 		return;
 	}
@@ -1135,7 +1147,16 @@ int load_config(struct computer *object, char *filename) {
 	return 0;
 }
 
-int main(int argc,char *argv[]) {
+#ifdef MINGW
+int WinMain()
+{
+	int argc=__argc;
+	char **argv=__argv;
+	
+#else
+int main(int argc,char *argv[])
+{
+#endif
 
 	int bucle,tstados,tstados_screen, argumento,fullscreen,dblbuffer,hwsurface,length;
 	char gamefile[MAX_PATH_LENGTH],config_path[MAX_PATH_LENGTH] ;
@@ -1159,15 +1180,23 @@ int main(int argc,char *argv[]) {
 	curr_frames=0;
 	ordenador.dblscan=1;
 	ordenador.bw=0;
+	turbo_n=1;
 	
 	#ifdef DEBUG
-	fatInitDefault();
+		#ifdef GEKKO
+		fatInitDefault();
+		#endif
 	fdebug = fopen("/fbzx-wii/logfile.txt","w");
+	#endif
+	
+	#ifdef MINGW
+		if(!getenv("HOME")) putenv("HOME=/fbzx-wii");
 	#endif
 	
 	#ifdef GEKKO
 	dblbuffer=1;
 	hwsurface=1;
+	sound_type=SOUND_ASND;
 	setenv("HOME", "/fbzx-wii", 1);
 	
 	//initialize libfat library
@@ -1248,7 +1277,8 @@ int main(int argc,char *argv[]) {
 			printf("  -ss: force singlescan (emulate TV black stripes)\n");
 			printf("  -bw: emulate black&white TV set\n");
 			printf("  -color: emulate a color TV set\n");
-			printf("  -jump N: show one TV refresh and jump over N refreshes (for slow systems)\n");
+			printf("  -jumpN: show one TV refresh and jump over N refreshes (for slow systems)\n");
+			printf("  -turboN: accelerate the tape loading by N (2-9)\n");
 			printf("   gamefile: an optional .Z80 snapshot or .TAP/.TZX tape file\n\n");
 			exit(0);
 		} else if(0==strcmp(argv[argumento],"-nosound")) {
@@ -1302,9 +1332,16 @@ int main(int argc,char *argv[]) {
 			argumento++;
 		} else if(0==strncmp(argv[argumento],"-jump",5)) {
 			jump_frames=(int)(argv[argumento][5]);
-			jump_frames-=48;//???
+			jump_frames-=48;
+			if ((jump_frames<0)||(jump_frames>9)) jump_frames = 0;
 			argumento++;
 			printf ("Jump %d\n",jump_frames);
+		} else if(0==strncmp(argv[argumento],"-turbo",6)) {
+			turbo_n=(int)(argv[argumento][6]);
+			turbo_n-=48;
+			if ((turbo_n<1)||(turbo_n>9)) turbo_n = 1;
+			argumento++;
+			printf ("turbo %d\n",turbo_n);
 		} else {
 			strcpy(gamefile,argv[argumento]);
 			argumento++;
@@ -1338,7 +1375,7 @@ int main(int argc,char *argv[]) {
 	if(fullscreen) {
 		SDL_Fullscreen_Switch();
 	}
-	SDL_WM_SetCaption("FBZX","");
+	SDL_WM_SetCaption("FBZX Wii","");
 	#endif
 	ordenador.interr=0;
 	ordenador.readkeyboard = 0;
@@ -1393,7 +1430,7 @@ int main(int argc,char *argv[]) {
 
 	//Remove and make tmp dir
 	
-	if (!chdir(path_tmp)) remove_dir(path_tmp); //remove the tmp directory if it exists
+	if (!chdir(path_tmp)) {chdir("/"); remove_dir(path_tmp);} //remove the tmp directory if it exists
 	
 	int write_protection=0;
 	
@@ -1489,6 +1526,9 @@ int main(int argc,char *argv[]) {
 	SDL_EventState(SDL_SYSWMEVENT,SDL_IGNORE);
 	SDL_EventState(SDL_VIDEORESIZE,SDL_IGNORE);
 	SDL_EventState(SDL_USEREVENT,SDL_IGNORE);
+	#ifndef GEKKO
+	SDL_EventState(SDL_MOUSEBUTTONDOWN,SDL_ENABLE);
+	#endif
 
 	SDL_ShowCursor(SDL_DISABLE);
 	salir=1;
@@ -1499,7 +1539,7 @@ int main(int argc,char *argv[]) {
 	printf("Reset computer\n");
 	ResetComputer();
 
-	sleep(1);
+	SDL_Delay(1000);
 
 	printf("Reset screen\n");
 	clean_screen();
@@ -1526,7 +1566,7 @@ int main(int argc,char *argv[]) {
 		if (ordenador.precision)
 			{
 			tstados_screen=tstados-ordenador.r_fetch -ordenador.wr -ordenador.io;
-			if(tstados_screen>0) emulate_screen(tstados_screen);
+			if(tstados_screen>0) show_screen_precision(tstados_screen);
 			ordenador.wr=0;
 			ordenador.r_fetch=0;
 			ordenador.io=0;
@@ -1535,7 +1575,7 @@ int main(int argc,char *argv[]) {
 			}
 		else
 			if (tstados>0) {
-			emulate_screen(tstados);
+			show_screen(tstados);
 			emulate(tstados+ordenador.contention);
 			ordenador.contention=0;
 			}
@@ -1604,19 +1644,8 @@ int main(int argc,char *argv[]) {
 		if(ordenador.interr==1) {
 			Z80free_INT(&procesador,bus_empty());
 			if ((ordenador.precision==0)||(jump_frames>0)) ordenador.interr=0;
-		}
+		} //else if (ordenador.precision==1) Z80free_INT_reset(&procesador);
 	}
-	
-	if (!chdir(path_tmp)) remove_dir(path_tmp); //remove the tmp directory if it exists
-	
-	#ifdef GEKKO
-	if (smbismount) CloseShare();
-	if (ftpismount) CloseFTP();
-	DeInitUSB();
-	fatUnmount(0);
-	#endif
-	
-	free_browser();
 	
 	return 0;
 }

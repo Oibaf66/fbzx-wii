@@ -137,6 +137,7 @@ void Z80free_reset(Z80FREE *);
 int Z80free_step(Z80FREE *);
 int Z80free_ustep(Z80FREE *);
 void Z80free_INT(Z80FREE *,byte);
+void Z80free_INT_reset(Z80FREE *);
 
 byte Z80free_Rd (register word Addr);
 byte Z80free_Rd_fake (register word Addr);

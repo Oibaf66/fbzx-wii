@@ -23,7 +23,7 @@ int Z80free_codesFDCB (Z80FREE *processor,byte d1) {
 	static byte tmp1;
 	static word tmp2;
 	static byte opcode;
-	opcode=Z80free_Rd_fetch(processor->PC++);
+	opcode=Z80free_Rd(processor->PC++);
 
 	switch(opcode) {
 	case 0: // LD_RLC B,(IY+d)

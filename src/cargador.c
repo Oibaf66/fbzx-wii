@@ -83,13 +83,13 @@ int save_z80(char *filename, int overwrite) {
   unsigned char value,bucle;
   int retval;
 
-  fichero=fopen(filename,"r");
+  fichero=fopen(filename,"rb");
   if((fichero!=NULL)&&(!overwrite)) {
     fclose(fichero);
     return -1; // file already exists
   }
 
-  fichero=fopen(filename,"w");
+  fichero=fopen(filename,"wb");
 
   if(fichero==NULL)
     return -2; // can't create file
@@ -182,7 +182,7 @@ int load_z80(char *filename) {
 	for(bucle=0;bucle<16;bucle++)
 		snap->ay_regs[bucle]=0;
 
-	fichero=fopen(filename,"r");
+	fichero=fopen(filename,"rb");
 	if(fichero==NULL) {
 		free(memo);
 		free(snap);
@@ -461,7 +461,7 @@ int load_sna(char *filename) {
 	
 	printf("Loading SNA file\n");
 	
-	fichero=fopen(filename,"r");
+	fichero=fopen(filename,"rb");
 	if(fichero==NULL) {
 		free(tempo);
 		free(tempo2);
@@ -547,12 +547,12 @@ int load_sna(char *filename) {
 		snap->PC=((word)tempo2[0])+256*((word)tempo2[1]);
 		memcpy(snap->page[5],tempo+27,16384);
 		memcpy(snap->page[2],tempo+16411,16384);
-		v1=tempo[2];
+		v1=tempo2[2];
 		snap->pager=v1;
 		v1&=0x07;
 		memcpy(snap->page[v1],tempo+32795,16384);
 		addr=4;
-		for (loop=0;loop<7;loop++) {
+		for (loop=0;loop<8;loop++) {
 			if ((loop==2)||(loop==5)||(loop==((int)v1))) {
 				continue;
 			}

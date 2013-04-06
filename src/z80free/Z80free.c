@@ -52,6 +52,12 @@ void Z80free_INT(Z80FREE *processor,byte value) {
 	
 }
 
+void Z80free_INT_reset(Z80FREE *processor) {
+
+	processor->INT_P=0;
+	
+}
+
 int Z80free_step(Z80FREE *processor) {
 	
 	int retval=0;
@@ -77,7 +83,6 @@ int Z80free_ustep(Z80FREE *processor) {
 			Z80free_doPush(processor,processor->PC);
 			processor->PC=0x0066;
 			processor->IFF1=0; // disable INTs
-			processor->Status=Z80INT;
 			return(11); // we use 11 tstates for attending a NMI
 		}
 		if (processor->INT_P) {
@@ -87,7 +92,6 @@ int Z80free_ustep(Z80FREE *processor) {
 					processor->HALT=0;
 					processor->PC++;
 				}
-				processor->Status=Z80INT;
 				processor->IFF1=0;
 				processor->IFF2=0;
 				Z80free_doPush(processor,processor->PC);
@@ -143,9 +147,13 @@ int Z80free_ustep(Z80FREE *processor) {
 			processor->Status=Z80FD;
 			return 4;
 		}
+		if (opcode==0xED) {
+			processor->Status=Z80ED;
+			return 4;
+		}
 		processor->Status=Z80XX;
 		if (opcode==0xCB) {
-			d1=Z80free_Rd_fetch(processor->PC++);
+			d1=Z80free_Rd(processor->PC++);
 			retval+=Z80free_codesDDCB(processor,d1);
 		} else {
 			retval+=Z80free_codesDD(processor,opcode);
@@ -161,9 +169,13 @@ int Z80free_ustep(Z80FREE *processor) {
 		if (opcode==0xFD) {
 			return 4;
 		}
+		if (opcode==0xED) {
+			processor->Status=Z80ED;
+			return 4;
+		}
 		processor->Status=Z80XX;
 		if (opcode==0xCB) {
-			d1=Z80free_Rd_fetch(processor->PC++);
+			d1=Z80free_Rd(processor->PC++);
 			retval+=Z80free_codesFDCB(processor,d1);
 		} else {
 			retval+=Z80free_codesFD(processor,opcode);
@@ -582,8 +594,10 @@ void Z80free_doRRD(Z80FREE *processor) {
 
 void Z80free_doPush (Z80FREE *processor, word val) {
 
-	processor->Rm.wr.SP-=2;
-	Z80free_write16(processor->Rm.wr.SP, val);
+	processor->Rm.wr.SP-=1;
+	Z80free_Wr(processor->Rm.wr.SP, (byte)((val >> 8) & 0xFF));
+	processor->Rm.wr.SP-=1;
+	Z80free_Wr(processor->Rm.wr.SP, (byte)(val & 0xFF));
 }
 
 

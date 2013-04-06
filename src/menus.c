@@ -208,7 +208,12 @@ void settings_menu() {
 
 		print_string(fbuffer,"V:",30,400,12,0,ancho);
 		print_string(fbuffer,"TV Set mode",78,400,15,0,ancho);
-
+		
+		#ifndef GEKKO
+		print_string(fbuffer,"F:",350,400,12,0,ancho);
+		print_string(fbuffer,"Full screen",398,400,15,0,ancho);
+		#endif
+		
 		print_string(fbuffer,"ESC:",168,450,12,0,ancho);
 		print_string(fbuffer,"return emulator",232,450,15,0,ancho);
 
@@ -297,7 +302,12 @@ void settings_menu() {
 			} else {
 				ordenador.turbo = 1; //Auto mode	
 			}
-		break;	
+		break;
+		#ifndef GEKKO
+		case SDLK_f:
+			SDL_Fullscreen_Switch();
+		break;
+		#endif
 		}
 	} while(fin);
 
@@ -706,7 +716,7 @@ void select_tapfile() {
 	}
 
 	if (!strncmp(filename,"smb:",4)) ordenador.tap_file=fopen(filename,"r"); //tinysmb does not work with r+
-	else ordenador.tap_file=fopen(filename,"r+"); // read and write
+	else ordenador.tap_file=fopen(filename,"r+b"); // read and write
 	ordenador.tape_write = 0; // by default, can't record
 	
 	if(ordenador.tap_file==NULL)
@@ -734,12 +744,10 @@ void select_tapfile() {
 	retval=fread(char_id,10,1,ordenador.tap_file); // read the (maybe) TZX header
 	if((!strncmp(char_id,"ZXTape!",7)) && (char_id[7]==0x1A)&&(char_id[8]==1)) {
 		ordenador.tape_file_type = TAP_TZX;
-		rewind_tape(ordenador.tap_file,1);
-		browser_tzx(ordenador.tap_file);
+		create_browser_tzx(ordenador.tap_file);
 	} else {
 		ordenador.tape_file_type = TAP_TAP;
-		rewind_tape(ordenador.tap_file,1);
-		browser_tap(ordenador.tap_file);
+		create_browser_tap(ordenador.tap_file);
 	}
 
 	clean_screen();
@@ -780,7 +788,7 @@ void create_tapfile() {
 		retorno=-1;
 	
 	if(!retorno) {
-		ordenador.tap_file=fopen(nombre2,"a+"); // create for read and write
+		ordenador.tap_file=fopen(nombre2,"a+b"); // create for read and write
 		if(ordenador.tap_file==NULL)
 			retorno=-2;
 		else
@@ -791,6 +799,8 @@ void create_tapfile() {
 	ordenador.tape_file_type = TAP_TAP;
 	switch(retorno) {
 	case 0:
+	strcpy(ordenador.last_selected_file,nombre2);
+	create_browser_tap(ordenador.tap_file);
 	break;
 	case -1:
 		print_string(videomem,"File already exists",-1,80,10,0,ancho);
@@ -1872,7 +1882,7 @@ void keyboard_menu() {
 	buffer=screen->pixels;
 	
 	clean_screen();
-	fichero=myfopen("fbzx/keymap.bmp","r");
+	fichero=myfopen("fbzx/keymap.bmp","rb");
 	if (fichero==NULL) {
 		strcpy(ordenador.osd_text,"Keymap picture not found");
 		ordenador.osd_time=100;
@@ -2019,7 +2029,7 @@ if (freq == 0)
 	ordenador.cpufreq = 3500000;
 	break;
 	}
-else ordenador.cpufreq = freq;
+else ordenador.cpufreq = freq*turbo_n;
 
 ordenador.tst_sample=(ordenador.cpufreq + (ordenador.freq*N_SAMPLES/2))/(ordenador.freq*N_SAMPLES);
 

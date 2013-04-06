@@ -236,7 +236,7 @@ static void tape_browser()
 	const char *row_selected; 
 	char block_n[5];
 	
-	if (browser_list[0]==NULL) {msgInfo("No tape inserted",3000,NULL);return;}
+	if (browser_list[0]==NULL) {msgInfo("No tape inserted or empty",3000,NULL);return;}
 	
 	row_selected = menu_select_browser(ordenador.tape_position);
 	
@@ -297,7 +297,7 @@ static void insert_tape()
 	}
 
 	if (!strncmp(filename,"smb:",4)) ordenador.tap_file=fopen(filename,"r"); //tinysmb does not work with r+
-	else ordenador.tap_file=fopen(filename,"r+"); // read and write
+	else ordenador.tap_file=fopen(filename,"r+b"); // read and write
 	
 	ordenador.tape_write = 1; // by default, can record
 	
@@ -325,12 +325,10 @@ static void insert_tape()
 	retval=fread(char_id,10,1,ordenador.tap_file); // read the (maybe) TZX header
 	if((!strncmp(char_id,"ZXTape!",7)) && (char_id[7]==0x1A)&&(char_id[8]==1)) {
 		ordenador.tape_file_type = TAP_TZX;
-		rewind_tape(ordenador.tap_file,1);
-		browser_tzx(ordenador.tap_file);
+		create_browser_tzx(ordenador.tap_file);
 	} else {
 		ordenador.tape_file_type = TAP_TAP;
-		rewind_tape(ordenador.tap_file,1);
-		browser_tap(ordenador.tap_file);
+		create_browser_tap(ordenador.tap_file);
 	}
 	
 }
@@ -376,14 +374,14 @@ void create_tapfile_sdl() {
 	if(ordenador.tap_file!=NULL)
 		fclose(ordenador.tap_file);
 	
-	ordenador.tap_file=fopen(nombre2,"r"); // test if it exists
+	ordenador.tap_file=fopen(nombre2,"rb"); // test if it exists
 	if(ordenador.tap_file==NULL)
 		retorno=0;
 	else
 		retorno=-1;
 	
 	if(!retorno) {
-		ordenador.tap_file=fopen(nombre2,"a+"); // create for read and write
+		ordenador.tap_file=fopen(nombre2,"a+b"); // create for read and write
 		if(ordenador.tap_file==NULL)
 			retorno=-2;
 		else
@@ -395,6 +393,7 @@ void create_tapfile_sdl() {
 	switch(retorno) {
 	case 0:
 	strcpy(ordenador.last_selected_file,nombre2);
+	create_browser_tap(ordenador.tap_file);
 	break;
 	case -1:
 		msgInfo("File already exists",3000,NULL);
@@ -942,7 +941,7 @@ void create_mdrfile_sdl() {
 	if(retorno==2) // abort
 		return;
 
-	ordenador.mdr_file=fopen(nombre2,"r"); // test if it exists
+	ordenador.mdr_file=fopen(nombre2,"rb"); // test if it exists
 	if(ordenador.mdr_file==NULL)
 		retorno=0;
 	else
@@ -1139,7 +1138,7 @@ static int save_scr(int i)
 	snprintf(db, MAX_PATH_LENGTH-1, "%s/%s.scr", dir, fb);
 	
 		
-	fichero=fopen(db,"r");
+	fichero=fopen(db,"rb");
 	
 	if(fichero!=NULL)
 	{	
@@ -1195,6 +1194,7 @@ static void set_port(int which)
 		strcat(load_path_poke,"poke");
 		ordenador.port = which;
 		break;
+	#ifdef GEKKO	
 	case 1: //PORT_SD
 		if (sdismount) {
 			strcpy(load_path_snaps,"sd:/");
@@ -1249,7 +1249,8 @@ static void set_port(int which)
 			ordenador.port = which;}
 		else
 			msgInfo("FTP is not mounted",3000,NULL);
-		break;	
+		break;
+	#endif	
 	default:
 		break;		
 	}	
@@ -1371,7 +1372,7 @@ int parse_poke (const char *filename)
 
 	trainer=0;
 
-	fpoke = fopen(filename,"r");
+	fpoke = fopen(filename,"rb");
 
 	if (fpoke==NULL) 
 	{
@@ -1809,7 +1810,7 @@ static void save_load_general_configurations(int which)
 	case 2:
 	case 0: // Load or delete file
 	{
-		fconfig = fopen(config_path,"r");
+		fconfig = fopen(config_path,"rb");
 		if (fconfig==NULL) 
 			{
 			msgInfo("Can not access the file",3000,NULL);
