@@ -86,7 +86,6 @@ static SDL_Surface *real_screen;
 #define IS_SUBMENU(p_msg) ( (p_msg)[0] == '^' )
 #define IS_TEXT(p_msg) ( (p_msg)[0] == '#' || (p_msg)[0] == ' ' )
 #define IS_MARKER(p_msg) ( (p_msg)[0] == '@' )
-#define FONT_PATH "/fbzx-wii/fbzx/FreeMono.ttf"
 
 static int is_inited = 0;
 static TTF_Font *menu_font16, *menu_font20, *menu_font8, *menu_font10;
@@ -1492,12 +1491,18 @@ static TTF_Font *read_font(const char *path, int font_size)
 
 void font_init()
 {
+	char *font_path;
+	
 	TTF_Init();
+	
+	font_path=myfile("fbzx/FreeMono.ttf");
 
-	menu_font16 = read_font(FONT_PATH, 16);
-	menu_font20 = read_font(FONT_PATH, 20);
-	menu_font8 = read_font(FONT_PATH, 8);
-	menu_font10 = read_font(FONT_PATH, 10);
+	menu_font16 = read_font(font_path, 16);
+	menu_font20 = read_font(font_path, 20);
+	menu_font8 = read_font(font_path, 8);
+	menu_font10 = read_font(font_path, 10);
+	
+	free(font_path);
 }
 
 void menu_init(SDL_Surface *screen)

@@ -99,6 +99,8 @@ void computer_init () { //Called only on start-up
 	ordenador.videosystem = 0; //PAL
 	ordenador.joystick[0] = 1; //Kemposton
 	ordenador.joystick[1] = 0; // Cursor
+	ordenador.joypad_as_joystick[0]= 1;
+	ordenador.joypad_as_joystick[1]= 1;
 	ordenador.vk_auto = 0; //Vk called by +
 	ordenador.vk_rumble = 1; //enabled
 	ordenador.rumble[0] = 0;

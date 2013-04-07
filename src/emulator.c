@@ -242,7 +242,12 @@ unsigned char InitNetwork()
 int load_zxspectrum_picture()
 {
 
-image=IMG_Load("/fbzx-wii/fbzx/ZXSpectrum48k.png");
+char *image_path;
+
+image_path=myfile("fbzx/ZXSpectrum48k.png");
+
+image=IMG_Load(image_path);
+free(image_path);
 
 if (image == NULL) {printf("Impossible to load image\n"); return 0;}
 
@@ -307,30 +312,38 @@ void SDL_Fullscreen_Switch()
 
 FILE *myfopen(char *filename,char *mode) {
 	
-	char tmp[4096];
+	char path[MAX_PATH_LENGTH];
 	FILE *fichero;
+	int length;
 	
-	fichero=fopen(filename,mode);
-	if (fichero!=NULL) {
-		return (fichero);
-	}
-	sprintf(tmp,"/usr/share/%s",filename);
-	fichero=fopen(tmp,mode);
-	if (fichero!=NULL) {
-		return (fichero);
-	}
-	sprintf(tmp,"/usr/local/share/%s",filename);
-	fichero=fopen(tmp,mode);
-	if (fichero!=NULL) {
-		return (fichero);
-	}
-	sprintf(tmp,"/fbzx-wii/%s",filename);
-	fichero=fopen(tmp,mode);
+	strcpy(path,getenv("HOME"));
+	length=strlen(path);
+	if ((length>0)&&(path[length-1]!='/'))
+		strcat(path,"/");
+	strcat(path,filename);
+	printf("opening %s\n",path);
+	fichero=fopen(path,mode);
 	if (fichero!=NULL) {
 		return (fichero);
 	}
 	
 	return (NULL);
+}
+
+char *myfile(char *filename) {
+	
+	char *path;
+	int length;
+	
+	path=(char *)malloc(MAX_PATH_LENGTH);
+	
+	strcpy(path,getenv("HOME"));
+	length=strlen(path);
+	if ((length>0)&&(path[length-1]!='/'))
+		strcat(path,"/");
+	strcat(path,filename);
+	
+	return (path);
 }
 
 char *load_a_rom(char **filenames) {
@@ -786,7 +799,7 @@ void load_config_network(struct computer *object) {
 	unsigned char smb_enable=0, ftp_enable=0, FTPPassive=0;
 	unsigned int FTPPort=21;
 	
-	fconfig = fopen("/fbzx-wii/fbzx.net","rb");
+	fconfig = myfopen("fbzx.net","rb");
 	if (fconfig==NULL) {
 		return;
 	}
@@ -1190,7 +1203,16 @@ int main(int argc,char *argv[])
 	#endif
 	
 	#ifdef MINGW
-		if(!getenv("HOME")) putenv("HOME=/fbzx-wii");
+		char path_home[MAX_PATH_LENGTH];
+		int i;
+		strcpy(path_home,"HOME=");
+		getcwd(path_home+5, MAX_PATH_LENGTH-5);
+		
+		for (i=4; path_home[i]!=0;i++)
+			if (path_home[i]=='\\') path_home[i]='/';
+		
+		printf("%s\n",path_home);
+		putenv(path_home);
 	#endif
 	
 	#ifdef GEKKO

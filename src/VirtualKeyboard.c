@@ -29,6 +29,7 @@
 #include "computer.h"
 #include "VirtualKeyboard.h"
 #include "menu_sdl.h"
+#include "emulator.h"
 #include<SDL/SDL_image.h>
 
 #ifdef GEKKO
@@ -73,35 +74,46 @@ void VirtualKeyboard_init(SDL_Surface *screen)
 	VirtualKeyboard.sel_x = 64;
 	VirtualKeyboard.sel_y = 100;
 	vkb_is_init = -1;
+	char *image_path;
 	
-	tmp_surface=IMG_Load("/fbzx-wii/fbzx/Spectrum_keyboard.png");
+	image_path=myfile("fbzx/Spectrum_keyboard.png");
+	tmp_surface=IMG_Load(image_path);
+	free(image_path);
 	if (tmp_surface == NULL) {printf("Impossible to load keyboard image\n"); return;}
 	image_kbd=SDL_DisplayFormat(tmp_surface);
 	SDL_FreeSurface (tmp_surface);
 	
-	
-	tmp_surface=IMG_Load("/fbzx-wii/fbzx/symbol_shift.png");
+	image_path=myfile("fbzx/symbol_shift.png");
+	tmp_surface=IMG_Load(image_path);
+	free(image_path);
 	if (tmp_surface == NULL) {printf("Impossible to load symbol shift image\n"); return;}
 	image_sym=SDL_DisplayFormat(tmp_surface);
 	SDL_FreeSurface (tmp_surface);
 	
-	
-	tmp_surface=IMG_Load("/fbzx-wii/fbzx/caps_shift.png");
+	image_path=myfile("fbzx/caps_shift.png");
+	tmp_surface=IMG_Load(image_path);
+	free(image_path);
 	if (tmp_surface == NULL) {printf("Impossible to load caps shift image\n"); return;}
 	image_caps=SDL_DisplayFormat(tmp_surface);
 	SDL_FreeSurface (tmp_surface);
 	
-	tmp_surface=IMG_Load("/fbzx-wii/fbzx/Spectrum_keyboard_small.png");
+	image_path=myfile("fbzx/Spectrum_keyboard_small.png");
+	tmp_surface=IMG_Load(image_path);
+	free(image_path);
 	if (tmp_surface == NULL) {printf("Impossible to load keyboard small image\n"); return;}
 	image_kbd_small=SDL_DisplayFormat(tmp_surface);
 	SDL_FreeSurface (tmp_surface);
 	
-	tmp_surface=IMG_Load("/fbzx-wii/fbzx/symbol_shift_small.png");
+	image_path=myfile("fbzx/symbol_shift_small.png");
+	tmp_surface=IMG_Load(image_path);
+	free(image_path);
 	if (tmp_surface == NULL) {printf("Impossible to load symbol shift small image\n"); return;}
 	image_sym_small=SDL_DisplayFormat(tmp_surface);
 	SDL_FreeSurface (tmp_surface);
 	
-	tmp_surface=IMG_Load("/fbzx-wii/fbzx/caps_shift_small.png");
+	image_path=myfile("fbzx/caps_shift_small.png");
+	tmp_surface=IMG_Load(image_path);
+	free(image_path);
 	if (tmp_surface == NULL) {printf("Impossible to load caps shift small image\n"); return;}
 	image_caps_small=SDL_DisplayFormat(tmp_surface);
 	SDL_FreeSurface (tmp_surface);

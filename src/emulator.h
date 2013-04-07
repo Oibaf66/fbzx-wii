@@ -56,6 +56,7 @@ int load_config(struct computer *object, char *filename);
 int save_config(struct computer *object, char *filename);
 int save_config_game(struct computer *object, char *filename, int overwrite);
 FILE *myfopen(char *filename,char *mode);
+char *myfile(char *filename);
 void init_sdl();
 void init_sound();
 void init_screen(int resx,int resy,int depth,int fullscreen,int dblbuffer,int hwsurface);
