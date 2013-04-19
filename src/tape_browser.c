@@ -75,7 +75,7 @@ void create_browser_tzx (FILE * fichero) {
 		browser_list[block_number]->position=byte_position;
 		strcpy(browser_list[block_number]->info, "                                   ");
 		
-		printf("TZX browser: %X en %d\n",blockid, byte_position);
+		printf("TZX browser: %X en %d\n",blockid, byte_position+1);
 		
 		switch(blockid) {
 				case 0x10: // classic tape block

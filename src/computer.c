@@ -1717,6 +1717,7 @@ void ResetComputer () {
 	ordenador.tape_stop = 1;
 	ordenador.tape_stop_fast = 1;
 	ordenador.stop_tape_start_countdown = 0;
+	ordenador.tape_current_bit = 0;
 	
 	if (ordenador.rewind_on_reset)
 	{		
