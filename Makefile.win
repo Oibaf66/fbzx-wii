@@ -39,7 +39,7 @@ INCLUDES	:=
 # options for code generation
 #---------------------------------------------------------------------------------
 
-CFLAGS	= -g -O2 -Wall $(INCLUDE) -Wno-pointer-sign -DBYTE_ORDER=LITTLE_ENDIAN -DMINGW
+CFLAGS	= -g -O2 -Wall $(INCLUDE) -Wno-pointer-sign -Wno-unused-but-set-variable -DBYTE_ORDER=LITTLE_ENDIAN -DMINGW
 CXXFLAGS	=	$(CFLAGS)
 
 LDFLAGS	=	-g -Wl,-Map,$(notdir $@).map 
@@ -132,7 +132,7 @@ dist: $(BUILD)
 	mkdir -p $@/fbzx-wii/configurations
 	mkdir -p $@/fbzx-wii/poke
 	mkdir -p $@/fbzx-wii/doc
-	cp fbzx.exe $@/fbzx-wii/fbzx.exe
+	cp fbzx-wii.exe $@/fbzx-wii/fbzx-wii.exe
 	cp meta.xml $@/fbzx-wii/meta.xml
 	cp spectrum-roms/* $@/fbzx-wii/spectrum-roms
 	cp dll/* $@/fbzx-wii
