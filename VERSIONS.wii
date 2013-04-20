@@ -1,3 +1,11 @@
+version 10.2:
+	* fixed bugs in 128k sna format
+	* fixed small bugs in z80 core
+ 	* fixed bugs in tape emulation (Speedlock 4-7, Softlock and Powerload work now)
+	* Improved code and tape loading speed
+
+	-- Fabio Olimpieri <fabio.olimpieri@tin.it> Apr 20 2013
+
 version 10:
 	* Tape browser
 	* TZX "select block" block
