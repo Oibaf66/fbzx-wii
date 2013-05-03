@@ -235,7 +235,7 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 				case 0x10: // classic tape block
 					done = 1;
 					bucle = 0;
-					ordenador.tape_current_bit = 0;
+					//ordenador.tape_current_bit = 0;
 					ordenador.tape_bit0_level = 855;
 					ordenador.tape_bit1_level = 1710;
 					ordenador.tape_bits_at_end = 8;
@@ -246,8 +246,8 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 					retval=fread(&value2,1,1,fichero);
 					retval=fread(&value3,1,1,fichero); // pause length
 					ordenador.tape_pause_at_end = ((unsigned int) value2) + 256 * ((unsigned int) value3);
-					if(ordenador.tape_pause_at_end==0)
-						ordenador.tape_pause_at_end=10; // to avoid problems
+					//if(ordenador.tape_pause_at_end==0)
+						//ordenador.tape_pause_at_end=10; // to avoid problems
 					ordenador.tape_pause_at_end *= 3500;
 					retval=fread (&value, 1, 1, fichero);
 					retval=fread (&value2, 1, 1, fichero);	// read block longitude
@@ -264,11 +264,11 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 					ordenador.tape_bit = 0x80;
 					ordenador.tape_current_mode = TAP_GUIDE;
 					ordenador.tape_counter0 = 2168;
-					ordenador.tape_counter1 = 2168;
+					ordenador.tape_counter1 = 0;
 					if (!(0x80 & ordenador.tape_byte))
-						ordenador.tape_counter_rep = 3228;	// 4 seconds
+						ordenador.tape_counter_rep = 8063;	// 4 seconds
 					else
-						ordenador.tape_counter_rep = 1614;	// 2 seconds					
+						ordenador.tape_counter_rep = 3223;	// 2 seconds					
 					break;
 
 				case 0x11: // turbo tape block					
@@ -293,7 +293,7 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 					retval=fread(&value2,1,1,fichero);
 					retval=fread(&value3,1,1,fichero);
 					ordenador.tape_counter_rep = ((unsigned int) value2) + 256 * ((unsigned int) value3);
-					ordenador.tape_counter_rep /=2;
+					//ordenador.tape_counter_rep /=2;
 					retval=fread(&value2,1,1,fichero);
 					ordenador.tape_bits_at_end = value2;					
 					
@@ -301,7 +301,6 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 					retval=fread(&value3,1,1,fichero); // pause length
 					ordenador.tape_pause_at_end = ((unsigned int) value2) + 256 * ((unsigned int) value3);
 					
-			
 					//if(ordenador.tape_pause_at_end==0)
 						//ordenador.tape_pause_at_end=10; // to avoid problems
 					ordenador.tape_pause_at_end *= 3500;
@@ -322,7 +321,7 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 					ordenador.tape_bit = 0x80;
 					ordenador.tape_current_mode = TAP_GUIDE;
 					ordenador.tape_counter0 = ordenador.tape_block_level;
-					ordenador.tape_counter1 = ordenador.tape_block_level;
+					ordenador.tape_counter1 = 0;
 					//ordenador.tape_current_bit = 0;
 					break;
 					
@@ -403,16 +402,16 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 					retval=fread(&value2,1,1,fichero);
 					retval=fread(&value3,1,1,fichero); // pause length
 					ordenador.tape_counter_rep = ((unsigned int) value2) + 256 * ((unsigned int) value3);
-					ordenador.tape_readed = 0;
+					//ordenador.tape_readed = 0;
 					ordenador.tape_counter0 = 0;				
-					ordenador.tape_counter1 = 0; // 1ms of inversed pulse					
+					ordenador.tape_counter1 = 0; 				
 					if(ordenador.tape_counter_rep == 0) {
-						ordenador.tape_current_mode = TAP_PAUSE2;	// initialize
-						ordenador.tape_byte_counter = 31500;
+						ordenador.tape_current_mode = TAP_STOP2;	// sTOP
+						//ordenador.tape_byte_counter = 31500;
 						break;
 					}
 					ordenador.tape_counter_rep *= 3500;
-					ordenador.tape_current_mode = TAP_PAUSE;									
+					ordenador.tape_current_mode = TAP_PAUSE2;									
 					break;
 					
 				case 0x21: // group start
@@ -458,16 +457,19 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 					}	
 					break;
 				
-				case 0x2A: // pause if 48K
+				case 0x2A: // stop if 48K
 					for(bucle=0;bucle<4;bucle++)
 						retval=fread(&value,1,1,fichero);
 					if(ordenador.mode128k==0) {
-						ordenador.tape_stop = 1;
-						ordenador.tape_stop_fast = 1;	// pause it
-						return;
-					}
+						ordenador.tape_counter0 = 0;				
+						ordenador.tape_counter1 = 0; 					
+						ordenador.tape_counter_rep = 0;
+						ordenador.tape_current_mode = TAP_STOP2;	// stop
+						//ordenador.tape_byte_counter = 31500;
+						done=1;
+						}
 					break;
-					
+
 				case 0x30: // text description
 					retval=fread(&value2,1,1,fichero); // length
 					for(bucle=0;bucle<((unsigned int)value2);bucle++)
@@ -529,11 +531,8 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 		} while (!done);			
 	}
 
-	if (feof (fichero)) {
-		rewind_tape(fichero,1);
-		ordenador.tape_current_bit = 0;
-		ordenador.tape_current_mode = TAP_TRASH;		
-		return;
+	if (feof (fichero)&&(ordenador.tape_current_mode != TAP_STOP)) {
+		ordenador.tape_current_mode = TAP_STOP2;
 	}
 	
 	// if there's a pulse still being reproduced, just play it
@@ -544,20 +543,21 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 			ordenador.tape_counter0 -= tstados;	// decrement counter;
 			return;
 		} else {
+			ordenador.tape_current_bit=1-ordenador.tape_current_bit;
 			tstados -= ordenador.tape_counter0;
 			ordenador.tape_counter0 = 0;
 		}
 	}
 	
-	ordenador.tape_readed = 1 - ordenador.tape_current_bit;	// return oposite current
 	if (ordenador.tape_counter1) {		
 		if (ordenador.tape_counter1 > tstados) {
+			ordenador.tape_readed = ordenador.tape_current_bit;	// return oposite current
 			ordenador.tape_counter1 -= tstados;	// decrement counter;
 			return;
 		} else {
 			tstados -= ordenador.tape_counter1;
 			ordenador.tape_counter1 = 0;
-			ordenador.tape_readed = ordenador.tape_current_bit;	// return current
+			ordenador.tape_current_bit=1-ordenador.tape_current_bit;
 		}
 	}
 
@@ -565,14 +565,17 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 
 	switch (ordenador.tape_current_mode) {
 	case TAP_FINAL_BIT:
+		printf("TAP_FINAL_BIT\n");	
 		ordenador.tape_current_mode = TAP_TRASH;
 		ordenador.next_block= NOBLOCK;
 		break;
+		
 	case TAP_GUIDE:	// guide tone
+		ordenador.tape_counter_rep--;
 		if (ordenador.tape_counter_rep) {	// still into guide tone
-			ordenador.tape_counter_rep--;
-			ordenador.tape_counter0 = ordenador.tape_block_level - tstados;
-			ordenador.tape_counter1 = ordenador.tape_block_level;	// new pulse
+			if (ordenador.tape_block_level>tstados) ordenador.tape_counter0 = ordenador.tape_block_level - tstados;
+			else ordenador.tape_counter0 = 0;
+			ordenador.tape_counter1 = 0;
 			return;
 		} else {	// guide tone ended. send sync tone			
 			ordenador.tape_counter0 = ordenador.tape_sync_level0 - tstados;
@@ -585,9 +588,9 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 					ordenador.tape_bit = ((ordenador.tape_bit>>1)&0x7F);
 				}
 			}
-			return;
 		}
 		break;
+		
 	case TAP_DATA:	// data
 		if (ordenador.tape_byte & ordenador.tape_bit) {	// next bit is 1
 			ordenador.tape_counter0 = ordenador.tape_bit1_level - tstados;
@@ -601,7 +604,7 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 			ordenador.tape_byte_counter--;
 			if (!ordenador.tape_byte_counter) {	// ended the block
 				if(ordenador.tape_pause_at_end) {					
-					ordenador.tape_current_mode = TAP_PAUSE3;	// pause					
+					ordenador.tape_current_mode = TAP_PAUSE2;	// pause					
 					ordenador.tape_counter_rep = ordenador.tape_pause_at_end;
 				} else
 					ordenador.tape_current_mode = TAP_FINAL_BIT;					
@@ -612,7 +615,7 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 			if (feof (fichero)) {
 				rewind_tape (fichero,0);
 				ordenador.tape_current_bit = 0;				
-				ordenador.tape_current_mode = TAP_STOP;	// stop tape
+				ordenador.tape_current_mode = TAP_STOP2;	// stop tape
 				return;
 			}
 			if((ordenador.tape_byte_counter==1)&&(ordenador.tape_bits_at_end!=8)) { // last byte
@@ -624,15 +627,23 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 		}
 		break;
 		
-	case TAP_PAUSE3: // one pulse of 1 ms for ending the bit
-		ordenador.tape_counter0 = 3500; // 1 ms
+	case TAP_STOP2: // one pulse of 1 ms for ending the bit
+		printf("TAP_STOP2\n");
+		ordenador.tape_counter0 = 3500-tstados; // 1 ms
+		ordenador.tape_counter1 = 0;		
+		ordenador.tape_current_mode = TAP_STOP;
+		break;
+	
+	case TAP_PAUSE2: // one pulse of 1 ms for ending the bit
+		printf("TAP_PAUSE2\n");
+		ordenador.tape_counter0 = 3500-tstados; // 1 ms
 		ordenador.tape_counter1 = 0;		
 		ordenador.tape_current_mode = TAP_PAUSE;
 		break;
 		
 	case TAP_PAUSE:	// pause
-		//ordenador.tape_readed = 0;
-		//ordenador.tape_current_bit = 0;
+		ordenador.tape_readed = 0;
+		ordenador.tape_current_bit = 0;
 		if (ordenador.tape_counter_rep > tstados) {
 			ordenador.tape_counter_rep -= tstados;
 		} else {
@@ -641,36 +652,26 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 			ordenador.next_block= NOBLOCK;
 		}
 		break;
-	case TAP_PAUSE2:	// pause and stop
-		//ordenador.tape_readed = 0;
-		//ordenador.tape_current_bit = 0;
-		if (ordenador.tape_counter_rep > tstados) {
-			ordenador.tape_counter_rep -= tstados;
-		} else {
-			ordenador.tape_counter_rep = 0;
-			ordenador.tape_current_mode = TAP_TRASH;	// read new block
-			ordenador.next_block= NOBLOCK;
-			ordenador.tape_stop = 1;
-			ordenador.tape_stop_fast = 1;	// pause it
-		}
-		break;
+	
 	case TZX_PURE_TONE:
 		ordenador.tape_counter_rep--;
-		ordenador.tape_current_bit = 1 - ordenador.tape_current_bit; // invert current bit
-		if (ordenador.tape_counter_rep) {	// still into guide tone			
-			ordenador.tape_counter0 = ordenador.tape_block_level - tstados;
-			ordenador.tape_counter1 = 0; // new pulse			
+		if (ordenador.tape_counter_rep) {	// still into guide tone
+			if (ordenador.tape_block_level>tstados) ordenador.tape_counter0 = ordenador.tape_block_level - tstados;
+			else ordenador.tape_counter0 = 0;
+			ordenador.tape_counter1 = 0;			
 		} else
 			ordenador.tape_current_mode = TAP_TRASH;	// next ID
 			ordenador.next_block= NOBLOCK;
 		break;
+		
 	case TZX_SEQ_PULSES:
-		ordenador.tape_current_bit = 1 - ordenador.tape_current_bit; // invert current bit
 		ordenador.tape_counter_rep--;
 		if(ordenador.tape_counter_rep) {
 			retval=fread(&value2,1,1,fichero);
 			retval=fread(&value3,1,1,fichero); // length of pulse in T-states
-			ordenador.tape_counter0 = ((unsigned int) value2) + 256 * ((unsigned int) value3);
+			ordenador.tape_block_level = ((unsigned int) value2) + 256 * ((unsigned int) value3);
+			if (ordenador.tape_block_level>tstados) ordenador.tape_counter0 = ordenador.tape_block_level - tstados;
+			else ordenador.tape_counter0 = 0;
 			ordenador.tape_counter1 = 0;
 		} else
 			ordenador.tape_current_mode = TAP_TRASH;	// next ID		
@@ -678,7 +679,10 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 		break;
 			
 	case TAP_STOP:
+		printf("TAP_STOP\n");
 		ordenador.tape_current_bit = 0;
+		ordenador.tape_readed = 0;
+		ordenador.tape_counter_rep = 0;
 		ordenador.tape_current_mode = TAP_TRASH;	// initialize
 		ordenador.next_block= NOBLOCK;
 		ordenador.tape_stop = 1;	// pause it
@@ -1264,9 +1268,9 @@ void fastload_block_tzx (FILE * fichero) {
 			//Anticipate auto ultra fast mode
 			if ((ordenador.turbo_state!= 1)&&(ordenador.turbo==1))
 			{
-			update_frequency(11000000);
+			update_frequency(10000000);  //precision could be on
 			jump_frames=7;
-			ordenador.turbo_state=4;
+			//ordenador.turbo_state=4;
 			}
 		ordenador.tape_start_countdwn=((unsigned int)pause[0]+256*(unsigned int)pause[1])/20+1; //autoplay countdown
 		if (ordenador.tape_start_countdwn<10) ordenador.tape_start_countdwn=10; //in case the pause is too short 
