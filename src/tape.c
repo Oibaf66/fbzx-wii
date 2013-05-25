@@ -1269,7 +1269,7 @@ void fastload_block_tzx (FILE * fichero) {
 			if ((ordenador.turbo_state!= 1)&&(ordenador.turbo==1))
 			{
 			update_frequency(10000000);  //precision could be on
-			jump_frames=7;
+			jump_frames=3;
 			//ordenador.turbo_state=4;
 			}
 		ordenador.tape_start_countdwn=((unsigned int)pause[0]+256*(unsigned int)pause[1])/20+1; //autoplay countdown

@@ -554,7 +554,7 @@ inline void show_screen (int tstados) {
 		if (ordenador.tstados_counter>=ordenador.tstatodos_frame) {
 			ordenador.tstados_counter-=ordenador.tstatodos_frame;
 			ordenador.interr = 1;
-			if ((ordenador.turbo_state == 0) || ((curr_frames%7 == 0)&&(curr_frames))) ordenador.readkeyboard = 1;
+			if ((ordenador.turbo_state == 0) || ((curr_frames%5 == 0)&&(curr_frames))) ordenador.readkeyboard = 1;
 			curr_frames++;
 			if (ordenador.tape_start_countdwn==1) ordenador.tape_stop=0; //Autoplay
 			if ((ordenador.tape_start_countdwn>0)&&(ordenador.stop_tape_start_countdown ==0)) ordenador.tape_start_countdwn--;

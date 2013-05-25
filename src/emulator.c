@@ -1596,7 +1596,10 @@ int main(int argc,char *argv[])
 			ordenador.contention=0;
 			}
 		else
-			if (tstados>0) {
+			{
+			ordenador.wr=0;
+			ordenador.r_fetch=0;
+			ordenador.io=0;
 			show_screen(tstados);
 			emulate(tstados+ordenador.contention);
 			ordenador.contention=0;
@@ -1618,6 +1621,11 @@ int main(int argc,char *argv[])
 					else 
 						{
 						ordenador.tape_start_countdwn=0; //Stop tape play countdown
+						if ((ordenador.turbo_state != 1)&&(ordenador.turbo==1))
+							{
+								update_frequency(0); //set machine frequency
+								jump_frames=0;
+							}
 						if (ordenador.tape_stop ==1) fastload_block_tzx(ordenador.tap_file);
 						}
 					}
