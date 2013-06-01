@@ -1,3 +1,9 @@
+version 10.3:
+	* Improved txz loading algorithm 
+	* fixed small bugs on return from turbo state
+
+	-- Fabio Olimpieri <fabio.olimpieri@tin.it> Jun 01 2013
+
 version 10.2:
 	* fixed bugs in 128k sna format
 	* fixed small bugs in z80 core
