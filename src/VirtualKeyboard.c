@@ -57,6 +57,7 @@ extern FILE *fdebug;
 static SDL_Surface *image_kbd, *image_sym, *image_caps,*image_kbd_small, *image_sym_small, *image_caps_small, *tmp_surface ;
 static int vkb_is_init;
 static int key_code;
+VirtualKeyboard_struct VirtualKeyboard; 
 
 extern struct computer ordenador;
 void clean_screen(); 

@@ -35,14 +35,14 @@ typedef struct virtkey
 } virtkey_t;
 
 
-struct Virtual_Keyboard
+typedef struct Virtual_Keyboard
 {
 	SDL_Surface *screen;
 	int sel_x;
 	int sel_y;
 	char buf[255];
 	
-} VirtualKeyboard;
+} VirtualKeyboard_struct;
 
 void VirtualKeyboard_init(SDL_Surface *screen);
 struct virtkey* get_key();
@@ -53,3 +53,4 @@ void toggle_shift();
 void virtkey_ir_run();
 void virtkey_ir_activate(void);
 void virtkey_ir_deactivate(void);
+extern VirtualKeyboard_struct VirtualKeyboard;
