@@ -118,9 +118,9 @@ static const char *screen_messages[] = {
 		/*05*/		"  ",
 		/*06*/		"Buffer resolution",
 		/*07*/		"^|640X480|320X240",
-		/*08*/		"  ",
-		/*09		"576p video mode",*/
-		/*10		"^|on|off",*/
+		/*08*		"  ",
+		*09*		"576p video mode",
+		*10*		"^|on|off",*/
 		NULL
 };
 
@@ -139,7 +139,7 @@ static const  char *input_messages[] = {
 		/*11*/		"^|On|Off",
 		/*12*/		"Rumble",
 		/*13*/		"^|On|Off",
-		NULL,
+		NULL
 };
 
 static const char *microdrive_messages[] = {
@@ -188,7 +188,7 @@ static const char *help_messages[] = {
 		/*12*/		"#2   http://wiibrew.org/wiki/FBZX_Wii",
 		/*13*/		"#2 ",
 		/*14*/		"OK",
-		NULL,
+		NULL
 };
 
 static const char *confs_messages[] = {

@@ -816,6 +816,7 @@ static void select_next(menu_t *p_menu, int dx, int dy, int cicle)
 
 	p_menu->cur_sel = get_next_seq_y(p_menu, p_menu->cur_sel, dy, cicle);
 	next = get_next_seq_y(p_menu, p_menu->cur_sel, dy + 1, cicle);
+	if (IS_SUBMENU(p_menu->pp_msgs[p_menu->cur_sel])&&(dy!=1)&&(dy!=-1)) p_menu->cur_sel--;
 	if (p_menu->pp_msgs[p_menu->cur_sel][0] == ' ' ||
 			p_menu->pp_msgs[p_menu->cur_sel][0] == '#' ||
 			IS_SUBMENU(p_menu->pp_msgs[p_menu->cur_sel]) )
