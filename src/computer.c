@@ -1586,16 +1586,14 @@ inline void read_keyboard () {
 	if ((!wd->ir.valid)&&(ordenador.vk_is_active)) virtkey_ir_deactivate();	
 	#else
 	int x=0,y=0 ;
-	SDL_GetRelativeMouseState(&x,&y);
-	if (x||y) 
+	SDL_GetMouseState(&x,&y);
+	if ((x>64)&&(x<576)&&(y>90)&&(y<390)) 
 		{
-			ordenador.vk_is_active=1;
-			SDL_ShowCursor(SDL_ENABLE);
+			if (!ordenador.vk_is_active) virtkey_ir_activate();	
 		}
 	else 
 		{
-			ordenador.vk_is_active=0;
-			SDL_ShowCursor(SDL_DISABLE);
+			if (ordenador.vk_is_active) virtkey_ir_deactivate();
 		}
 	#endif
     }
