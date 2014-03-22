@@ -413,7 +413,7 @@ void menu_print_font(SDL_Surface *screen, int r, int g, int b,
 {
 	SDL_Surface *font_surf;
 	SDL_Rect dst = {x, y,  0, 0};
-	SDL_Color color = {r, g, b};
+	SDL_Color color = {r, g, b, 0};
 	char buf[255];
 	unsigned int i, lenght;
 
@@ -462,7 +462,7 @@ void print_font(SDL_Surface *screen, int r, int g, int b,
 #define _MAX_STRING 64
 	SDL_Surface *font_surf;
 	SDL_Rect dst = {x, y,  0, 0};
-	SDL_Color color = {r, g, b};
+	SDL_Color color = {r, g, b, 0};
 	char buf[255];
 
 	memset(buf, 0, sizeof(buf));
@@ -1196,14 +1196,16 @@ static const char *menu_select_file_internal_zip(char *path,
 	}
 	else opt = menu_select_sized("Select file", file_list, NULL, 0, x, y, x2, y2, NULL, NULL ,16, draw_scr);
 	
-	if (opt < 0) {free(path); return NULL;}
+	sel = NULL;
 			
-	sel = strdup(file_list[opt]);
+	if (opt >= 0) sel = strdup(file_list[opt]);
 
 	/* Cleanup everything - file_list is NULL-terminated */
         for ( i = 0; file_list[i]; i++ )
         	free((void*)file_list[i]);
         free(file_list);
+		
+	if (opt < 0) {free(path); return NULL;}	
 
 	if (!sel) {free(path); return NULL;}
 	
@@ -1281,10 +1283,10 @@ static const char *menu_select_file_internal_zip(char *path,
 			if (fout) fclose(fout);
         }
 	
-	unzCloseCurrentFile(uf); 
+	unzCloseCurrentFile(uf);
+	unzClose (uf);
 	free(buf2);
 	free(sel);
-	
 	
 	return write_filename;
 }
@@ -1364,14 +1366,17 @@ static const char *menu_select_file_internal(char *dir_path,
 	}
 	else opt = menu_select_sized("Select file", file_list, NULL, 0, x, y, x2, y2, NULL, NULL ,16, draw_scr);
 	
-	if (opt < 0)
-		return NULL;
-	sel = strdup(file_list[opt]);
+	sel = NULL;	
+	
+	if (opt >= 0 ) sel = strdup(file_list[opt]);
 
 	/* Cleanup everything - file_list is NULL-terminated */
         for ( i = 0; file_list[i]; i++ )
         	free((void*)file_list[i]);
         free(file_list);
+	
+	if (opt < 0)
+		return NULL;
 
 	if (!sel)
 		return NULL;
