@@ -1112,6 +1112,7 @@ inline void read_keyboard () {
 		ordenador.jk = 0;
 	
 	pevento=&evento;
+	memset(&evento,0, sizeof(SDL_Event));
 	SDL_PollEvent (&evento);
 
 	if (pevento->type==SDL_QUIT) {
