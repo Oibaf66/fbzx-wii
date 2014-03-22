@@ -341,15 +341,15 @@ void create_browser_tap (FILE * fichero) {
 	block_number=0;
 	do	{
 		byte_position=ftell(fichero);
-		browser_list[block_number]=(struct browser *)malloc(sizeof(struct browser));
-		browser_list[block_number]->position=byte_position;
-		strcpy(browser_list[block_number]->info, "                                   ");
-		strcpy(browser_list[block_number]->block_type,"Standard Speed Data");
 		retval=fread (value, 1, 2, fichero);	// read length of current block
 		if (retval!=2) {retorno=1;break;}
 		longitud = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1]);
 		retval=fread (&flag_byte, 1, 1, fichero);
 		if (retval!=1) {retorno=1;break;}
+		browser_list[block_number]=(struct browser *)malloc(sizeof(struct browser));
+		browser_list[block_number]->position=byte_position;
+		strcpy(browser_list[block_number]->info, "                                   ");
+		strcpy(browser_list[block_number]->block_type,"Standard Speed Data");
 		printf("TAP browser: flag byte %X en %ld\n",flag_byte, ftell(fichero));
 			switch(flag_byte)
 			{
