@@ -530,9 +530,9 @@ void sound_remove_dc(unsigned char *sound_buffer,int size){
 
 void sound_play() {
 
-
+#if defined(D_SOUND_OSS) || defined(D_SOUND_ALSA) || defined(D_SOUND_PULSE)  
 	static int retval,retval2;
-
+#endif
 	ordenador.current_buffer=sound[0];
 	//remove_dc(ordenador.current_buffer,ordenador.buffer_len);
 
