@@ -1739,7 +1739,6 @@ static int save_load_game_configurations(int which)
 			if (which == 0) // Load config file
 			{
 				if (!load_config(&ordenador,(char *)filename)) {msgInfo("Game confs loaded",3000,NULL);retorno2=-1;}
-				break;
 			}
 			else // Delete config file
 				if (msgYesNo("Delete the file?", 0, FULL_DISPLAY_X /2-138/RATIO, FULL_DISPLAY_Y /2-48/RATIO)) unlink(filename);
