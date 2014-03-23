@@ -496,52 +496,6 @@ void print_font(SDL_Surface *screen, int r, int g, int b,
 	SDL_FreeSurface(font_surf);
 }
 
-
-#ifdef GEKKO
-inline void paint_one_pixel_scr(unsigned char *colour,unsigned char *address) 
-{
- *(address++)=*(colour+2);
- *(address++)=*(colour+3);	
-}
-#else
-
-inline void paint_one_pixel_scr(unsigned char *colour,unsigned char *address) {
-
-	#if BYTE_ORDER == LITTLE_ENDIAN
-	switch(ordenador.bpp) {
-	case 1:
-		*address=*colour;
-	break;
-	case 3:
-		*(address++)=*(colour++);
-	case 2:
-		*(address++)=*(colour++);
-		*(address++)=*(colour++);
-	break;
-	case 4:
-		*((unsigned int *)address)=*((unsigned int *)colour);
-	break;
-	}
-	#else //BIG ENDIAN
-	switch(ordenador.bpp) {
-	case 1:
-		*address=*(colour+3);
-	break;
-	case 3:
-		*(address++)=*(colour+1);
-	case 2:
-		*(address++)=*(colour+2);
-		*(address++)=*(colour+3);
-	break;
-	case 4:
-		*((unsigned int *)address)=*((unsigned int *)colour);
-	break;
-	}
-	#endif
-	
-}
-#endif
-
 void draw_scr_file(int x,int y, char *filename)
 {
 	FILE *fichero;
@@ -586,7 +540,7 @@ void draw_scr_file(int x,int y, char *filename)
 			
 			address = (unsigned char *)(ordenador.screen->pixels + (x + loop_x*8 + bucle + (y + loop_y)*640)*ordenador.bpp);
 		
-			paint_one_pixel_scr((unsigned char *)p, address);
+			paint_one_pixel((unsigned char *)p, address);
 		
 			mask = ((mask >> 1) & 0x7F);
 			}
