@@ -345,4 +345,5 @@ void virtkey_ir_deactivate(void)
 	keys[3 * KEY_COLS + 0 ].is_on = 0; //Caps Shit
 	keys[3 * KEY_COLS + 8 ].is_on = 0; //Sym Shift
 	key_code=0;
+	clean_screen();
 }
