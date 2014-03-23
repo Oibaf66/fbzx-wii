@@ -649,14 +649,14 @@ inline void show_screen (int tstados) {
 					ordenador.esc_again=0;
 				}
 					
-				if (ordenador.osd_time)
+				if (ordenador.osd_time>1)
 					print_string (ordenador.screenbuffer,ordenador.osd_text, -1,450, 12, 0,ordenador.screen_width);
-				/*else {
+				else if (ordenador.osd_time==1){
 					if (ordenador.zaurus_mini==0)
 						print_string (ordenador.screenbuffer,"                                      ",-1, 450, 12, 0,ordenador.screen_width);
 					else
 						print_string (ordenador.screenbuffer,"                            ",-1, 450, 12, 0,ordenador.screen_width);
-				}*/
+				}
 			}
 			
 			if (ordenador.tape_start_countdwn==1) ordenador.tape_stop=0; //Autoplay
@@ -896,14 +896,14 @@ inline void show_screen_precision (int tstados) {
 					ordenador.esc_again=0;
 				}
 					
-				if (ordenador.osd_time)
+				if (ordenador.osd_time>1)
 					print_string (ordenador.screenbuffer,ordenador.osd_text, -1,450, 12, 0,ordenador.screen_width);
-				/*else {
+				else if (ordenador.osd_time==1) {
 					if (ordenador.zaurus_mini==0)
 						print_string (ordenador.screenbuffer,"                                      ",-1, 450, 12, 0,ordenador.screen_width);
 					else
 						print_string (ordenador.screenbuffer,"                            ",-1, 450, 12, 0,ordenador.screen_width);
-				}*/
+				}
 			}
 			
 			if (ordenador.tape_start_countdwn==1) ordenador.tape_stop=0; //Autoplay
