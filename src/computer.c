@@ -1128,8 +1128,7 @@ inline void read_keyboard () {
 	SDL_JoystickGetButton(ordenador.joystick_sdl[0], 19)) 
 	{if (ordenador.vk_is_active) virtkey_ir_deactivate();main_menu(); }
 	
-	
-	if (!ordenador.vk_is_active) { 
+	 
 	for(joy_n=0;joy_n<ordenador.joystick_number;joy_n++) 
 	{
 	joy_axis_x[joy_n] = SDL_JoystickGetAxis(ordenador.joystick_sdl[joy_n], 0);
@@ -1144,6 +1143,7 @@ inline void read_keyboard () {
 	else if (joy_axis_y[joy_n] < -16384) ordenador.joy_axis_y_state[joy_n] = JOY_UP;
 		else ordenador.joy_axis_y_state[joy_n] = JOY_CENTER_Y;
 		
+	if (!ordenador.vk_is_active) {
 	for(joybutton_n=0;joybutton_n<5;joybutton_n++)
 		{
 		joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][joybutton_n])] = 
@@ -1162,7 +1162,7 @@ inline void read_keyboard () {
 		joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][18])] = 
 		SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 18);
 		}	
-		
+	}	
 		//JOY HAT
 		status_hat[joy_n] = SDL_JoystickGetHat(ordenador.joystick_sdl[joy_n], 0);
 		if(!ordenador.joypad_as_joystick[joy_n])
@@ -1173,7 +1173,7 @@ inline void read_keyboard () {
 			joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][22])] = (status_hat[joy_n] & SDL_HAT_RIGHT);
 		}
 	}
-	}
+	
 	
 	//Keyboard buffer
 	
