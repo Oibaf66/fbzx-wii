@@ -114,7 +114,7 @@ static const char *screen_messages[] = {
 		/*01*/		"^|on|off",
 		/*02*/		"  ",
 		/*03*/		"TV mode",
-		/*04*/		"^|Color|B&W",
+		/*04*/		"^|Color|B&W|Green",
 		/*05*/		"  ",
 		/*06*/		"Buffer resolution",
 		/*07*/		"^|640X480|320X240",

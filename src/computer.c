@@ -183,8 +183,10 @@ void computer_set_palete() {
 
 	SDL_Color colores[16];
 
-	if (ordenador.bw==0) {
-		// Color mode
+	switch (ordenador.bw) {
+		
+		case 0: // Color mode
+		default:
 
 		colores[0].r = 0;
 		colores[0].g = 0;
@@ -255,10 +257,10 @@ void computer_set_palete() {
 			colors[14]=SDL_MapRGB(screen->format,255,255,0);
 			colors[15]=SDL_MapRGB(screen->format,255,255,255);
 		}
-	} else {
+		break;
 
-		// B&W mode
-
+		case 1: // B&W mode
+		
 		colores[0].r = 0;
 		colores[0].g = 0;
 		colores[0].b = 0;
@@ -342,6 +344,93 @@ void computer_set_palete() {
 			colors[13]=SDL_MapRGB(screen->format,179,179,179);
 			colors[14]=SDL_MapRGB(screen->format,226,226,226);
 			colors[15]=SDL_MapRGB(screen->format,255,255,255);
+		}
+		break;
+		case 2: //Green mode
+		
+		colores[0].r = 0;
+		colores[0].g = 0;
+		colores[0].b = 0;
+
+		colores[1].r = 0;
+		colores[1].g = 30;
+		colores[1].b = 0;
+
+		colores[2].r = 0;
+		colores[2].g = 57;
+		colores[2].b = 0;
+
+		colores[3].r = 0;
+		colores[3].g = 79;
+		colores[3].b = 0;
+
+		colores[4].r = 0;
+		colores[4].g = 113;
+		colores[4].b = 0;
+
+		colores[5].r = 0;
+		colores[5].g = 135;
+		colores[5].b = 0;
+
+		colores[6].r = 0;
+		colores[6].g = 160;
+		colores[6].b = 0;
+
+		colores[7].r = 0;
+		colores[7].g = 192;
+		colores[7].b = 0;
+
+		colores[8].r = 0;
+		colores[8].g = 0;
+		colores[8].b = 0;
+
+		colores[9].r = 0;
+		colores[9].g = 45;
+		colores[9].b = 0;
+
+		colores[10].r = 0;
+		colores[10].g = 76;
+		colores[10].b = 0;
+
+		colores[11].r = 0;
+		colores[11].g = 105;
+		colores[11].b = 0;
+
+		colores[12].r = 0;
+		colores[12].g = 150;
+		colores[12].b = 0;
+
+		colores[13].r = 0;
+		colores[13].g = 179;
+		colores[13].b = 0;
+
+		colores[14].r = 0;
+		colores[14].g = 226;
+		colores[14].b = 0;
+
+		colores[15].r = 0;
+		colores[15].g = 255;
+		colores[15].b = 0;
+
+		SDL_SetColors (ordenador.screen, colores, 16, 16);	// set 16 colors from the 16th
+
+		if (ordenador.bpp!=1) {
+			colors[0]=SDL_MapRGB(screen->format,0,0,0);
+			colors[1]=SDL_MapRGB(screen->format,0,30,0);
+			colors[2]=SDL_MapRGB(screen->format,0,57,0);
+			colors[3]=SDL_MapRGB(screen->format,0,79,0);
+			colors[4]=SDL_MapRGB(screen->format,0,113,0);
+			colors[5]=SDL_MapRGB(screen->format,0,135,0);
+			colors[6]=SDL_MapRGB(screen->format,0,160,0);
+			colors[7]=SDL_MapRGB(screen->format,0,192,0);
+			colors[8]=SDL_MapRGB(screen->format,0,0,0);
+			colors[9]=SDL_MapRGB(screen->format,0,45,0);
+			colors[10]=SDL_MapRGB(screen->format,0,76,0);
+			colors[11]=SDL_MapRGB(screen->format,0,105,0);
+			colors[12]=SDL_MapRGB(screen->format,0,150,0);
+			colors[13]=SDL_MapRGB(screen->format,0,179,0);
+			colors[14]=SDL_MapRGB(screen->format,0,226,0);
+			colors[15]=SDL_MapRGB(screen->format,0,255,0);
 		}
 	}
 

@@ -1110,7 +1110,7 @@ int load_config(struct computer *object, char *filename) {
 		object->precision=precision;
 		object->precision_old=precision;
 	}
-	if (bw<2) {
+	if (bw<3) {
 		object->bw=bw;
 	}
 	if (volume<17) {
