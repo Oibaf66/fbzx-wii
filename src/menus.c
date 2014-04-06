@@ -159,10 +159,17 @@ void settings_menu() {
 			sprintf(texto,"TURBO auto mode: disabled");
 		print_string(fbuffer,texto,-1,145,14,0,ancho);
 
-		if (ordenador.bw) {
+		switch (ordenador.bw) {
+			case 0:
+			default:
+			print_string(fbuffer,"TV Set: \001\012C\001\014o\001\011l\001\016o\001\013r",-1,165,15,0,ancho);
+			break;
+			case 1:
 			print_string(fbuffer,"TV Set: \001\011B\001\012&\001\014W",-1,165,15,0,ancho);
-		} else {
-			print_string(fbuffer,"TV Set: \001\012C\001\014o\001\015l\001\016o\001\013r",-1,165,15,0,ancho);
+			break;
+			case 2:
+			print_string(fbuffer,"TV Set: \001\014Green",-1,165,15,0,ancho);
+			break;
 		}
 	
 		print_string(fbuffer,"1:",30,190,12,0,ancho);
@@ -289,7 +296,7 @@ void settings_menu() {
 			ordenador.ay_emul=1-ordenador.ay_emul;
 		break;
 		case SDLK_v:
-			ordenador.bw=1-ordenador.bw;
+			ordenador.bw=(ordenador.bw+1)%3;
 			computer_set_palete();
 		break;
 		case SDLK_t:
