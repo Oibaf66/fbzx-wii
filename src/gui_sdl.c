@@ -1060,7 +1060,7 @@ static int load_scr()
 	retorno2=0; //stay in the menu as default
 
 
-	const char *filename = menu_select_file(load_path_scr1, NULL, 0); // Load from SCR1
+	const char *filename = menu_select_file(load_path_scr1, NULL, 1); // Load from SCR1
 	
 	if (filename==NULL) // Aborted
 		return 0; 
