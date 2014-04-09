@@ -62,9 +62,13 @@ int msgInfo(char *text, int duration, SDL_Rect *rc);
 
 int msgYesNo(char *text, int def,int x, int y);
 
-void font_init();
+void font_init(void);
+
+void font_fini(void);
 
 void menu_init(SDL_Surface *screen);
+
+void menu_deinit(void);
 
 int menu_is_inited(void);
 

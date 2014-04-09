@@ -39,6 +39,7 @@
 #include "microdrive.h"
 #include "menu_sdl.h"
 #include "tape_browser.h"
+#include "VirtualKeyboard.h"
 #include <dirent.h>
 
 
@@ -611,6 +612,9 @@ void end_system() {
 	if(ordenador.tap_file!=NULL)
 		fclose(ordenador.tap_file);
 
+	VirtualKeyboard_fini();
+	menu_deinit();
+	font_fini();
 	SDL_Quit();
 	
 	if (!chdir(path_tmp)) {chdir("/"); remove_dir(path_tmp);} //remove the tmp directory if it exists
@@ -1409,6 +1413,7 @@ int main(int argc,char *argv[])
 	
 	font_init();
 	menu_init(ordenador.screen);
+	VirtualKeyboard_init(ordenador.screen);
 	
 	//Load the splash screen
 	if (ordenador.zaurus_mini==0) if (load_zxspectrum_picture()) SDL_FreeSurface (image);

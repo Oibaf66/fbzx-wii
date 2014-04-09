@@ -45,6 +45,7 @@ typedef struct Virtual_Keyboard
 } VirtualKeyboard_struct;
 
 void VirtualKeyboard_init(SDL_Surface *screen);
+void VirtualKeyboard_fini(void);
 struct virtkey* get_key();
 struct virtkey* get_key_internal();
 void draw_vk();

@@ -1465,12 +1465,26 @@ void font_init()
 	free(font_path);
 }
 
+void font_fini()
+{
+	TTF_CloseFont(menu_font16); 
+	TTF_CloseFont(menu_font20);
+	TTF_CloseFont(menu_font8);
+	TTF_CloseFont(menu_font10);
+	
+	TTF_Quit();	
+}
+
 void menu_init(SDL_Surface *screen)
 {
 	real_screen = screen;
-
-	VirtualKeyboard_init(screen); 
 	is_inited = 1;
+}
+
+void menu_deinit()
+{
+	real_screen = 0;
+	is_inited = 0;
 }
 
 int menu_is_inited(void)

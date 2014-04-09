@@ -124,6 +124,20 @@ void VirtualKeyboard_init(SDL_Surface *screen)
 	vkb_is_init = 1;
 }
 
+void VirtualKeyboard_fini()
+{
+	if (vkb_is_init != 1) return;
+	
+	SDL_FreeSurface (image_kbd);
+	SDL_FreeSurface (image_sym);
+	SDL_FreeSurface (image_caps);
+	SDL_FreeSurface (image_kbd_small);
+	SDL_FreeSurface (image_sym_small);
+	SDL_FreeSurface (image_caps_small);
+	vkb_is_init = -1;
+	ordenador.vk_is_active=0;
+}
+
 void draw_vk()
 {
 	
