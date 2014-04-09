@@ -1677,7 +1677,7 @@ inline void read_keyboard () {
 	#else
 	int x=0,y=0 ;
 	SDL_GetMouseState(&x,&y);
-	if ((x>64)&&(x<576)&&(y>90)&&(y<390)) 
+	if ((x>64/RATIO)&&(x<576/RATIO)&&(y>90/RATIO)&&(y<390/RATIO)) 
 		{
 			if (!ordenador.vk_is_active) virtkey_ir_activate();	
 		}
