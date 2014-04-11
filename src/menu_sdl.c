@@ -593,7 +593,7 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_siz
 		if (sel < 0)
 			SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 0x40, 0x00, 0x00));
 		else
-			SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 0x00, 0xe7, 0xe7));
+			SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 0x00, 0xe7, 0xe7)); //Title
 		menu_print_font(screen, 0,0,0, p_menu->x1, p_menu->y1, p_menu->title, font_size, 52);
 	}
 
@@ -610,25 +610,25 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_siz
 			y = (i - p_menu->start_entry_visible) * line_height;
 
 			if (sel < 0)
-				menu_print_font(screen, 0x40,0x40,0x40,
+				menu_print_font(screen, 0x40,0x40,0x40, //Not used
 						x_start, y_start + y, msg, font_size, max_string);
 			else if (p_menu->cur_sel == i) /* Selected - color */
 					{
 					if (msg[0] == ']') 
-					menu_print_font(screen, 0,200,0,
+					menu_print_font(screen, 0,200,0, //Selected menu entry begining with ']' (tape browser)
 						x_start, y_start + y, msg+1, font_size,max_string ); //do not show ']'
 					else	
-					menu_print_font(screen, 0,200,0,
+					menu_print_font(screen, 0,200,0, //Selected menu entry
 						x_start, y_start + y, msg, font_size,max_string );
 					selected_file = msg;	
 					}	
 			else if (IS_SUBMENU(msg))
 			{
 				if (p_menu->cur_sel == i-1)
-					menu_print_font(screen, 0,200,0,
+					menu_print_font(screen, 0,200,0, //Selected sub menu entry
 							x_start, y_start + y, msg, font_size, max_string);
 				else
-					menu_print_font(screen, 0x40,0x40,0x40,
+					menu_print_font(screen, 0x40,0x40,0x40, //Non selected sub menu entry
 							x_start, y_start + y, msg, font_size, max_string);
 			}
 			else if (msg[0] == '#')
@@ -636,11 +636,11 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_siz
 				switch (msg[1])
 				{
 				case '1':
-					menu_print_font(screen, 0,0,255,
+					menu_print_font(screen, 0,0,255, //Text 1
 							x_start, y_start + y, msg+2, font_size, max_string);
 					break;
 				case '2':
-					menu_print_font(screen, 0x40,0x40,0x40,
+					menu_print_font(screen, 0x40,0x40,0x40, //Text 2
 							x_start, y_start + y, msg+2, font_size, max_string);
 					break;
 				default:
@@ -650,11 +650,11 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_siz
 				}
 			}
 			else if (msg[0] == ']')
-				menu_print_font(screen, 0,0,255,
+				menu_print_font(screen, 0,0,255, //Non selected menu entry starting with ']' (tape browser)
 							x_start, y_start + y, msg+1, font_size, max_string);
 			
 			else /* Otherwise white */
-				menu_print_font(screen, 0x40,0x40,0x40,
+				menu_print_font(screen, 0x40,0x40,0x40, //Non selected menu entry
 						x_start, y_start + y, msg, font_size, max_string);
 			if (IS_SUBMENU(msg))
 			{
@@ -688,10 +688,10 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_siz
 							r = (SDL_Rect){ x_start + (n+1) * w-1, y_start + (i+ 1 - p_menu->start_entry_visible) * ((h + h/4)) -3, (n_chars - 1) * w, 2};
 							if (p_menu->cur_sel == i-1)
 								SDL_FillRect(screen, &r,
-										SDL_MapRGB(screen->format, 255,0,0));
+										SDL_MapRGB(screen->format, 255,0,0)); //Underline selected text
 							else
 								SDL_FillRect(screen, &r,
-										SDL_MapRGB(screen->format, 0x40,0x40,0x40));
+										SDL_MapRGB(screen->format, 0x40,0x40,0x40));//Underline non selected text
 							break;
 						}
 					}
@@ -706,12 +706,12 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_siz
 	r.y = p_menu->y1+line_height-1;
 	r.w = line_height/2;
 	r.h = p_menu->y2 - p_menu->y1 - line_height+1;
-	SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 0x00, 0xe7, 0xe7));
+	SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 0x00, 0xe7, 0xe7)); //Frame for scr preview
 	r.x = r.x + r.w;
 	r.y = p_menu->y1+ (p_menu->y2 - p_menu->y1)/2 + line_height/4+1;
 	r.w = (p_menu->x2 - p_menu->x1)/2 - line_height*2-3;
 	r.h = line_height/2;
-	SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 0x00, 0xe7, 0xe7));
+	SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 0x00, 0xe7, 0xe7)); //Frame for scr preview
 	
 	if ((!selected_file)||(selected_file[0] == '[')) return; //No dir
 	
