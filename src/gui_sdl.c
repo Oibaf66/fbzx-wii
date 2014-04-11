@@ -62,9 +62,9 @@ static const char *main_menu_messages[] = {
 		/*01*/		"^|Insert|Load|Play|Stop|Rewind|Create|Del|Browse",
 		/*02*/		"Snapshot",
 		/*03*/		"^|Load|Save|Delete",
-		/*04*/		"#1---------------------------------------------",
-		/*05*/		"Wiimote configuration",
-		/*06*/		"^|Wiimote1|Wiimote2",
+		/*04*/		"Wiimote configuration",
+		/*05*/		"^|Wiimote1|Wiimote2",
+		/*06*/		"Tape settings",
 		/*07*/		"Emulation settings",
 		/*08*/		"Screen settings",
 		/*09*/		"Audio settings",
@@ -79,18 +79,27 @@ static const char *main_menu_messages[] = {
 static const char *emulation_messages[] = {
 		/*00*/		"Emulated machine",
 		/*01*/		"^|48k_2|48K_3|128k|+2|+2A/+3|128K_Sp|NTSC",
-		/*02*/		"Frame rate",
-		/*03*/		"^|100%|50%|33%|25%|20%",
-		/*04*/		"Tape instant load",
-		/*05*/		"^|on|off",
-		/*06*/		"Instant load pause",
-		/*07*/		"^|on|off",
-		/*08*/		"Turbo mode",
-		/*09*/		"^|off|auto|fast|ultrafast",
-		/*10*/		"Rewind tape on reset",
-		/*11*/		"^|on|off",	
-		/*12*/		"Precision",
-		/*13*/		"^|on|off",	
+		/*02*/		"  ",		
+		/*03*/		"Frame rate",
+		/*04*/		"^|100%|50%|33%|25%|20%",
+		/*05*/		"  ",		
+		/*06*/		"Precision",
+		/*07*/		"^|on|off",	
+		NULL
+};
+
+static const char *tape_messages[] = {
+		/*00*/		"Tape instant load",
+		/*01*/		"^|on|off",
+		/*02*/		"  ",
+		/*03*/		"Instant load pause",
+		/*04*/		"^|on|off",
+		/*05*/		"  ",
+		/*06*/		"Turbo mode",
+		/*07*/		"^|off|auto|fast|ultrafast",
+		/*08*/		"  ",		
+		/*09*/		"Rewind tape on reset",
+		/*10*/		"^|on|off",	
 		NULL
 };
 
@@ -576,7 +585,7 @@ static void set_machine_model(int which)
 
 static int emulation_settings(void)
 {
-	unsigned int submenus[7],submenus_old[7];
+	unsigned int submenus[3],submenus_old[3];
 	int opt, i, retorno;
 	unsigned char old_mode, old_videosystem;
 	
@@ -586,18 +595,13 @@ static int emulation_settings(void)
 	
 	submenus[0] = get_machine_model();
 	submenus[1] = jump_frames;
-	submenus[2] = !ordenador.tape_fast_load;
-	submenus[3] = !ordenador.pause_instant_load;
-	submenus[4] = ordenador.turbo;
-	submenus[5] = !ordenador.rewind_on_reset;
-	submenus[6] = !ordenador.precision;
+	submenus[2] = !ordenador.precision;
 
-	
-	for (i=0; i<7; i++) submenus_old[i] = submenus[i];
+	for (i=0; i<3; i++) submenus_old[i] = submenus[i];
 	old_mode=ordenador.mode128k;
 	old_videosystem = ordenador.videosystem;
 	
-	opt = menu_select_title("Emulation settings menu",
+	opt = menu_select_title("Emulation settings",
 			emulation_messages, submenus);
 	if (opt < 0)
 		return retorno;
@@ -605,15 +609,57 @@ static int emulation_settings(void)
 	if (submenus[0]!=submenus_old[0]) set_machine_model(submenus[0]);
 	if ((old_mode!=ordenador.mode128k)||(old_videosystem!=ordenador.videosystem)) {ResetComputer(); retorno=-2;} 
 	
-	jump_frames = submenus[1];
-	ordenador.tape_fast_load = !submenus[2];
-	ordenador.pause_instant_load = !submenus[3];
+	curr_frames=0;
 	
-	ordenador.turbo = submenus[4];
-	ordenador.rewind_on_reset = !submenus[5];
+	jump_frames = submenus[1];
+	
+	if (submenus[2] != submenus_old[2])
+	{
+	ordenador.precision = !submenus[2];
+	ordenador.precision_old=ordenador.precision;
+	if (ordenador.turbo_state!=1)  //Tape is not loading with auto mode
+	 if (ordenador.precision)
+		{ 
+		update_frequency(0);
+		jump_frames=0;
+			if (ordenador.turbo!=1)
+			{
+			ordenador.turbo =0;
+			ordenador.turbo_state=0;
+			}
+			
+		}
+	}
+	
+	return retorno;
+}
+
+static void tape_settings(void)
+{
+	unsigned int submenus[4],submenus_old[4];
+	int opt, i;
+	
+	memset(submenus, 0, sizeof(submenus));
+	
+	submenus[0] = !ordenador.tape_fast_load;
+	submenus[1] = !ordenador.pause_instant_load;
+	submenus[2] = ordenador.turbo;
+	submenus[3] = !ordenador.rewind_on_reset;
+	
+	for (i=0; i<4; i++) submenus_old[i] = submenus[i];
+	
+	opt = menu_select_title("Tape settings",
+			tape_messages, submenus);
+	if (opt < 0)
+		return;
+	
+	ordenador.tape_fast_load = !submenus[0];
+	ordenador.pause_instant_load = !submenus[1];
+	ordenador.turbo = submenus[2];
+	ordenador.rewind_on_reset = !submenus[3];
 	
 	curr_frames=0;
-	if (submenus[4] != submenus_old[4])
+	if (submenus[2] != submenus_old[2])
 	{
 	switch(ordenador.turbo)
 	{
@@ -643,27 +689,9 @@ static int emulation_settings(void)
 		break;	
 	}
 	}
-	
-	if (submenus[6] != submenus_old[6])
-	{
-	ordenador.precision = !submenus[6];
-	ordenador.precision_old=ordenador.precision;
-	if (ordenador.turbo_state!=1)  //Tape is not loading with turbo mode
-	 if (ordenador.precision)
-		{ 
-		update_frequency(0);
-		jump_frames=0;
-			if (ordenador.turbo!=1)
-			{
-			ordenador.turbo =0;
-			ordenador.turbo_state=0;
-			}
-			
-		}
-	}
-	
-	return retorno;
+	return;
 }
+
 
 unsigned int get_value_filter (unsigned int value)
 {
@@ -714,7 +742,7 @@ static void audio_settings(void)
 	submenus[3] = get_value_filter(ordenador.low_filter);
 	
 	
-	opt = menu_select_title("Audio settings menu",
+	opt = menu_select_title("Audio settings",
 			audio_messages, submenus);
 	if (opt < 0)
 		return;
@@ -745,7 +773,7 @@ static void screen_settings(void)
 	for (i=0; i<4; i++) submenus_old[i] = submenus[i];
 	
 	
-	opt = menu_select_title("Screen settings menu",
+	opt = menu_select_title("Screen settings",
 			screen_messages, submenus);
 	if (opt < 0)
 		return;
@@ -813,7 +841,7 @@ static void input_options(int joy)
 	submenus[5] = !ordenador.joypad_as_joystick[joy];
 	submenus[6] = !ordenador.rumble[joy];
 	
-	opt = menu_select_title("Input menu",
+	opt = menu_select_title("Wiimote configuration",
 			input_messages, submenus);
 	if (opt < 0)
 		return;
@@ -995,7 +1023,7 @@ static void microdrive()
 	submenus_old[1] = submenus[1];
 	submenus_old[2] = submenus[2];
 	
-	opt = menu_select_title("Microdrive menu",
+	opt = menu_select_title("Microdrive",
 			microdrive_messages, submenus);
 	if (opt < 0)
 		return;
@@ -1571,7 +1599,7 @@ static int tools()
 	
 	old_port=ordenador.port;
 	
-	opt = menu_select_title("Tools menu",
+	opt = menu_select_title("Tools",
 			tools_messages, submenus);
 	if (opt < 0)
 		return 0;
@@ -1860,7 +1888,7 @@ static void manage_configurations()
 	submenus[2]=!ordenador.autoconf;
 	submenus[3]=!ordenador.ignore_z80_joy_conf;
 
-	opt = menu_select_title("Configurations file menu",
+	opt = menu_select_title("Configuration file",
 			confs_messages, submenus);
 	if (opt < 0)
 		return;
@@ -1907,9 +1935,12 @@ void main_menu()
 		case 2:
 			retorno = save_load_snapshot(submenus[1]);
 			break;
-		case 5:
+		case 4:
 			input_options(submenus[2]);
 			break;
+		case 6:
+			tape_settings();
+			break;		
 		case 7:
 			if (emulation_settings()==-2) retorno=-1;
 			break;
