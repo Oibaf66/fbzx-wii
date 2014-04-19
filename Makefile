@@ -134,7 +134,8 @@ dist: $(BUILD)
 	cp images/symbol_shift_small.png $@/fbzx-wii/fbzx
 	cp images/caps_shift_small.png $@/fbzx-wii/fbzx
 	cp images/ZXSpectrum48k.png $@/fbzx-wii/fbzx
-	cp images/FreeMono.ttf $@/fbzx-wii/fbzx
+	cp images/ZX_Spectrum.ttf $@/fbzx-wii/fbzx
+	cp images/ZX_Spectrum_narrow.ttf $@/fbzx-wii/fbzx
 	cp fbzx.net $@/fbzx-wii
 	cp AMSTRAD CAPABILITIES COPYING FAQ README README.TZX VERSIONS VERSIONS.wii $@/apps/fbzx-wii/doc
 	touch $@/fbzx-wii/tapes/dummy

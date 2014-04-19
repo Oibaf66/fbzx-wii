@@ -59,32 +59,36 @@ void clean_screen();
 
 static const char *main_menu_messages[] = {
 		/*00*/		"Tape",
-		/*01*/		"^|Insert|Load|Play|Stop|Rewind|Create|Del|Browse",
+		/*01*/		"^|Ins|Load|Play|Stop|Rew|Make|Del|Brows",
 		/*02*/		"Snapshot",
 		/*03*/		"^|Load|Save|Delete",
-		/*04*/		"Wiimote configuration",
-		/*05*/		"^|Wiimote1|Wiimote2",
-		/*06*/		"Tape settings",
-		/*07*/		"Emulation settings",
-		/*08*/		"Screen settings",
-		/*09*/		"Audio settings",
-		/*10*/		"Config files",
-		/*11*/		"Microdrive",
-		/*12*/		"Tools",
-		/*13*/		"Reset",
-		/*14*/		"Quit",
+		/*04*/		"#1----------------------------------------",
+		/*05*/		"Wiimote configuration",
+		/*06*/		"^|Wiimote1|Wiimote2",
+		/*07*/		"Tape settings",
+		/*08*/		"Emulation settings",
+		/*09*/		"Screen settings",
+		/*10*/		"Audio settings",
+		/*11*/		"Config files",
+		/*12*/		"Microdrive",
+		/*13*/		"Tools",
+		/*14*/		"Reset",
+		/*15*/		"Quit",
 		NULL
 };
 
 static const char *emulation_messages[] = {
 		/*00*/		"Emulated machine",
-		/*01*/		"^|48k_2|48K_3|128k|+2|+2A/+3|128K_Sp|NTSC",
-		/*02*/		"  ",		
-		/*03*/		"Frame rate",
-		/*04*/		"^|100%|50%|33%|25%|20%",
-		/*05*/		"  ",		
-		/*06*/		"Precision",
-		/*07*/		"^|on|off",	
+		/*01*/		"^|48K|128K|+2|+2A/+3|128K_SP|48K_NTSC",
+		/*02*/		"  ",
+		/*03*/		"48K model",
+		/*04*/		"^|issue2|issue3",	
+		/*05*/		"  ",
+		/*06*/		"Frame rate",
+		/*07*/		"^|100%|50%|33%|25%|20%",
+		/*08*/		"  ",		
+		/*09*/		"Precision",
+		/*10*/		"^|on|off",	
 		NULL
 };
 
@@ -125,7 +129,7 @@ static const char *screen_messages[] = {
 		/*03*/		"TV mode",
 		/*04*/		"^|Color|B&W|Green",
 		/*05*/		"  ",
-		/*06*/		"Buffer resolution",
+		/*06*/		"Screen resolution",
 		/*07*/		"^|640X480|320X240",
 		/*08*		"  ",
 		*09*		"576p video mode",
@@ -135,7 +139,7 @@ static const char *screen_messages[] = {
 
 static const  char *input_messages[] = {
 		/*00*/		"Joystick type",
-		/*01*/		"^|Cursor|Kempston|Sinclair1|Sinclair2|QAOP",
+		/*01*/		"^|Cursor|Kempston|Sincl1|Sincl2|QAOP",
 		/*02*/		"Bind key to Wiimote",
 		/*03*/		"^|A|B|1|2|-|+",
 		/*04*/		"Bind key to Nunchuk",
@@ -153,7 +157,7 @@ static const  char *input_messages[] = {
 
 static const char *microdrive_messages[] = {
 		/*00*/		"Microdrive",
-		/*01*/		"^|Insert|Create|Delete",
+		/*01*/		"^|Insert|Make|Delete",
 		/*02*/		"  ",
 		/*03*/		"Interface I",
 		/*04*/		"^|on|off",
@@ -182,18 +186,18 @@ static const char *tools_messages[] = {
 };
 
 static const char *help_messages[] = {
-		/*00*/		"#2HOME enters the menu system, where arrow keys",
-		/*01*/		"#2and nunchuck are used to navigate up and down.",
-		/*02*/		"#2You can bind keyboard keys to the wiimote",
-		/*03*/		"#2buttons in the 'Wiimote' menu and",
-		/*04*/		"#2change emulation options in the Settings menu.",
+		/*00*/		"#2HOME enters the menu system where pad",
+		/*01*/		"#2and nunchuck are used to navigate.",
+		/*02*/		"#2You can bind keyboard keys to the ",
+		/*03*/		"#2wiimote buttons and change the",
+		/*04*/		"#2emulation options.",
 		/*05*/		"#2 ",
-		/*06*/		"#2The easiest way to play a game is to load",
-		/*07*/		"#2a snapshot (.z80 and .sna files).",
-		/*08*/		"#2You can also insert a tape file (.tap and .tzx)",
-		/*09*/		"#2and then load the file in the tape menu.",
+		/*06*/		"#2The easiest way to play a game is to ",
+		/*07*/		"#2load a snapshot (.z80 and .sna files).",
+		/*08*/		"#2You can also insert a tape file",
+		/*09*/		"#2and load it in the tape menu.",
 		/*10*/		"#2 ",
-		/*11*/		"#2More information is available on the wiki:",
+		/*11*/		"#2More information is available in",
 		/*12*/		"#2   http://wiibrew.org/wiki/FBZX_Wii",
 		/*13*/		"#2 ",
 		/*14*/		"OK",
@@ -351,7 +355,7 @@ static void delete_tape()
 	
 	if ((ext_matches(filename, ".tap")|ext_matches(filename, ".TAP")|ext_matches(filename, ".tzx")|
 	ext_matches(filename, ".TZX"))
-	&& (msgYesNo("Delete the file?", 0, FULL_DISPLAY_X /2-138/RATIO, FULL_DISPLAY_Y /2-48/RATIO))) unlink(filename);
+	&& (msgYesNo("Delete the file?", 0, -1, -1))) unlink(filename);
 	
 	free((void *)filename);
 }
@@ -529,53 +533,45 @@ static int manage_tape(int which)
 static unsigned int get_machine_model(void)
 {
 	if (ordenador.videosystem == 0)
-	return  (ordenador.mode128k + (ordenador.issue==3));
-	else return (6); 
+	return  (ordenador.mode128k);
+	else return (5); 
 }
 
 static void set_machine_model(int which)
 {
 	switch (which)
 	{
-	case 0: //48k issue2
-			ordenador.issue=2;
+	case 0: //48k
 			ordenador.mode128k=0;
 			ordenador.ay_emul=0;
 			ordenador.videosystem =0;
 		break;
-	case 1: //48k issue3
-			ordenador.issue=3;
-			ordenador.mode128k=0;
-			ordenador.ay_emul=0;
-			ordenador.videosystem =0;
-		break;
-	case 2: //128k
+	case 1: //128k
 			ordenador.issue=3;
 			ordenador.mode128k=1;
 			ordenador.ay_emul=1;
 			ordenador.videosystem =0;
 		break;
-	case 3: //Amstrad +2
+	case 2: //Amstrad +2
 			ordenador.issue=3;
 			ordenador.mode128k=2;
 			ordenador.ay_emul=1;
 			ordenador.videosystem =0;
 		break;
-	case 4: //Amstrad +2A/+3
+	case 3: //Amstrad +2A/+3
 			ordenador.issue=3;
 			ordenador.mode128k=3;
 			ordenador.ay_emul=1;
 			ordenador.mdr_active=0;
 			ordenador.videosystem =0;
 		break;
-	case 5: //128K Spanish
+	case 4: //128K Spanish
 			ordenador.issue=3;
 			ordenador.mode128k=4;
 			ordenador.ay_emul=1;
 			ordenador.videosystem =0;
 		break;
-	case 6: //48k ntsc
-			ordenador.issue=3;
+	case 5: //48k ntsc
 			ordenador.mode128k=0;
 			ordenador.ay_emul=0;
 			ordenador.videosystem =1;
@@ -585,19 +581,20 @@ static void set_machine_model(int which)
 
 static int emulation_settings(void)
 {
-	unsigned int submenus[3],submenus_old[3];
+	unsigned int submenus[4],submenus_old[4];
 	int opt, i, retorno;
 	unsigned char old_mode, old_videosystem;
 	
-	retorno=-1; //exit to the previous menue
+	retorno=-1; //exit to the previous menu
 	
 	memset(submenus, 0, sizeof(submenus));
 	
 	submenus[0] = get_machine_model();
-	submenus[1] = jump_frames;
-	submenus[2] = !ordenador.precision;
+	submenus[1] = ordenador.issue-2;
+	submenus[2] = jump_frames;
+	submenus[3] = !ordenador.precision;
 
-	for (i=0; i<3; i++) submenus_old[i] = submenus[i];
+	for (i=0; i<4; i++) submenus_old[i] = submenus[i];
 	old_mode=ordenador.mode128k;
 	old_videosystem = ordenador.videosystem;
 	
@@ -605,17 +602,19 @@ static int emulation_settings(void)
 			emulation_messages, submenus);
 	if (opt < 0)
 		return retorno;
+		
+	curr_frames=0;
 	
 	if (submenus[0]!=submenus_old[0]) set_machine_model(submenus[0]);
 	if ((old_mode!=ordenador.mode128k)||(old_videosystem!=ordenador.videosystem)) {ResetComputer(); retorno=-2;} 
 	
-	curr_frames=0;
+	if (ordenador.mode128k==0) ordenador.issue= submenus[1]+2; else ordenador.issue = 3;
 	
-	jump_frames = submenus[1];
+	jump_frames = submenus[2];
 	
-	if (submenus[2] != submenus_old[2])
+	if (submenus[3] != submenus_old[3])
 	{
-	ordenador.precision = !submenus[2];
+	ordenador.precision = !submenus[3];
 	ordenador.precision_old=ordenador.precision;
 	if (ordenador.turbo_state!=1)  //Tape is not loading with auto mode
 	 if (ordenador.precision)
@@ -942,7 +941,7 @@ static void delete_mdr()
 		return; 
 	
 	if ((ext_matches(filename, ".mdr")|ext_matches(filename, ".MDR"))
-	&& (msgYesNo("Delete the file?", 0, FULL_DISPLAY_X /2-138/RATIO, FULL_DISPLAY_Y /2-48/RATIO))) unlink(filename);
+	&& (msgYesNo("Delete the file?", 0,-1, -1))) unlink(filename);
 	
 	free((void *)filename);
 }
@@ -1074,7 +1073,7 @@ static void delete_scr()
 		return; 
 	
 	if ((ext_matches(filename, ".scr")|ext_matches(filename, ".SCR"))
-	&& (msgYesNo("Delete the file?", 0, FULL_DISPLAY_X /2-138/RATIO, FULL_DISPLAY_Y /2-48/RATIO))) unlink(filename);
+	&& (msgYesNo("Delete the file?", 0, -1, -1))) unlink(filename);
 	
 	free((void *)filename);
 }
@@ -1171,7 +1170,7 @@ static int save_scr(int i)
 	if(fichero!=NULL)
 	{	
 		fclose(fichero);
-		if (!msgYesNo("Overwrite the exiting file?", 0, FULL_DISPLAY_X /2-160/RATIO, FULL_DISPLAY_Y /2-48/RATIO))
+		if (!msgYesNo("Overwrite the exiting file?", 0, -1, -1))
 			return 0; // file already exists
 	}
 	
@@ -1382,16 +1381,21 @@ int parse_poke (const char *filename)
 	FILE* fpoke;
 	unsigned char title[128], flag, newfile, restore, old_mport1;
 	int bank, address, value, original_value, ritorno,y,k, trainer, poke;
-	SDL_Rect src, banner;
+	SDL_Rect src, banner, src_ext;
 
-	src.x=0;
-	src.y=30/RATIO;
-	src.w=FULL_DISPLAY_X;
-	src.h=FULL_DISPLAY_Y-60/RATIO;
+	src.x=2/RATIO;
+	src.y=28/RATIO;
+	src.w=FULL_DISPLAY_X-4/RATIO;
+	src.h=FULL_DISPLAY_Y-56/RATIO;
+	
+	src_ext.x=0;
+	src_ext.y=26/RATIO;
+	src_ext.w=FULL_DISPLAY_X;
+	src_ext.h=FULL_DISPLAY_Y-52/RATIO;
 
-	banner.x=0;
+	banner.x=2/RATIO;
 	banner.y=30/RATIO;
-	banner.w=FULL_DISPLAY_X;
+	banner.w=FULL_DISPLAY_X-4/RATIO;
 	banner.h=20/RATIO;
 
 	y=60/RATIO;
@@ -1410,9 +1414,10 @@ int parse_poke (const char *filename)
 
 	clean_screen();
 
-	SDL_FillRect(screen, &src, SDL_MapRGB(screen->format, 0xff, 0xff, 0xff));
+	SDL_FillRect(screen, &src_ext, SDL_MapRGB(screen->format, 220, 220, 0));
+	SDL_FillRect(screen, &src, SDL_MapRGB(screen->format, 0, 0, 0));
 
-	print_font(screen, 0x0, 0x0, 0x0,0, 30/RATIO, "Press 1 to deselect, 2 to select", 16);
+	print_font(screen, 255, 255, 255,4/RATIO, 30/RATIO, "Press 1 to deselect, 2 to select", 16);
 
 	ritorno=0;
 	do
@@ -1427,11 +1432,15 @@ int parse_poke (const char *filename)
 
 		if (strlen(title)>1) title[strlen(title)-2]='\0'; //cancel new line and line feed
 
-		if (y>420/RATIO) {SDL_FillRect(screen, &src, SDL_MapRGB(screen->format, 0xff, 0xff, 0xff));y=40/RATIO;}
+		if (y>420/RATIO) {SDL_FillRect(screen, &src, SDL_MapRGB(screen->format, 0, 0, 0));y=40/RATIO;}
 	
-		if (newfile) print_font(screen, 0x80, 0x80, 0x80,0, y, title+1, 16);
-		else {if (old_poke[trainer][0]==0) print_font(screen, 0xd0, 0, 0,0, y, title+1, 16); //In row 0 information on trainer selection 
-				else print_font(screen, 0, 0xd0, 0,0, y, title+1, 16);}
+		banner.y=y-2/RATIO;
+		
+		SDL_FillRect(screen, &banner, SDL_MapRGB(screen->format, 0, 200, 200));
+		
+		if (newfile) print_font(screen, 0, 0, 0,4/RATIO, y, title+1, 16);
+		else {if (old_poke[trainer][0]==0) print_font(screen, 220, 0, 0,4/RATIO, y, title+1, 16); //In row 0 information on trainer selection 
+				else print_font(screen, 0, 250, 0,4/RATIO, y, title+1, 16);}
 
 		SDL_Flip(screen);
 		k=0;
@@ -1439,19 +1448,17 @@ int parse_poke (const char *filename)
 		while (!((k & KEY_ESCAPE)||(k & KEY_SELECT)))
 		{k = menu_wait_key_press();}
 	
-		banner.y=y;
-	
-		SDL_FillRect(screen, &banner, SDL_MapRGB(screen->format, 0xff, 0xff, 0xff));
+		SDL_FillRect(screen, &banner, SDL_MapRGB(screen->format, 0, 0, 0));
 	
 		if (k & KEY_SELECT) 
 		{
-			print_font(screen, 0, 0x40, 0,0, y, title+1, 16);
+			print_font(screen, 0, 220, 0,4/RATIO, y, title+1, 16);
 			old_poke[trainer][0]=1;
 		}
 		else 
 		{
 			if ((!newfile)&&(old_poke[trainer][0]==1)) restore=1;
-			print_font(screen, 0x80, 0, 0,0, y, title+1, 16);
+			print_font(screen, 220, 0, 0,4/RATIO, y, title+1, 16);
 			old_poke[trainer][0]=0;
 		}	
 	
@@ -1707,7 +1714,7 @@ static int save_load_snapshot(int which)
 				}
 			}
 			else // Delete snashot file
-				if (msgYesNo("Delete the file?", 0, FULL_DISPLAY_X /2-138/RATIO, FULL_DISPLAY_Y /2-48/RATIO)) unlink(filename);
+				if (msgYesNo("Delete the file?", 0, -1, -1)) unlink(filename);
 		}	
 		free((void*)filename);
 	} break;
@@ -1722,7 +1729,7 @@ static int save_load_snapshot(int which)
 				retorno2=-1;
 				break;
 			case -1:
-				if (msgYesNo("Overwrite the exiting file?", 0, FULL_DISPLAY_X /2-160/RATIO, FULL_DISPLAY_Y /2-48/RATIO))
+				if (msgYesNo("Overwrite the exiting file?", 0, -1, -1))
 				{
 					save_z80(db,1); //force overwrite
 					msgInfo("Snapshot saved",3000,NULL);
@@ -1769,7 +1776,7 @@ static int save_load_game_configurations(int which)
 				if (!load_config(&ordenador,(char *)filename)) {msgInfo("Game confs loaded",3000,NULL);retorno2=-1;}
 			}
 			else // Delete config file
-				if (msgYesNo("Delete the file?", 0, FULL_DISPLAY_X /2-138/RATIO, FULL_DISPLAY_Y /2-48/RATIO)) unlink(filename);
+				if (msgYesNo("Delete the file?", 0, -1, -1)) unlink(filename);
 		}	
 		free((void*)filename);
 	} break;
@@ -1800,7 +1807,7 @@ static int save_load_game_configurations(int which)
 				retorno2=-1;
 				break;
 			case -1:
-				if (msgYesNo("Overwrite the exiting file?", 0, FULL_DISPLAY_X /2-160/RATIO, FULL_DISPLAY_Y /2-48/RATIO))
+				if (msgYesNo("Overwrite the exiting file?", 0, -1, -1))
 				{
 					save_config_game(&ordenador,db,1); //force overwrite
 					msgInfo("Game confs saved",3000,NULL);
@@ -1840,7 +1847,7 @@ static void save_load_general_configurations(int which)
 		fconfig = fopen(config_path,"rb");
 		if (fconfig==NULL) 
 			{
-			msgInfo("Can not access the file",3000,NULL);
+			msgInfo("Can't access the file",3000,NULL);
 			return;
 			}
 		else fclose(fconfig);
@@ -1855,7 +1862,7 @@ static void save_load_general_configurations(int which)
 				break;
 			}
 			else // Delete config file
-				if (msgYesNo("Delete the file?", 0, FULL_DISPLAY_X /2-138/RATIO, FULL_DISPLAY_Y /2-48/RATIO)) unlink(config_path);
+				if (msgYesNo("Delete the file?", 0, -1, -1)) unlink(config_path);
 		
 	} break;
 	case 1: // Save configuration file
@@ -1935,36 +1942,36 @@ void main_menu()
 		case 2:
 			retorno = save_load_snapshot(submenus[1]);
 			break;
-		case 4:
+		case 5:
 			input_options(submenus[2]);
 			break;
-		case 6:
+		case 7:
 			tape_settings();
 			break;		
-		case 7:
+		case 8:
 			if (emulation_settings()==-2) retorno=-1;
 			break;
-		case 8:
+		case 9:
 			screen_settings();
 			break;
-		case 9:
+		case 10:
 			audio_settings();
 			break;	
-		case 10:
+		case 11:
 			manage_configurations();
 			break;
-		case 11:
+		case 12:
 			microdrive();
 			break;	
-		case 12:
+		case 13:
 			if (tools()==-2) retorno=-1;
 			break;
-		case 13:
+		case 14:
 			ResetComputer ();
 			retorno=-1;
 			break;	
-		case 14:
-			if (msgYesNo("Are you sure to quit?", 0, FULL_DISPLAY_X /2-138/RATIO, FULL_DISPLAY_Y /2-48/RATIO)) 
+		case 15:
+			if (msgYesNo("Are you sure to quit?", 0, -1, -1)) 
 				{salir = 0;retorno=-1;}	
 			break;
 		default:
