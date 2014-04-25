@@ -36,6 +36,7 @@
 #include "cargador.h"
 #include "characters.h"
 #include "spk_ay.h"
+#include "sound.h"
 
 
 #define ID_BUTTON_OFFSET 0
@@ -1932,7 +1933,7 @@ void main_menu()
 	
 	memset(submenus, 0, sizeof(submenus));
 	
-	reset_sound();
+	if (sound_type != SOUND_ASND) reset_sound();
 
 	do
 	{
