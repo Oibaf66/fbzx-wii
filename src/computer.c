@@ -1421,6 +1421,11 @@ inline void read_keyboard () {
 			if (!ordenador.vk_auto)
 			{if (!ordenador.vk_is_active)  virtkey_ir_activate(); else virtkey_ir_deactivate();}
 		break;
+#ifndef GEKKO		
+		case SDLK_RALT: //Full_screen
+			SDL_Fullscreen_Switch();
+		break;
+#endif		
 		}
 		
 	// reorder joystick if screen is rotated
