@@ -47,7 +47,8 @@
 
 
 #if defined(GEKKO)
-# include <wiiuse/wpad.h> 
+#include <wiiuse/wpad.h> 
+#include <asndlib.h>
 #endif
 
 #ifdef DEBUG
@@ -1619,6 +1620,14 @@ int menu_is_inited(void)
 //Sound must be reseted before calling this function
 void play_click(sound)
 {
+	
+	if (sound_type == SOUND_ASND)
+	{
+		ASND_SetVoice(2,VOICE_STEREO_16BIT_BE,ordenador.freq,0, click_buffer_pointer[sound],len_click_buffer[sound],
+			255, 255, NULL);
+		return;
+	}
+	
 	int inc;
 	int len_click_buffer_norm = len_click_buffer[sound]/ordenador.increment;
 	
