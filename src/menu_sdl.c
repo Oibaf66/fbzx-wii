@@ -32,6 +32,7 @@
 #include <string.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_ttf.h>
+#include<SDL/SDL_image.h>
 #include <stdint.h>
 
 #include "menu_sdl.h"
@@ -42,6 +43,8 @@
 
 #include "minizip/unzip.h"
 #include "tape_browser.h"
+#include "sound.h"
+
 
 #if defined(GEKKO)
 # include <wiiuse/wpad.h> 
@@ -92,6 +95,10 @@ static TTF_Font *menu_font_alt_large, *menu_font_large, *menu_font_alt_small, *m
 
 int fh, fw;
 
+static int *click_buffer_pointer[3];
+static int len_click_buffer[3];
+static SDL_Surface *image_stripes, *image_stripes_small,*tmp_surface;
+
 int msgInfo(char *text, int duration, SDL_Rect *irc)
 {
 	int len = strlen(text);
@@ -128,7 +135,7 @@ int msgInfo(char *text, int duration, SDL_Rect *irc)
 		irc->w=src.w;
 		irc->h=src.h;
 	}	
-	SDL_FillRect(real_screen, &rc, SDL_MapRGB(real_screen->format, 220, 220, 0));
+	SDL_FillRect(real_screen, &rc, SDL_MapRGB(real_screen->format, 255, 255, 0));
 	SDL_FillRect(real_screen, &src, SDL_MapRGB(real_screen->format, 255, 255, 255));
 	menu_print_font(real_screen, 0,0,0, X+w, Y+h/2, text,20,64);
 	SDL_UpdateRect(real_screen, src.x, src.y, src.w, src.h);
@@ -187,7 +194,7 @@ int msgYesNo(char *text, int default_opt, int x, int y)
 
 	while (1)
 	{	
-		SDL_FillRect(real_screen, &rc, SDL_MapRGB(real_screen->format, 220, 220, 0));
+		SDL_FillRect(real_screen, &rc, SDL_MapRGB(real_screen->format, 255, 255, 0));
 		SDL_FillRect(real_screen, &src, SDL_MapRGB(real_screen->format, 255, 255, 255));
 		menu_print_font(real_screen, 0,0,0, X+w, Y+h/2, text,20,64);
 
@@ -197,7 +204,7 @@ int msgYesNo(char *text, int default_opt, int x, int y)
 			brc.y=rc.y+h*2-4/RATIO;
 			brc.w=w*3;
 			brc.h=h*3/2;
-			SDL_FillRect(real_screen, &brc, SDL_MapRGB(real_screen->format, 0x00, 220, 0x00));
+			SDL_FillRect(real_screen, &brc, SDL_MapRGB(real_screen->format, 0x00, 255, 0x00));
 		}
 		else //"NO"
 		{
@@ -219,18 +226,22 @@ int msgYesNo(char *text, int default_opt, int x, int y)
 		key = menu_wait_key_press();
 		if (key & KEY_SELECT)
 		{
+			play_click(1);
 			return default_opt;
 		}
 		else if (key & KEY_ESCAPE)
 		{
+			play_click(2);
 			return 0;
 		}
 		else if (key & KEY_LEFT)
 		{
+			play_click(0);
 			default_opt = !default_opt;
 		}
 		else if (key & KEY_RIGHT)
 		{
+			play_click(0);
 			default_opt = !default_opt;
 		}
 	}
@@ -430,7 +441,8 @@ void menu_print_font(SDL_Surface *screen, int r, int g, int b,
 		if (length>max_string)
 		{
 			if (buf[length-8]== '.') strcpy (buf + max_string-8, buf + length-8);
-				else strcpy (buf + max_string-4, buf + length-4);	
+				else if (buf[length-4] == '.') strcpy (buf + max_string-4, buf + length-4);
+				else buf[length]=0;
 		}
 	}
 	/* Fixup multi-menu option look */
@@ -561,7 +573,7 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_siz
 	//int line_height = (font_height + font_height / 2);
 	int line_height = 22/ RATIO;
 	int x_start = p_menu->x1+4/RATIO;
-	int y_start = p_menu->y1 + line_height+4/RATIO;
+	int y_start;
 	SDL_Rect r;
 	int entries_visible = (p_menu->y2 - p_menu->y1-10/RATIO) / line_height - 1;
 	const char *selected_file = NULL;
@@ -569,6 +581,9 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_siz
 	char name[MAX_PATH_LENGTH];
 	char *ptr;
 	int i, y, length, max_string;
+	
+	if (font_size==16) y_start = p_menu->y1 + line_height+2/RATIO;
+	else y_start = p_menu->y1 + line_height+4/RATIO;
 	
 	if ((draw_scr)&&(RATIO==1)) max_string = 30; else max_string = 46;
 
@@ -599,8 +614,9 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_siz
 		if (sel < 0)
 			SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 0x40, 0x00, 0x00));
 		else
-			SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 220, 220, 0)); //Title
-		menu_print_font(screen, 0,0,0, p_menu->x1+4/RATIO, p_menu->y1+4/RATIO, p_menu->title, font_size, 50);
+			SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 255, 255, 0)); //Title
+		if (font_size==16) menu_print_font(screen, 0,0,0, p_menu->x1+4/RATIO, p_menu->y1+2/RATIO, p_menu->title, font_size, 50);
+		else menu_print_font(screen, 0,0,0, p_menu->x1+4/RATIO, p_menu->y1+4/RATIO, p_menu->title, font_size, 50);
 	}
 
 	for (i = p_menu->start_entry_visible; i <= p_menu->start_entry_visible + entries_visible; i++)
@@ -625,9 +641,9 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_siz
 						x_start, y_start + y, msg, font_size, max_string);
 			else if (p_menu->cur_sel == i) /* Selected - color */
 					{
-					SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 0, 220, 220));
+					SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 0, 255, 255));
 					if (msg[0] == ']') 
-					menu_print_font(screen, 0,0,0, //Selected menu entry begining with ']' (tape browser)
+					menu_print_font(screen, 255,0,0, //Selected menu entry begining with ']' (tape browser)
 						x_start, y_start + y, msg+1, font_size,max_string ); //do not show ']'
 					else
 					menu_print_font(screen, 0,0,0, //Selected menu entry
@@ -639,7 +655,7 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_siz
 			{
 				if (p_menu->cur_sel == i-1)
 					{
-					SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 0, 220, 220));
+					SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 0, 255, 255));
 					menu_print_font(screen, 0,0,0, //Selected sub menu entry
 							x_start, y_start + y, msg, font_size, max_string);
 					}		
@@ -652,7 +668,7 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_siz
 				switch (msg[1])
 				{
 				case '1':
-					menu_print_font(screen, 220,220,0, //Text 1
+					menu_print_font(screen, 255,255,0, //Text 1
 							x_start, y_start + y, msg+2, font_size, max_string);
 					break;
 				case '2':
@@ -666,7 +682,7 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_siz
 				}
 			}
 			else if (msg[0] == ']')
-				menu_print_font(screen, 220,0,0, //Non selected menu entry starting with ']' (tape browser)
+				menu_print_font(screen, 255,0,0, //Non selected menu entry starting with ']' (tape browser)
 							x_start, y_start + y, msg+1, font_size, max_string);
 			
 			else /* Otherwise white */
@@ -702,7 +718,7 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_siz
 							r = (SDL_Rect){ x_start + (n+1) * w-2/RATIO, y_start + (i+ 1 - p_menu->start_entry_visible) *line_height -8/RATIO, (n_chars - 1) * w, 2/RATIO};
 							if (p_menu->cur_sel == i-1)
 								SDL_FillRect(screen, &r,
-										SDL_MapRGB(screen->format, 220,0,0)); //Underline selected text
+										SDL_MapRGB(screen->format, 255,0,0)); //Underline selected text
 							else
 								SDL_FillRect(screen, &r,
 										SDL_MapRGB(screen->format, 255,255,255));//Underline non selected text
@@ -721,13 +737,13 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_siz
 	r.w = 2;
 	r.h = 423;
 	
-	SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 220, 220, 0)); //Frame for scr preview
+	SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 255, 255, 0)); //Frame for scr preview
 	r.x = 369;
 	r.y = 249;
 	r.w = 270;
 	r.h = 2;
 	
-	SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 220, 220, 0)); //Frame for scr preview
+	SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 255, 255, 0)); //Frame for scr preview
 	
 	if ((!selected_file)||(selected_file[0] == '[')) return; //No dir
 	
@@ -1063,28 +1079,36 @@ static int menu_select_internal(SDL_Surface *screen,
 		uint32_t keys;
 		int sel_last = p_menu->cur_sel;
 
-		SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 220, 220, 0));
+		SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 255, 255, 0));
 		SDL_FillRect(screen, &r_int, SDL_MapRGB(screen->format, 0, 0, 0));
-
+		
+		if (strcmp(p_menu->title, "Select block")&&strcmp(p_menu->title, "Select program")
+		&&strncmp(p_menu->title, "Selected file:",14)&&strcmp(p_menu->title, "Select file"))
+		{
+			SDL_Rect dst_rect = {410/RATIO, 70/RATIO, 0, 0};
+			if (RATIO == 1) SDL_BlitSurface(image_stripes, NULL, screen, &dst_rect);
+			else SDL_BlitSurface(image_stripes_small, NULL, screen, &dst_rect);
+		}
+		
 		menu_draw(screen, p_menu, 0, font_size, draw_scr);
 		SDL_Flip(screen);
 
 		keys = menu_wait_key_press();
 
 		if (keys & KEY_UP)
-			{select_next(p_menu, 0, -1, 1);play_click();}
+			{select_next(p_menu, 0, -1, 1);play_click(0);}
 		else if (keys & KEY_DOWN)
-			{select_next(p_menu, 0, 1, 1);play_click();}
+			{select_next(p_menu, 0, 1, 1);play_click(0);}
 		else if (keys & KEY_PAGEUP)
-			select_next(p_menu, 0, -19, 0);
+			{select_next(p_menu, 0, -19, 0);play_click(0);}
 		else if (keys & KEY_PAGEDOWN)
-			select_next(p_menu, 0, 19, 0);
+			{select_next(p_menu, 0, 19, 0);play_click(0);}
 		else if (keys & KEY_LEFT)
-			select_next(p_menu, -1, 0 ,1);
+			{select_next(p_menu, -1, 0 ,1);play_click(0);}
 		else if (keys & KEY_RIGHT)
-			select_next(p_menu, 1, 0 ,1);
+			{select_next(p_menu, 1, 0 ,1);play_click(0);}
 		else if (keys & KEY_ESCAPE)
-			break;
+			{play_click(2);break;}
 		else if (keys & KEY_SELECT)
 		{
 			ret = p_menu->cur_sel;
@@ -1092,6 +1116,7 @@ static int menu_select_internal(SDL_Surface *screen,
 
 			for (i=0; i<p_menu->n_submenus; i++)
 				p_submenus[i] = p_menu->p_submenus[i].sel;
+			play_click(1);	
 			break;
 		}
 		/* Invoke the callback when an entry is selected */
@@ -1156,7 +1181,7 @@ static const char *menu_select_file_internal_zip(char *path,
 	int opt;
 	int i;
 	int err;
-	char buf[64];
+	char buf[80];
 	
 	if (file_list == NULL) {free(path); return NULL;}
 
@@ -1165,7 +1190,7 @@ static const char *menu_select_file_internal_zip(char *path,
 		ptr_selected_file= strrchr(selected_file,'/');
 		if (ptr_selected_file) ptr_selected_file++;
 		else ptr_selected_file = selected_file;
-		snprintf(buf,64,"Selected file:%s",ptr_selected_file);
+		snprintf(buf,80,"Selected file:%s",ptr_selected_file);
 		opt = menu_select_sized(buf, file_list, NULL, 0, x, y, x2, y2, NULL, NULL, 16, draw_scr);
 	}
 	else opt = menu_select_sized("Select file", file_list, NULL, 0, x, y, x2, y2, NULL, NULL ,16, draw_scr);
@@ -1435,7 +1460,7 @@ const char *menu_select_tape_block()
 			0, 18/RATIO, FULL_DISPLAY_X, FULL_DISPLAY_Y - 18/RATIO, NULL, 0, 0);
 }
 
-
+/*
 static TTF_Font *read_font(const char *path, int font_size)
 {
 	TTF_Font *out;
@@ -1468,7 +1493,7 @@ static TTF_Font *read_font(const char *path, int font_size)
 
 	return out;
 }
-
+*/
 void font_init()
 {
 	char *font_path,*font_path2;
@@ -1476,14 +1501,15 @@ void font_init()
 	TTF_Init();
 	
 	font_path=myfile("fbzx/ZX_Spectrum.ttf");
-	font_path2=myfile("fbzx/ZX_Spectrum_narrow.ttf");
+	font_path2=myfile("fbzx/FreeMono.ttf");
 
-	menu_font_large = read_font(font_path, 16);//Used for menu
-	menu_font_alt_large = read_font(font_path2, 16); //Used for file selection
-	menu_font_small = read_font(font_path, 8);
-	menu_font_alt_small = read_font(font_path2, 8);
+	menu_font_large = TTF_OpenFont(font_path, 16);//Used for menu
+	menu_font_alt_large = TTF_OpenFont(font_path2, 20); //Used for file selection
+	menu_font_small = TTF_OpenFont(font_path, 8);
+	menu_font_alt_small = TTF_OpenFont(font_path2, 10);
 	
 	free(font_path);
+	free(font_path2);
 }
 
 void font_fini()
@@ -1498,12 +1524,89 @@ void font_fini()
 
 void menu_init(SDL_Surface *screen)
 {
+	FILE *fichero;
+	int i;
+	
+	for(i=0; i<3; i++)
+	{
+		switch (i)
+		{
+#ifdef GEKKO
+			case 0:
+			fichero=myfopen("fbzx/menu_navigation_BE.raw","rb"); //Menu up, down, left, right
+			break;
+		
+			case 1:
+			fichero=myfopen("fbzx/select_BE.raw","rb"); //Menu select
+			break;
+			
+			case 2:
+			fichero=myfopen("fbzx/unselect_BE.raw","rb"); //Menu unselect
+			break;
+#else
+			case 0:
+			fichero=myfopen("fbzx/menu_navigation_LE.raw","rb"); //Menu up, down, left, right
+			break;
+		
+			case 1:
+			fichero=myfopen("fbzx/select_LE.raw","rb"); //Menu select
+			break;
+			
+			case 2:
+			fichero=myfopen("fbzx/unselect_LE.raw","rb"); //Menu unselect
+			break;
+#endif			
+		}
+		
+		
+		if(fichero==NULL) {
+			printf("Can't open button click wav file: %d\n", i);
+			exit(1);
+			}
+		
+		fseek (fichero, 0, SEEK_END);
+		len_click_buffer[i]=ftell (fichero);
+		fseek (fichero, 0, SEEK_SET);
+	
+		click_buffer_pointer[i]= (int *) malloc(len_click_buffer[i]);
+	
+		if(click_buffer_pointer[i]==NULL) {
+			printf("Can't allocate click wav buffer: %d\n",i);
+			exit(1);
+			}
+		
+		fread(click_buffer_pointer[i], 1, len_click_buffer[i], fichero); 	
+	
+		fclose(fichero);
+	}
+	
+	char *image_path;
+	
+	image_path=myfile("fbzx/stripes.png");
+	tmp_surface=IMG_Load(image_path);
+	free(image_path);
+	if (tmp_surface == NULL) {printf("Impossible to load stripes image\n"); exit(1);}
+	image_stripes=SDL_DisplayFormat(tmp_surface);
+	SDL_FreeSurface (tmp_surface);	
+	
+	image_path=myfile("fbzx/stripes_small.png");
+	tmp_surface=IMG_Load(image_path);
+	free(image_path);
+	if (tmp_surface == NULL) {printf("Impossible to load stripes small image\n"); exit(1);}
+	image_stripes_small=SDL_DisplayFormat(tmp_surface);
+	SDL_FreeSurface (tmp_surface);
+
 	real_screen = screen;
 	is_inited = 1;
 }
 
 void menu_deinit()
 {
+	free(click_buffer_pointer[0]);
+	free(click_buffer_pointer[1]);
+	free(click_buffer_pointer[2]);
+	SDL_FreeSurface (image_stripes);
+	SDL_FreeSurface (image_stripes_small);
 	real_screen = 0;
 	is_inited = 0;
 }
@@ -1513,8 +1616,21 @@ int menu_is_inited(void)
 	return is_inited;
 }
 
-void play_click(void)
+//Sound must be reseted before calling this function
+void play_click(sound)
 {
+	int inc;
+	int len_click_buffer_norm = len_click_buffer[sound]/ordenador.increment;
+	
+	for(inc=0; inc< len_click_buffer_norm-ordenador.buffer_len; inc+=ordenador.buffer_len)
+	{
+		memcpy(ordenador.current_buffer, click_buffer_pointer[sound]+inc, ordenador.buffer_len*ordenador.increment);
+		sound_play();
+	}
+	
+	memcpy(ordenador.current_buffer, click_buffer_pointer[sound] + inc, (len_click_buffer_norm - inc)*ordenador.increment);
+	//memset(ordenador.current_buffer + len_click_buffer_norm - inc,0, (inc-len_click_buffer_norm + ordenador.buffer_len)*ordenador.increment);
+	sound_play();
 }
 
 
@@ -1541,7 +1657,9 @@ int ask_value_sdl(int *final_value,int y_coord,int max_value) {
 		
 		virtualkey = get_key();
 		if (virtualkey == NULL) return(0);
-		if (virtualkey->sdl_code==1) break; //done, retorno -1
+		if (virtualkey->sdl_code==1) {play_click(2); break; }//done, retorno -1
+		
+		play_click(1);
 		sdl_key = virtualkey->sdl_code;
 		
 		switch (sdl_key) {
@@ -1670,6 +1788,9 @@ int ask_filename_sdl(char *nombre_final,int y_coord,char *extension, char *path,
 		
 		virtualkey = get_key();
 		if (virtualkey == NULL) return(2);
+		
+		play_click(1);
+		
 		sdl_key = virtualkey->sdl_code;
 		
 		switch (sdl_key) {

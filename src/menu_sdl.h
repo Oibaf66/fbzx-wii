@@ -80,6 +80,6 @@ int ask_filename_sdl(char *nombre_final,int y_coord,char *extension, char *path,
 
 const char *menu_select_tape_block();
 
-void play_click(void);
+void play_click(int sound);
 
 #endif /* !__MENU_H__ */

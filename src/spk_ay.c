@@ -382,3 +382,13 @@ inline void play_sound (unsigned int tstados) {
 		else sample_count++;
 	}
 }
+
+void reset_sound(void)
+{
+		//memset(ordenador.current_buffer,0, (ordenador.buffer_len-ordenador.sound_cuantity)*ordenador.increment);
+		sound_play();
+		ordenador.sound_cuantity = 0;
+		sample_count=0;
+		lvalue_sum=0;
+		rvalue_sum=0;
+}

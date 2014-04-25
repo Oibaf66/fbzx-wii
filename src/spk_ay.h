@@ -23,5 +23,6 @@
 
 inline void play_ay (unsigned int);
 inline void play_sound (unsigned int);
+void reset_sound(void);
 
-#endif;
+#endif

@@ -35,6 +35,8 @@
 #include "menus.h"
 #include "cargador.h"
 #include "characters.h"
+#include "spk_ay.h"
+
 
 #define ID_BUTTON_OFFSET 0
 #define ID_AXIS_OFFSET 32
@@ -62,7 +64,7 @@ static const char *main_menu_messages[] = {
 		/*01*/		"^|Ins|Load|Play|Stop|Rew|Make|Del|Brows",
 		/*02*/		"Snapshot",
 		/*03*/		"^|Load|Save|Delete",
-		/*04*/		"#1----------------------------------------",
+		/*04*/		"#1---------------------",
 		/*05*/		"Wiimote configuration",
 		/*06*/		"^|Wiimote1|Wiimote2",
 		/*07*/		"Tape settings",
@@ -1414,7 +1416,7 @@ int parse_poke (const char *filename)
 
 	clean_screen();
 
-	SDL_FillRect(screen, &src_ext, SDL_MapRGB(screen->format, 220, 220, 0));
+	SDL_FillRect(screen, &src_ext, SDL_MapRGB(screen->format, 255, 255, 0));
 	SDL_FillRect(screen, &src, SDL_MapRGB(screen->format, 0, 0, 0));
 
 	print_font(screen, 255, 255, 255,4/RATIO, 30/RATIO, "Press 1 to deselect, 2 to select", 16);
@@ -1434,9 +1436,9 @@ int parse_poke (const char *filename)
 
 		if (y>420/RATIO) {SDL_FillRect(screen, &src, SDL_MapRGB(screen->format, 0, 0, 0));y=40/RATIO;}
 	
-		banner.y=y-2/RATIO;
+		banner.y=y;
 		
-		SDL_FillRect(screen, &banner, SDL_MapRGB(screen->format, 0, 200, 200));
+		SDL_FillRect(screen, &banner, SDL_MapRGB(screen->format, 0, 255, 255));
 		
 		if (newfile) print_font(screen, 0, 0, 0,4/RATIO, y, title+1, 16);
 		else {if (old_poke[trainer][0]==0) print_font(screen, 220, 0, 0,4/RATIO, y, title+1, 16); //In row 0 information on trainer selection 
@@ -1454,12 +1456,14 @@ int parse_poke (const char *filename)
 		{
 			print_font(screen, 0, 220, 0,4/RATIO, y, title+1, 16);
 			old_poke[trainer][0]=1;
+			play_click(1);
 		}
 		else 
 		{
 			if ((!newfile)&&(old_poke[trainer][0]==1)) restore=1;
 			print_font(screen, 220, 0, 0,4/RATIO, y, title+1, 16);
 			old_poke[trainer][0]=0;
+			play_click(2);
 		}	
 	
 		SDL_Flip(screen);
@@ -1516,6 +1520,7 @@ int parse_poke (const char *filename)
 
 	while (!(k & KEY_ESCAPE)&&(ritorno==0))
 	{k = menu_wait_key_press();}
+	play_click(2);
 
 	fclose(fpoke);
 	if (ritorno==0) strcpy(ordenador.last_selected_poke_file,filename);		
@@ -1926,6 +1931,8 @@ void main_menu()
 	int retorno;
 	
 	memset(submenus, 0, sizeof(submenus));
+	
+	reset_sound();
 
 	do
 	{
