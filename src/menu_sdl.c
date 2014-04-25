@@ -137,7 +137,7 @@ int msgInfo(char *text, int duration, SDL_Rect *irc)
 	}	
 	SDL_FillRect(real_screen, &rc, SDL_MapRGB(real_screen->format, 255, 255, 0));
 	SDL_FillRect(real_screen, &src, SDL_MapRGB(real_screen->format, 255, 255, 255));
-	menu_print_font(real_screen, 0,0,0, X+w, Y+h/2, text,20,64);
+	menu_print_font(real_screen, 0,0,0, X+w, Y+h/2, text,FONT_NORM,64);
 	SDL_UpdateRect(real_screen, src.x, src.y, src.w, src.h);
 	SDL_UpdateRect(real_screen, rc.x, rc.y, rc.w,rc.h);
 	if (duration > 0)
@@ -145,7 +145,7 @@ int msgInfo(char *text, int duration, SDL_Rect *irc)
 	else if (duration < 0)
 	{
 		SDL_FillRect(real_screen, &brc, SDL_MapRGB(real_screen->format, 0x00, 0x80, 0x00));
-		menu_print_font(real_screen, 0,0,0, FULL_DISPLAY_X/2-w, Y+h*2, "OK",20,64);
+		menu_print_font(real_screen, 0,0,0, FULL_DISPLAY_X/2-w, Y+h*2, "OK",FONT_NORM,64);
 		SDL_UpdateRect(real_screen, brc.x, brc.y, brc.w, brc.h);
 		while (!(KEY_SELECT & menu_wait_key_press())) {}
 
@@ -196,7 +196,7 @@ int msgYesNo(char *text, int default_opt, int x, int y)
 	{	
 		SDL_FillRect(real_screen, &rc, SDL_MapRGB(real_screen->format, 255, 255, 0));
 		SDL_FillRect(real_screen, &src, SDL_MapRGB(real_screen->format, 255, 255, 255));
-		menu_print_font(real_screen, 0,0,0, X+w, Y+h/2, text,20,64);
+		menu_print_font(real_screen, 0,0,0, X+w, Y+h/2, text,FONT_NORM,64);
 
 		if (default_opt) //"YES"
 		{
@@ -215,8 +215,8 @@ int msgYesNo(char *text, int default_opt, int x, int y)
 			SDL_FillRect(real_screen, &brc, SDL_MapRGB(real_screen->format, 255, 0x00, 0x00));
 		}
 	
-		menu_print_font(real_screen, 0,0,0, rc.x + rc.w/2-5*w, Y+h*2, "YES",20,64);
-		menu_print_font(real_screen, 0,0,0, rc.x + rc.w/2+5*w-2*w, Y+h*2, "NO",20,64);
+		menu_print_font(real_screen, 0,0,0, rc.x + rc.w/2-5*w, Y+h*2, "YES",FONT_NORM,64);
+		menu_print_font(real_screen, 0,0,0, rc.x + rc.w/2+5*w-2*w, Y+h*2, "NO",FONT_NORM,64);
 		
 		SDL_UpdateRect(real_screen, src.x, src.y, src.w, src.h);
 		SDL_UpdateRect(real_screen, rc.x, rc.y, rc.w,rc.h);
@@ -424,7 +424,7 @@ static submenu_t *find_submenu(menu_t *p_menu, int index)
 }
 
 void menu_print_font(SDL_Surface *screen, int r, int g, int b,
-		int x, int y, const char *msg, int font_size, int max_string)
+		int x, int y, const char *msg, int font_type, int max_string)
 {
 	SDL_Surface *font_surf;
 	SDL_Rect dst = {x, y,  0, 0};
@@ -454,12 +454,12 @@ void menu_print_font(SDL_Surface *screen, int r, int g, int b,
 
 	if (FULL_DISPLAY_X == 640)
 		{
-		if (font_size == 16) font_surf = TTF_RenderUTF8_Blended(menu_font_alt_large, buf, color);
+		if (font_type == FONT_ALT) font_surf = TTF_RenderUTF8_Blended(menu_font_alt_large, buf, color);
 		else font_surf = TTF_RenderUTF8_Blended(menu_font_large, buf, color);
 		}
 	else 	
 		{
-		if (font_size == 16) font_surf = TTF_RenderUTF8_Blended(menu_font_alt_small, buf, color);
+		if (font_type == FONT_ALT) font_surf = TTF_RenderUTF8_Blended(menu_font_alt_small, buf, color);
 		else font_surf = TTF_RenderUTF8_Blended(menu_font_small, buf, color);
 		}
 		
@@ -474,7 +474,7 @@ void menu_print_font(SDL_Surface *screen, int r, int g, int b,
 }
 
 void print_font(SDL_Surface *screen, int r, int g, int b,
-		int x, int y, const char *msg, int font_size)
+		int x, int y, const char *msg, int font_type)
 {
 #define _MAX_STRING 52
 	SDL_Surface *font_surf;
@@ -494,12 +494,12 @@ void print_font(SDL_Surface *screen, int r, int g, int b,
 
 	if (FULL_DISPLAY_X == 640)
 		{
-		if (font_size == 16) font_surf = TTF_RenderUTF8_Blended(menu_font_alt_large, buf, color);
+		if (font_type == FONT_ALT) font_surf = TTF_RenderUTF8_Blended(menu_font_alt_large, buf, color);
 		else font_surf = TTF_RenderUTF8_Blended(menu_font_large, buf, color);
 		}
 	else 	
 		{
-		if (font_size == 16) font_surf = TTF_RenderUTF8_Blended(menu_font_alt_small, buf, color);
+		if (font_type == FONT_ALT) font_surf = TTF_RenderUTF8_Blended(menu_font_alt_small, buf, color);
 		else font_surf = TTF_RenderUTF8_Blended(menu_font_small, buf, color);
 		}
 		
@@ -567,7 +567,7 @@ void draw_scr_file(int x,int y, char *filename)
 		}
 }
 
-static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_size, int draw_scr)
+static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_type, int draw_scr)
 {
 	//int font_height = TTF_FontHeight(p_menu->p_font);
 	//int line_height = (font_height + font_height / 2);
@@ -582,7 +582,7 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_siz
 	char *ptr;
 	int i, y, length, max_string;
 	
-	if (font_size==16) y_start = p_menu->y1 + line_height+2/RATIO;
+	if (font_type==FONT_ALT) y_start = p_menu->y1 + line_height+2/RATIO;
 	else y_start = p_menu->y1 + line_height+4/RATIO;
 	
 	if ((draw_scr)&&(RATIO==1)) max_string = 30; else max_string = 46;
@@ -615,8 +615,8 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_siz
 			SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 0x40, 0x00, 0x00));
 		else
 			SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 255, 255, 0)); //Title
-		if (font_size==16) menu_print_font(screen, 0,0,0, p_menu->x1+4/RATIO, p_menu->y1+2/RATIO, p_menu->title, font_size, 50);
-		else menu_print_font(screen, 0,0,0, p_menu->x1+4/RATIO, p_menu->y1+4/RATIO, p_menu->title, font_size, 50);
+		if (font_type==FONT_ALT) menu_print_font(screen, 0,0,0, p_menu->x1+4/RATIO, p_menu->y1+2/RATIO, p_menu->title, font_type, 50);
+		else menu_print_font(screen, 0,0,0, p_menu->x1+4/RATIO, p_menu->y1+4/RATIO, p_menu->title, font_type, 50);
 	}
 
 	for (i = p_menu->start_entry_visible; i <= p_menu->start_entry_visible + entries_visible; i++)
@@ -638,16 +638,16 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_siz
 			
 			if (sel < 0)
 				menu_print_font(screen, 0x40,0x40,0x40, //Not used
-						x_start, y_start + y, msg, font_size, max_string);
+						x_start, y_start + y, msg, font_type, max_string);
 			else if (p_menu->cur_sel == i) /* Selected - color */
 					{
 					SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 0, 255, 255));
 					if (msg[0] == ']') 
 					menu_print_font(screen, 255,0,0, //Selected menu entry begining with ']' (tape browser)
-						x_start, y_start + y, msg+1, font_size,max_string ); //do not show ']'
+						x_start, y_start + y, msg+1, font_type,max_string ); //do not show ']'
 					else
 					menu_print_font(screen, 0,0,0, //Selected menu entry
-						x_start, y_start + y, msg, font_size,max_string );
+						x_start, y_start + y, msg, font_type,max_string );
 						
 					selected_file = msg;	
 					}	
@@ -657,11 +657,11 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_siz
 					{
 					SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 0, 255, 255));
 					menu_print_font(screen, 0,0,0, //Selected sub menu entry
-							x_start, y_start + y, msg, font_size, max_string);
+							x_start, y_start + y, msg, font_type, max_string);
 					}		
 				else
 					menu_print_font(screen, 255,255,255, //Non selected sub menu entry
-							x_start, y_start + y, msg, font_size, max_string);
+							x_start, y_start + y, msg, font_type, max_string);
 			}
 			else if (msg[0] == '#')
 			{
@@ -669,25 +669,25 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_siz
 				{
 				case '1':
 					menu_print_font(screen, 255,255,0, //Text 1
-							x_start, y_start + y, msg+2, font_size, max_string);
+							x_start, y_start + y, msg+2, font_type, max_string);
 					break;
 				case '2':
 					menu_print_font(screen, 255,255,255, //Text 2
-							x_start, y_start + y, msg+2, font_size, max_string);
+							x_start, y_start + y, msg+2, font_type, max_string);
 					break;
 				default:
 					menu_print_font(screen, 0x40,0x40,0x40,
-							x_start, y_start + y, msg, font_size, max_string);
+							x_start, y_start + y, msg, font_type, max_string);
 					break;							
 				}
 			}
 			else if (msg[0] == ']')
 				menu_print_font(screen, 255,0,0, //Non selected menu entry starting with ']' (tape browser)
-							x_start, y_start + y, msg+1, font_size, max_string);
+							x_start, y_start + y, msg+1, font_type, max_string);
 			
 			else /* Otherwise white */
 				menu_print_font(screen, 255,255,255, //Non selected menu entry
-						x_start, y_start + y, msg, font_size, max_string);
+						x_start, y_start + y, msg, font_type, max_string);
 			if (IS_SUBMENU(msg))
 			{
 				submenu_t *p_submenu = find_submenu(p_menu, i);
@@ -1061,7 +1061,7 @@ extern char curdir[MAX_PATH_LENGTH];
 static int menu_select_internal(SDL_Surface *screen,
 		menu_t *p_menu, int *p_submenus, int sel,
 		void (*select_next_cb)(menu_t *p, void *data),
-		void *select_next_cb_data, int font_size, int draw_scr)
+		void *select_next_cb_data, int font_type, int draw_scr)
 {
 	int ret = -1;
 	int i;
@@ -1090,7 +1090,7 @@ static int menu_select_internal(SDL_Surface *screen,
 			else SDL_BlitSurface(image_stripes_small, NULL, screen, &dst_rect);
 		}
 		
-		menu_draw(screen, p_menu, 0, font_size, draw_scr);
+		menu_draw(screen, p_menu, 0, font_type, draw_scr);
 		SDL_Flip(screen);
 
 		keys = menu_wait_key_press();
@@ -1132,7 +1132,7 @@ static int menu_select_internal(SDL_Surface *screen,
 int menu_select_sized(const char *title, const char **msgs, int *submenus, int sel,
 		int x, int y, int x2, int y2,
 		void (*select_next_cb)(menu_t *p, void *data),
-		void *select_next_cb_data, int font_size, int draw_scr)
+		void *select_next_cb_data, int font_type, int draw_scr)
 
 {
 	menu_t menu;
@@ -1140,19 +1140,19 @@ int menu_select_sized(const char *title, const char **msgs, int *submenus, int s
 
 	if (FULL_DISPLAY_X == 640)
 	{
-	if (font_size == 16) menu_init_internal(&menu, title, menu_font_alt_large, msgs, x, y, x2, y2);
+	if (font_type == FONT_ALT) menu_init_internal(&menu, title, menu_font_alt_large, msgs, x, y, x2, y2);
 	else menu_init_internal(&menu, title, menu_font_large, msgs, x, y, x2, y2);
 	}
 	else
 	{
-	if (font_size == 16) menu_init_internal(&menu, title, menu_font_alt_small, msgs, x, y, x2, y2);
+	if (font_type == FONT_ALT) menu_init_internal(&menu, title, menu_font_alt_small, msgs, x, y, x2, y2);
 	else menu_init_internal(&menu, title, menu_font_small, msgs, x, y, x2, y2);
 	}
 
 	if (sel >= 0)
 		select_one(&menu, sel);
 	out = menu_select_internal(real_screen, &menu, submenus, sel,
-			select_next_cb, select_next_cb_data, font_size, draw_scr);
+			select_next_cb, select_next_cb_data, font_type, draw_scr);
 
 	menu_fini(&menu);
 
@@ -1164,7 +1164,7 @@ int menu_select_title(const char *title, const char **msgs, int *submenus)
 	SDL_FillRect(real_screen, 0, SDL_MapRGB(real_screen->format, 0, 0, 0));
 	return menu_select_sized(title, msgs, submenus, 0,
 			0, 48/RATIO, FULL_DISPLAY_X, FULL_DISPLAY_Y-48/RATIO,
-			NULL, NULL, 20, 0);
+			NULL, NULL, FONT_NORM, 0);
 }
 
 int menu_select(const char **msgs, int *submenus)
@@ -1191,9 +1191,9 @@ static const char *menu_select_file_internal_zip(char *path,
 		if (ptr_selected_file) ptr_selected_file++;
 		else ptr_selected_file = selected_file;
 		snprintf(buf,80,"Selected file:%s",ptr_selected_file);
-		opt = menu_select_sized(buf, file_list, NULL, 0, x, y, x2, y2, NULL, NULL, 16, draw_scr);
+		opt = menu_select_sized(buf, file_list, NULL, 0, x, y, x2, y2, NULL, NULL, FONT_ALT, draw_scr);
 	}
-	else opt = menu_select_sized("Select file", file_list, NULL, 0, x, y, x2, y2, NULL, NULL ,16, draw_scr);
+	else opt = menu_select_sized("Select file", file_list, NULL, 0, x, y, x2, y2, NULL, NULL ,FONT_ALT, draw_scr);
 	
 	sel = NULL;
 			
@@ -1353,17 +1353,17 @@ static const char *menu_select_file_internal(char *dir_path,
 	if (file_list == NULL)
 		return NULL;
 		
-	if (!strcmp(dir_path,"browser")) opt = menu_select_sized("Select block", file_list, NULL, block_pos, x, y, x2, y2, NULL, NULL ,16, 0);
-	else if (!strcmp(dir_path,"select_block")) opt = menu_select_sized("Select program", file_list, NULL, 0, x, y, x2, y2, NULL, NULL ,16, 0);
+	if (!strcmp(dir_path,"browser")) opt = menu_select_sized("Select block", file_list, NULL, block_pos, x, y, x2, y2, NULL, NULL ,FONT_ALT, 0);
+	else if (!strcmp(dir_path,"select_block")) opt = menu_select_sized("Select program", file_list, NULL, 0, x, y, x2, y2, NULL, NULL ,FONT_ALT, 0);
 	else if (selected_file) 
 	{
 		ptr_selected_file= strrchr(selected_file,'/');
 		if (ptr_selected_file) ptr_selected_file++;
 		else ptr_selected_file = selected_file;
 		snprintf(buf,80,"Selected file:%s",ptr_selected_file);
-		opt = menu_select_sized(buf, file_list, NULL, 0, x, y, x2, y2, NULL, NULL, 16, draw_scr);
+		opt = menu_select_sized(buf, file_list, NULL, 0, x, y, x2, y2, NULL, NULL, FONT_ALT, draw_scr);
 	}
-	else opt = menu_select_sized("Select file", file_list, NULL, 0, x, y, x2, y2, NULL, NULL ,16, draw_scr);
+	else opt = menu_select_sized("Select file", file_list, NULL, 0, x, y, x2, y2, NULL, NULL ,FONT_ALT, draw_scr);
 	
 	sel = NULL;	
 	
@@ -1461,7 +1461,7 @@ const char *menu_select_tape_block()
 }
 
 /*
-static TTF_Font *read_font(const char *path, int font_size)
+static TTF_Font *read_font(const char *path, int font_type)
 {
 	TTF_Font *out;
 	SDL_RWops *rw;
@@ -1483,7 +1483,7 @@ static TTF_Font *read_font(const char *path, int font_size)
 		fprintf(stderr, "Could not create RW: %s\n", SDL_GetError());
 		exit(1);
 	}
-	out = TTF_OpenFontRW(rw, 1, font_size);
+	out = TTF_OpenFontRW(rw, 1, font_type);
 	if (!out)
 	{
 		fprintf(stderr, "Unable to open font %s\n", path);

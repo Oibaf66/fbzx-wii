@@ -1419,7 +1419,7 @@ int parse_poke (const char *filename)
 	SDL_FillRect(screen, &src_ext, SDL_MapRGB(screen->format, 255, 255, 0));
 	SDL_FillRect(screen, &src, SDL_MapRGB(screen->format, 0, 0, 0));
 
-	print_font(screen, 255, 255, 255,4/RATIO, 30/RATIO, "Press 1 to deselect, 2 to select", 16);
+	print_font(screen, 255, 255, 255,4/RATIO, 30/RATIO, "Press 1 to deselect, 2 to select", FONT_ALT);
 
 	ritorno=0;
 	do
@@ -1440,9 +1440,9 @@ int parse_poke (const char *filename)
 		
 		SDL_FillRect(screen, &banner, SDL_MapRGB(screen->format, 0, 255, 255));
 		
-		if (newfile) print_font(screen, 0, 0, 0,4/RATIO, y, title+1, 16);
-		else {if (old_poke[trainer][0]==0) print_font(screen, 220, 0, 0,4/RATIO, y, title+1, 16); //In row 0 information on trainer selection 
-				else print_font(screen, 0, 250, 0,4/RATIO, y, title+1, 16);}
+		if (newfile) print_font(screen, 0, 0, 0,4/RATIO, y, title+1, FONT_ALT);
+		else {if (old_poke[trainer][0]==0) print_font(screen, 220, 0, 0,4/RATIO, y, title+1, FONT_ALT); //In row 0 information on trainer selection 
+				else print_font(screen, 0, 250, 0,4/RATIO, y, title+1, FONT_ALT);}
 
 		SDL_Flip(screen);
 		k=0;
@@ -1454,14 +1454,14 @@ int parse_poke (const char *filename)
 	
 		if (k & KEY_SELECT) 
 		{
-			print_font(screen, 0, 220, 0,4/RATIO, y, title+1, 16);
+			print_font(screen, 0, 220, 0,4/RATIO, y, title+1, FONT_ALT);
 			old_poke[trainer][0]=1;
 			play_click(1);
 		}
 		else 
 		{
 			if ((!newfile)&&(old_poke[trainer][0]==1)) restore=1;
-			print_font(screen, 220, 0, 0,4/RATIO, y, title+1, 16);
+			print_font(screen, 220, 0, 0,4/RATIO, y, title+1, FONT_ALT);
 			old_poke[trainer][0]=0;
 			play_click(2);
 		}	

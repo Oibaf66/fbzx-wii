@@ -40,14 +40,16 @@
 #define KEY_HELP     256
 #define KEY_DESELECT    512
 
+enum font {FONT_NORM, FONT_ALT};
+
 int FULL_DISPLAY_X; //640
 int FULL_DISPLAY_Y; //480
 int RATIO;
 
 
-void menu_print_font(SDL_Surface *screen, int r, int g, int b, int x, int y, const char *msg, int font_size, int max_string);
+void menu_print_font(SDL_Surface *screen, int r, int g, int b, int x, int y, const char *msg, int font_type, int max_string);
 
-void print_font(SDL_Surface *screen, int r, int g, int b, int x, int y, const char *msg, int font_size);
+void print_font(SDL_Surface *screen, int r, int g, int b, int x, int y, const char *msg, int font_type);
 
 /* Various option selects */
 int menu_select_title(const char *title, const char **pp_msgs, int *p_submenus);
