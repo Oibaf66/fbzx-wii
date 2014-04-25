@@ -1222,7 +1222,7 @@ int main(int argc,char *argv[])
 	#ifdef GEKKO
 	dblbuffer=1;
 	hwsurface=1;
-	sound_type=SOUND_ASND;
+	//sound_type=SOUND_ASND; //play_click does not work with ASND double buffer
 	setenv("HOME", "/fbzx-wii", 1);
 	
 	//initialize libfat library

@@ -227,14 +227,14 @@ int sound_init_sdl() {
 	SDL_AudioSpec fmt;
 
 	ordenador.sign=0;
-	ordenador.format=1; //16 bit
+	ordenador.format=1; //16 bit LE
 	ordenador.channels=2; //stereo
 	ordenador.freq=48000;
 	ordenador.buffer_len=4096;
 	
 	 /* Set 16-bit stereo audio at 48Khz */
     fmt.freq = ordenador.freq;
-    fmt.format = AUDIO_U16LSB; //unsigned Little endian
+    fmt.format = AUDIO_S16SYS; //signed Little endian/Big endian
     fmt.channels = ordenador.channels;
     fmt.samples = ordenador.buffer_len; //number of samples
     fmt.callback = sdlcallback;
@@ -244,6 +244,17 @@ int sound_init_sdl() {
 
     /* Open the audio device and start playing sound! */
     if (SDL_OpenAudio(&fmt, NULL) < 0 ) return -1;
+	
+	printf("SDL audio initiated\n");
+	
+	ordenador.freq = fmt.freq;
+    ordenador.channels = fmt.channels;
+    ordenador.buffer_len = fmt.samples; //number of samples
+	
+	printf("freq = %d\n",fmt.freq);
+	printf("channels = %d\n",fmt.channels);
+	printf("buffer_len = %d\n",fmt.samples);
+	printf("format = %x\n",fmt.format);
 
 	return 0;
 }
@@ -258,7 +269,7 @@ int sound_init_asnd() {
 	ASND_Init();
 	ASND_Pause(0);
 	ordenador.sign=0;
-	ordenador.format=1; //16 bit
+	ordenador.format=2; //16 bit BE
 	ordenador.channels=2; //stereo
 	ordenador.freq=48000;
 	ordenador.buffer_len=4096;
