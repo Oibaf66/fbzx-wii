@@ -152,7 +152,7 @@ dist: $(BUILD)
 	cp sound/select_LE.raw $@/fbzx-wii/fbzx
 	cp sound/unselect_LE.raw $@/fbzx-wii/fbzx	
 	cp fbzx.net $@/fbzx-wii
-	cp AMSTRAD CAPABILITIES COPYING FAQ README README.TZX VERSIONS VERSIONS.wii $@/fbzx-wii/doc
+	cp AMSTRAD CAPABILITIES COPYING FAQ README README.TZX VERSIONS VERSIONS.wii README_WIN.txt $@/fbzx-wii/doc
 	touch $@/fbzx-wii/tapes/dummy
 	touch $@/fbzx-wii/snapshots/dummy
 	touch $@/fbzx-wii/microdrives/dummy
