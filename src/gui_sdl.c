@@ -119,9 +119,9 @@ static const char *audio_messages[] = {
 		/*05*/		"  ",
 		/*06*/		"Audio mode",
 		/*07*/		"^|mono|ABC|ACB|BAC",
-		/*08		"  ", */
-		/*09		"Beeper low pass filter",*/
-		/*10		"^|0|1|2|3|4|5|6|7|max",*/
+		/*08*/		"  ", 
+		/*09*/		"Gui sound",
+		/*10*/		"^|on|off",
 		NULL
 };
 
@@ -695,40 +695,6 @@ static void tape_settings(void)
 }
 
 
-unsigned int get_value_filter (unsigned int value)
-{
- switch (value)
- {
- case 480:
-	return(0);
- case 240:
-	return(1);
- case 160:
-	return(2);
- case 120:
-	return(3);
- case 80:
-	return(4);
- case 60:
-	return(5);
- case 40:
-	return(6);
- case 24:
-	return(7);
- case 10:
-	return(8);
- default:
-	return(0);
- }
-}
-
-unsigned int set_value_filter (unsigned int value)
-{
-	unsigned int set[9] = {480,240,160,120,80,60,40,24,10};
-	beeper=0;
-	return set[value];
-}
-
 static void audio_settings(void)
 {
 	unsigned int submenus[4];
@@ -741,8 +707,7 @@ static void audio_settings(void)
 	submenus[0] = ordenador.volume/2;
 	submenus[1] = !ordenador.ay_emul;
 	submenus[2] = ordenador.audio_mode;
-	submenus[3] = get_value_filter(ordenador.low_filter);
-	
+	submenus[3] = !ordenador.gui_sound;
 	
 	opt = menu_select_title("Audio settings",
 			audio_messages, submenus);
@@ -753,8 +718,7 @@ static void audio_settings(void)
 	ordenador.volume = submenus[0]*2; 
 	ordenador.ay_emul = !submenus[1];
 	ordenador.audio_mode = submenus[2];
-	ordenador.low_filter= set_value_filter(submenus[3]);
-	
+	ordenador.gui_sound = !submenus[3];
 	
 }
 

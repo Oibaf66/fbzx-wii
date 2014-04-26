@@ -135,6 +135,7 @@ void computer_init () { //Called only on start-up
 	for (bucle = 0; bucle < 16; bucle++)
 		ordenador.ay_registers[bucle] = 0;
 	ordenador.ay_emul = 0;
+	ordenador.gui_sound = 1;
 	ordenador.aych_a = 0;
 	ordenador.aych_b = 0;
 	ordenador.aych_c = 0;
@@ -176,7 +177,6 @@ void computer_init () { //Called only on start-up
 	ordenador.npixels=4;
 	ordenador.progressive=0;
 	ordenador.audio_mode=2; //ACB
-	ordenador.low_filter=480;
 }
 
 void computer_set_palete() {

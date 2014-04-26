@@ -132,7 +132,6 @@ struct computer {
 	unsigned char sound_bit;
 	unsigned char sound_bit_mic;
 	unsigned int tstados_counter_sound;
-	unsigned int low_filter;
 	unsigned int *current_buffer;
 	unsigned char num_buff;
 	unsigned int sound_cuantity; // counter for the buffer
@@ -141,6 +140,7 @@ struct computer {
 	unsigned char ayval_a,ayval_b,ayval_c,ayval_n;
 	unsigned char ay_emul; // 0: no AY emulation; 1: AY emulation
 	unsigned char audio_mode; //mono, ABC, ACB, BAC
+	unsigned char gui_sound;
 	unsigned int vol_a,vol_b,vol_c;
 	unsigned int tst_ay;
 	unsigned int ay_latch;
