@@ -1,3 +1,13 @@
+version 11:
+	* Gui interface with ZX Spectrum style and sound
+	* Added screen preview in scr menu
+	* Added tape settings menu
+	* Added green color mode
+	* Added submenu for 48k issue 2 & 3
+	* Fixed several bugs (mainly memory leakage)
+
+	-- Fabio Olimpieri <fabio.olimpieri@tin.it> Apr 26 2014
+
 version 10.3:
 	* Improved txz loading algorithm 
 	* fixed small bugs on return from turbo state
