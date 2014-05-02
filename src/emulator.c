@@ -730,6 +730,7 @@ int save_config(struct computer *object, char *filename) {
 	fprintf(fconfig,"joystick1=%c%c",48+object->joystick[0],10);
 	fprintf(fconfig,"joystick2=%c%c",48+object->joystick[1],10);
 	fprintf(fconfig,"ay_sound=%c%c",48+object->ay_emul,10);
+	fprintf(fconfig,"fuller_box_sound=%c%c",48+object->fuller_box_sound,10);
 	fprintf(fconfig,"audio_mode=%c%c",48+object->audio_mode,10);
 	fprintf(fconfig,"gui_sound=%c%c",48+object->gui_sound,10);
 	fprintf(fconfig,"interface1=%c%c",48+object->mdr_active,10);
@@ -782,6 +783,7 @@ int save_config_game(struct computer *object, char *filename, int overwrite) {
 	fprintf(fconfig,"joystick1=%c%c",48+object->joystick[0],10);
 	fprintf(fconfig,"joystick2=%c%c",48+object->joystick[1],10);
 	fprintf(fconfig,"ay_sound=%c%c",48+object->ay_emul,10);
+	fprintf(fconfig,"fuller_box_sound=%c%c",48+object->fuller_box_sound,10);
 	fprintf(fconfig,"joypad1=%c%c",48+object->joypad_as_joystick[0],10);
 	fprintf(fconfig,"joypad2=%c%c",48+object->joypad_as_joystick[1],10);
 	fprintf(fconfig,"rumble1=%c%c",48+object->rumble[0],10);
@@ -921,7 +923,7 @@ int load_config(struct computer *object, char *filename) {
 	unsigned char volume=255,mode128k=255,issue=255,ntsc=255, joystick1=255,joystick2=255,ay_emul=255,mdr_active=255,
 	dblscan=255,framerate =255, screen =255, text=255, precision=255, bw=255, tap_fast=255, audio_mode=255,
 	joypad1=255, joypad2=255, rumble1=255, rumble2=255, joy_n=255, key_n=255, port=255, autoconf=255, turbo=225, vk_auto=255, vk_rumble=255,
-	rewind_on_reset=255, pause_instant_load =255, ignore_z80_joy_conf=255, gui_sound=255;
+	rewind_on_reset=255, pause_instant_load =255, ignore_z80_joy_conf=255, gui_sound=255, fuller_box_sound=255;
 	
 	if (filename) strcpy(config_path,filename); 
 	else return -2;
@@ -977,6 +979,10 @@ int load_config(struct computer *object, char *filename) {
 		}
 		if (!strncmp(line,"ay_sound=",9)) {
 			ay_emul=line[9]-'0';
+			continue;
+		}
+		if (!strncmp(line,"fuller_box_sound=",17)) {
+			fuller_box_sound=line[17]-'0';
 			continue;
 		}
 		if (!strncmp(line,"audio_mode=",11)) {
@@ -1088,14 +1094,17 @@ int load_config(struct computer *object, char *filename) {
 	if (ntsc<2) {
 		object->videosystem=ntsc;
 	}
-	if (joystick1<5) {
+	if (joystick1<6) {
 		object->joystick[0]=joystick1;
 	}
-	if (joystick2<5) {
+	if (joystick2<6) {
 		object->joystick[1]=joystick2;
 	}
 	if (ay_emul<2) {
 		object->ay_emul=ay_emul;
+	}
+	if (fuller_box_sound<2) {
+		object->fuller_box_sound=fuller_box_sound;
 	}
 	if (audio_mode<4) {
 		object->audio_mode=audio_mode;

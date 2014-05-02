@@ -117,11 +117,14 @@ static const char *audio_messages[] = {
 		/*03*/		"AY-3-8912 Emulation",
 		/*04*/		"^|on|off",	
 		/*05*/		"  ",
-		/*06*/		"Audio mode",
-		/*07*/		"^|mono|ABC|ACB|BAC",
-		/*08*/		"  ", 
-		/*09*/		"Gui sound",
-		/*10*/		"^|on|off",
+		/*06*/		"Fuller Box Audio",
+		/*07*/		"^|on|off",	
+		/*08*/		"  ",
+		/*09*/		"Audio mode",
+		/*10*/		"^|mono|ABC|ACB|BAC",
+		/*11*/		"  ", 
+		/*12*/		"Gui sound",
+		/*13*/		"^|on|off",
 		NULL
 };
 
@@ -142,7 +145,7 @@ static const char *screen_messages[] = {
 
 static const  char *input_messages[] = {
 		/*00*/		"Joystick type",
-		/*01*/		"^|Cursor|Kempston|Sincl1|Sincl2|QAOP",
+		/*01*/		"^|Curs|Kemps|Sincl1|Sincl2|Fuller|QAOP",
 		/*02*/		"Bind key to Wiimote",
 		/*03*/		"^|A|B|1|2|-|+",
 		/*04*/		"Bind key to Nunchuk",
@@ -697,7 +700,7 @@ static void tape_settings(void)
 
 static void audio_settings(void)
 {
-	unsigned int submenus[4];
+	unsigned int submenus[5];
 	int opt;
 
 	
@@ -706,8 +709,9 @@ static void audio_settings(void)
 	
 	submenus[0] = ordenador.volume/2;
 	submenus[1] = !ordenador.ay_emul;
-	submenus[2] = ordenador.audio_mode;
-	submenus[3] = !ordenador.gui_sound;
+	submenus[2] = !ordenador.fuller_box_sound;
+	submenus[3] = ordenador.audio_mode;
+	submenus[4] = !ordenador.gui_sound;
 	
 	opt = menu_select_title("Audio settings",
 			audio_messages, submenus);
@@ -717,8 +721,9 @@ static void audio_settings(void)
 	
 	ordenador.volume = submenus[0]*2; 
 	ordenador.ay_emul = !submenus[1];
-	ordenador.audio_mode = submenus[2];
-	ordenador.gui_sound = !submenus[3];
+	ordenador.fuller_box_sound = !submenus[2];
+	ordenador.audio_mode = submenus[3];
+	ordenador.gui_sound = !submenus[4];
 	
 }
 

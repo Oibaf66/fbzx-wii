@@ -139,6 +139,7 @@ struct computer {
 	unsigned int aych_a,aych_b,aych_c,aych_n,aych_envel; // counters for AY emulation
 	unsigned char ayval_a,ayval_b,ayval_c,ayval_n;
 	unsigned char ay_emul; // 0: no AY emulation; 1: AY emulation
+	unsigned char fuller_box_sound; // 0: no AY emulation; 1: AY emulation
 	unsigned char audio_mode; //mono, ABC, ACB, BAC
 	unsigned char gui_sound;
 	unsigned int vol_a,vol_b,vol_c;
@@ -161,7 +162,7 @@ struct computer {
 	unsigned char issue; // 2= 48K issue 2, 3= 48K issue 3
 	unsigned char mode128k; // 0=48K, 1=128K, 2=+2, 3=+3 4=sp
 	unsigned char videosystem; //0=PAL, 1=NTSC
-	unsigned char joystick[2]; // 0=cursor, 1=kempston, 2=sinclair1, 3=sinclair2
+	unsigned char joystick[2]; // 0=cursor, 1=kempston, 2=sinclair1, 3=sinclair2, 4=Fuller, 5=QAOP
 	unsigned char port254;
 
 

@@ -97,7 +97,7 @@ void computer_init () { //Called only on start-up
 	ordenador.issue = 3;
 	ordenador.mode128k = 0;
 	ordenador.videosystem = 0; //PAL
-	ordenador.joystick[0] = 1; //Kemposton
+	ordenador.joystick[0] = 1; //Kempston
 	ordenador.joystick[1] = 0; // Cursor
 	ordenador.joypad_as_joystick[0]= 1;
 	ordenador.joypad_as_joystick[1]= 1;
@@ -135,6 +135,7 @@ void computer_init () { //Called only on start-up
 	for (bucle = 0; bucle < 16; bucle++)
 		ordenador.ay_registers[bucle] = 0;
 	ordenador.ay_emul = 0;
+	ordenador.fuller_box_sound = 0;
 	ordenador.gui_sound = 1;
 	ordenador.aych_a = 0;
 	ordenador.aych_b = 0;
@@ -1482,7 +1483,16 @@ inline void read_keyboard () {
 			if ((ordenador.joy_axis_x_state[joy_n] == JOY_LEFT)||(joybutton_matrix[joy_n][SDLK_LEFT])) ordenador.k12|= 16;
 			if (joybutton_matrix[joy_n][SDLK_LALT]) {ordenador.k12|= 1; fire_on[joy_n]=1;}//fire button
 		break;
-		case 4:	// QAOP
+		
+		case 4: //Fuller
+			if ((ordenador.joy_axis_y_state[joy_n] == JOY_UP)||(joybutton_matrix[joy_n][SDLK_UP])) ordenador.jk|= 1;
+			if ((ordenador.joy_axis_y_state[joy_n] == JOY_DOWN)||(joybutton_matrix[joy_n][SDLK_DOWN])) ordenador.jk|= 2;
+			if ((ordenador.joy_axis_x_state[joy_n] == JOY_RIGHT)||(joybutton_matrix[joy_n][SDLK_RIGHT])) ordenador.jk|= 8;
+			if ((ordenador.joy_axis_x_state[joy_n] == JOY_LEFT)||(joybutton_matrix[joy_n][SDLK_LEFT])) ordenador.jk|= 4;
+			if (joybutton_matrix[joy_n][SDLK_LALT]) {ordenador.jk |= 128; fire_on[joy_n]=1;}//fire button
+		break;
+		
+		case 5:	// QAOP
 			if ((ordenador.joy_axis_y_state[joy_n] == JOY_UP) ||(joybutton_matrix[joy_n][SDLK_UP]))ordenador.k10|=1;
 			if ((ordenador.joy_axis_y_state[joy_n] == JOY_DOWN)||(joybutton_matrix[joy_n][SDLK_DOWN])) ordenador.k9 |=1;
 			if ((ordenador.joy_axis_x_state[joy_n] == JOY_RIGHT)||(joybutton_matrix[joy_n][SDLK_RIGHT])) ordenador.k13|=1;
@@ -1525,7 +1535,16 @@ inline void read_keyboard () {
 			if ((ordenador.joy_axis_x_state[joy_n] == JOY_LEFT)||(status_hat[joy_n] & SDL_HAT_LEFT)) ordenador.k12|= 16;
 			if (joybutton_matrix[joy_n][SDLK_LALT]) {ordenador.k12|= 1; fire_on[joy_n]=1;}//fire button
 		break;
-		case 4:	// QAOP
+		
+		case 4: //Fuller
+			if ((ordenador.joy_axis_y_state[joy_n] == JOY_UP)||(status_hat[joy_n] & SDL_HAT_UP)) ordenador.jk|= 1;
+			if ((ordenador.joy_axis_y_state[joy_n] == JOY_DOWN)||(status_hat[joy_n] & SDL_HAT_DOWN)) ordenador.jk|= 2;
+			if ((ordenador.joy_axis_x_state[joy_n] == JOY_RIGHT)||(status_hat[joy_n] & SDL_HAT_RIGHT)) ordenador.jk|= 8;
+			if ((ordenador.joy_axis_x_state[joy_n] == JOY_LEFT)||(status_hat[joy_n] & SDL_HAT_LEFT)) ordenador.jk|= 4;
+			if (joybutton_matrix[joy_n][SDLK_LALT]) {ordenador.jk |= 128; fire_on[joy_n]=1;}//fire button
+		break;
+		
+		case 5:	// QAOP
 			if ((ordenador.joy_axis_y_state[joy_n] == JOY_UP)||(status_hat[joy_n] & SDL_HAT_UP)) ordenador.k10|=1;
 			if ((ordenador.joy_axis_y_state[joy_n] == JOY_DOWN)||(status_hat[joy_n] & SDL_HAT_DOWN)) ordenador.k9 |=1;
 			if ((ordenador.joy_axis_x_state[joy_n] == JOY_RIGHT)||(status_hat[joy_n] & SDL_HAT_RIGHT)) ordenador.k13|=1;
@@ -2176,7 +2195,7 @@ void Z80free_Out (register word Port, register byte Value) {
 	}
 
 	// Sound chip (AY-3-8912)
-
+	
 	if (((Port|0x3FFD) == 0xFFFD)&&(ordenador.ay_emul)) // bit1, 14 ,15 according to the manual
 		ordenador.ay_latch = ((unsigned int) (Value & 0x0F));
 
@@ -2185,6 +2204,18 @@ void Z80free_Out (register word Port, register byte Value) {
 		if (ordenador.ay_latch == 13) //Envelope shape
 			ordenador.ay_envel_way = 2;	// start cycle
 	}
+	
+	// Fuller Box sound chip (AY-3-8912)
+
+	if (((Port&0x00FF) == 0x3F)&&(ordenador.fuller_box_sound)) 
+		ordenador.ay_latch = ((unsigned int) (Value & 0x0F));
+
+	if (((Port&0x00FF) == 0x5F)&&(ordenador.fuller_box_sound)) { 
+		ordenador.ay_registers[ordenador.ay_latch] = (unsigned char) Value;
+		if (ordenador.ay_latch == 13) //Envelope shape
+			ordenador.ay_envel_way = 2;	// start cycle
+	}
+	
 }
 
 void Z80free_Out_fake (register word Port, register byte Value) {
@@ -2312,7 +2343,7 @@ byte Z80free_In (register word Port) {
 		return (pines);
 	}
 
-	// Joystick
+	// Joystick - Kempston
 	if (!(temporal_io & 0x0020)) {
 		if ((ordenador.joystick[0] == 1)||(ordenador.joystick[1] == 1)) {
 			return (ordenador.js);
@@ -2320,7 +2351,17 @@ byte Z80free_In (register word Port) {
 			return 0; // if Kempston is not selected, emulate it, but always 0
 		}
 	}
+	
+	// Joystick - Fuller
+	if ((temporal_io & 0x00FF)==0x7F) {
+		if ((ordenador.joystick[0] == 4)||(ordenador.joystick[1] == 4)) {
+			return (~ordenador.js);
+		} else {
+			return 255; // if Fuller is not selected, emulate it, but always 255
+		}
+	}
 
+	// Sound chip (AY-3-8912)
 	if ((temporal_io == 0xFFFD)&&(ordenador.ay_emul)) //any mask to apply?
 		return (ordenador.ay_registers[ordenador.ay_latch]);
 		

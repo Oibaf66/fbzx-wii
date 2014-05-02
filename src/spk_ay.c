@@ -48,7 +48,7 @@ inline void play_ay (unsigned int tstados) {
     0x92, 0xAF, 0xD9, 0xFF
   };
   
-	if ((!ordenador.ay_emul)||(ordenador.turbo_state))
+	if ((!(ordenador.ay_emul||ordenador.fuller_box_sound))||ordenador.turbo_state)
 		return;
 
 	ordenador.tst_ay += tstados;
@@ -330,7 +330,7 @@ inline void play_sound (unsigned int tstados) {
 
 		//Each channel max 256*vol
 		
-		if ((ordenador.ay_emul)&&(!ordenador.turbo_state))
+		if ((ordenador.ay_emul||ordenador.fuller_box_sound)&&(!ordenador.turbo_state))
 		{
 			switch (ordenador.audio_mode)
 			{
