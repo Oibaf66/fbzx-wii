@@ -178,6 +178,8 @@ void computer_init () { //Called only on start-up
 	ordenador.npixels=4;
 	ordenador.progressive=0;
 	ordenador.audio_mode=2; //ACB
+	
+	rom_cartridge[0] = 0;
 }
 
 void computer_set_palete() {
@@ -1725,7 +1727,9 @@ void ResetComputer () {
 
 	Z80free_reset (&procesador);
 	load_rom (ordenador.mode128k);
-
+	
+	rom_cartridge[0] = 0;
+	
 	// reset the AY-3-8912
 
 	for (bucle = 0; bucle < 16; bucle++)

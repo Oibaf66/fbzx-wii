@@ -317,7 +317,7 @@ static const char **get_file_list_zip(const char *path)
         }
 		
 		const char *exts[] = {".tap", ".TAP", ".tzx", ".TZX", ".z80",".Z80",".sna", ".SNA",
-				".mdr", ".MDR", ".scr", ".SCR", ".conf", ".CONF",".pok", ".POK" ,NULL};
+				".mdr", ".MDR", ".scr", ".SCR", ".conf", ".CONF",".pok", ".POK" ,".rom", ".ROM", NULL};
 
 		if (ext_matches_list(filename_inzip, exts))
 		{
@@ -369,7 +369,7 @@ static const char **get_file_list(const char *base_dir)
 	{
 		char buf[255];
 		const char *exts[] = {".tap", ".TAP", ".tzx", ".TZX", ".z80",".Z80",".sna", ".SNA",
-				".mdr", ".MDR", ".scr", ".SCR", ".conf", ".CONF",".pok", ".POK", ".zip", ".ZIP",NULL};
+				".mdr", ".MDR", ".scr", ".SCR", ".conf", ".CONF",".pok", ".POK", ".zip", ".ZIP",".rom", ".ROM",NULL};
 		struct stat st;
 
 		snprintf(buf, 255, "%s/%s", base_dir, de->d_name);

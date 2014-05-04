@@ -44,6 +44,7 @@ extern char load_path_snaps[MAX_PATH_LENGTH];
 extern char load_path_taps[MAX_PATH_LENGTH];
 extern char load_path_scr1[MAX_PATH_LENGTH];
 extern char load_path_poke[MAX_PATH_LENGTH];
+extern char rom_cartridge[MAX_PATH_LENGTH];
 
 extern unsigned int colors[80];
 extern unsigned int jump_frames,curr_frames, turbo_n;

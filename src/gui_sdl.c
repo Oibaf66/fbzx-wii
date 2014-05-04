@@ -1665,7 +1665,17 @@ static int save_load_snapshot(int which)
 
 		if (!filename)
 			return 0;
-
+		
+		//Load ROM Cartridge
+		if ((ext_matches(filename, ".rom")|ext_matches(filename, ".ROM"))&(which == 0)) 
+		{
+			set_machine_model(0);
+			strcpy(rom_cartridge, filename);
+			free((void*)filename);
+			ResetComputer ();
+			return -1;
+		}
+		
 		if (ext_matches(filename, ".z80")|ext_matches(filename, ".Z80")|
 		ext_matches(filename, ".sna")|ext_matches(filename, ".SNA"))
 		{

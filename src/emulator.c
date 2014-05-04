@@ -79,6 +79,7 @@ char load_path_snaps[MAX_PATH_LENGTH];
 char load_path_taps[MAX_PATH_LENGTH];
 char load_path_scr1[MAX_PATH_LENGTH];
 char load_path_poke[MAX_PATH_LENGTH];
+char rom_cartridge[MAX_PATH_LENGTH];
 
 unsigned int colors[80];
 unsigned int jump_frames,curr_frames, turbo_n;
@@ -366,6 +367,23 @@ char *load_a_rom(char **filenames) {
 	return (NULL);
 }
 
+char *load_rom_cartridge(void) {
+	
+	FILE *fichero;
+	int size;
+	
+	printf("Opening %s\n", rom_cartridge);
+	fichero=fopen(rom_cartridge,"rb");
+	if(fichero==NULL) {
+			return (rom_cartridge);
+	}
+	size=fread(ordenador.memoria,1,16384,fichero);
+	if (size != 16384) return (rom_cartridge);
+	
+	fclose(fichero);
+	return (0);
+}
+
 void load_rom(char type) {
 
 	char *retval;
@@ -377,7 +395,7 @@ void load_rom(char type) {
 	case 0:
 		filenames[0]="spectrum-roms/48.rom";
 		filenames[1]=NULL;
-		retval=load_a_rom(filenames);
+		if (rom_cartridge[0]) retval = load_rom_cartridge(); else retval=load_a_rom(filenames);
 		if (retval) {
 			printf("Can't load file %s\n",retval);
 			exit(1);

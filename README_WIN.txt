@@ -1,5 +1,5 @@
 FBZX Wii was written to run on WII, for testing purpose FBZX Wii was adapted
-to run also on Windows. Anyhow the windows version is yet usable.
+to run also on Windows even if some WII features cannot be used.
 
 These are the basic instructions:
 
@@ -20,7 +20,8 @@ FBZX WII Menu
 
 Menu key (it is the key near CTRL Rigth) or gamepad 7 key to access FBZX Wii menu. 
 Left ALT key to toggle Full Screen.
-The virtual keyboard is accessed passing the mouse on the screen or through CTRL Rigth or gamepad button 6 (if depends on the selected option).
+The virtual keyboard is accessed passing the mouse on the screen or through CTRL Rigth 
+or gamepad button 6 (it depends on the auto virtual ketboard option).
 
 * In menu
 Gamepad pad or keyboard keys for menu navigation.
@@ -47,7 +48,7 @@ Gamepad -------- WII
 ******************
 Original FBZX Menu
 ******************
-F1-F12 to access the original FBZX (not Wii) menu (not all the features are available here).
+F1-F12 to access the original FBZX menu (not all the features are available here).
 F1 key to access FBZX help menu.
 
 	

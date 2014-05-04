@@ -116,6 +116,7 @@ dist: $(BUILD)
 	mkdir -p $@/fbzx-wii/spectrum-roms
 	mkdir -p $@/fbzx-wii/tapes
 	mkdir -p $@/fbzx-wii/snapshots
+	mkdir -p $@/fbzx-wii/snapshots/rom-cartridges
 	mkdir -p $@/fbzx-wii/microdrives
 	mkdir -p $@/fbzx-wii/scr
 	mkdir -p $@/fbzx-wii/scr2
@@ -145,6 +146,7 @@ dist: $(BUILD)
 	cp AMSTRAD CAPABILITIES COPYING FAQ README README.TZX VERSIONS VERSIONS.wii $@/apps/fbzx-wii/doc
 	touch $@/fbzx-wii/tapes/dummy
 	touch $@/fbzx-wii/snapshots/dummy
+	touch $@/fbzx-wii/snapshots/rom-cartridges/dummy
 	touch $@/fbzx-wii/microdrives/dummy
 	touch $@/fbzx-wii/scr/dummy
 	touch $@/fbzx-wii/scr2/dummy
