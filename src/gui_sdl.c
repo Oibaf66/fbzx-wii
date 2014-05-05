@@ -163,7 +163,7 @@ static const  char *input_messages[] = {
 
 static const char *microdrive_messages[] = {
 		/*00*/		"Microdrive",
-		/*01*/		"^|Insert|Make|Delete",
+		/*01*/		"^|Insert|Load|Make|Delete",
 		/*02*/		"  ",
 		/*03*/		"Interface I",
 		/*04*/		"^|on|off",
@@ -977,7 +977,107 @@ void create_mdrfile_sdl() {
 	clean_screen();
 }
 
-static void microdrive()
+void load_mdr_file(void)
+{
+	char model128k;
+	
+	model128k = ordenador.mode128k;
+	
+	if ((ordenador.mport1 & 0x10)&&(ordenador.mode128k!=4)) //ROM 48k 
+	model128k =0;
+	
+	//Emulate load *"m";1;"run"
+		countdown_buffer=8;
+		ordenador.kbd_buffer_pointer=17;
+		
+		switch (model128k)
+		{
+		case 3: //+3
+		case 2: //+2
+		case 1: //128k
+			ordenador.keyboard_buffer[0][21]= SDLK_6;	
+			ordenador.keyboard_buffer[1][21]= SDLK_LSHIFT;
+			ordenador.keyboard_buffer[0][20]= SDLK_RETURN;	// Return
+			ordenador.keyboard_buffer[1][20]= 0;
+			ordenador.keyboard_buffer[0][19]= SDLK_SPACE;	// Space
+			ordenador.keyboard_buffer[1][19]= 0;
+			ordenador.keyboard_buffer[0][18]= SDLK_SPACE;	// Space
+			ordenador.keyboard_buffer[1][18]= 0;
+			ordenador.kbd_buffer_pointer=21;
+		case 4://Spanish 128k
+			ordenador.keyboard_buffer[0][17]= SDLK_l;		
+			ordenador.keyboard_buffer[1][17]= 0;
+			ordenador.keyboard_buffer[0][16]= SDLK_o;		
+			ordenador.keyboard_buffer[1][16]= 0;
+			ordenador.keyboard_buffer[0][15]= SDLK_a;		
+			ordenador.keyboard_buffer[1][15]= 0;
+			ordenador.keyboard_buffer[0][14]= SDLK_d;		
+			ordenador.keyboard_buffer[1][14]= 0;
+			ordenador.keyboard_buffer[0][13]= SDLK_b;		//*
+			ordenador.keyboard_buffer[1][13]= SDLK_LCTRL;
+			ordenador.keyboard_buffer[0][12]= SDLK_p;		//"
+			ordenador.keyboard_buffer[1][12]= SDLK_LCTRL;
+			ordenador.keyboard_buffer[0][11]= SDLK_m;		//m
+			ordenador.keyboard_buffer[1][11]= 0;
+			ordenador.keyboard_buffer[0][10]= SDLK_p;		//"
+			ordenador.keyboard_buffer[1][10]= SDLK_LCTRL;
+			ordenador.keyboard_buffer[0][9]= SDLK_o;		//;
+			ordenador.keyboard_buffer[1][9]= SDLK_LCTRL;
+			ordenador.keyboard_buffer[0][8]= SDLK_1;		//1
+			ordenador.keyboard_buffer[1][8]= 0;
+			ordenador.keyboard_buffer[0][7]= SDLK_o;		//;
+			ordenador.keyboard_buffer[1][7]= SDLK_LCTRL;
+			ordenador.keyboard_buffer[0][6]= SDLK_p;		//"
+			ordenador.keyboard_buffer[1][6]= SDLK_LCTRL;
+			ordenador.keyboard_buffer[0][5]= SDLK_r;		//r
+			ordenador.keyboard_buffer[1][5]= 0;
+			ordenador.keyboard_buffer[0][4]= SDLK_u;		//u
+			ordenador.keyboard_buffer[1][4]= 0;
+			ordenador.keyboard_buffer[0][3]= SDLK_n;		//n
+			ordenador.keyboard_buffer[1][3]= 0;
+			ordenador.keyboard_buffer[0][2]= SDLK_p;		//"
+			ordenador.keyboard_buffer[1][2]= SDLK_LCTRL;
+			ordenador.keyboard_buffer[0][1]= SDLK_RETURN;	// Return
+			ordenador.keyboard_buffer[1][1]= 0;
+			break;
+			
+		case 0: //48k
+		default:
+			ordenador.keyboard_buffer[0][14]= SDLK_j;		//Load
+			ordenador.keyboard_buffer[1][14]= 0;
+			ordenador.keyboard_buffer[0][13]= SDLK_b;		//*
+			ordenador.keyboard_buffer[1][13]= SDLK_LCTRL;
+			ordenador.keyboard_buffer[0][12]= SDLK_p;		//"
+			ordenador.keyboard_buffer[1][12]= SDLK_LCTRL;
+			ordenador.keyboard_buffer[0][11]= SDLK_m;		//m
+			ordenador.keyboard_buffer[1][11]= 0;
+			ordenador.keyboard_buffer[0][10]= SDLK_p;		//"
+			ordenador.keyboard_buffer[1][10]= SDLK_LCTRL;
+			ordenador.keyboard_buffer[0][9]= SDLK_o;		//;
+			ordenador.keyboard_buffer[1][9]= SDLK_LCTRL;
+			ordenador.keyboard_buffer[0][8]= SDLK_1;		//1
+			ordenador.keyboard_buffer[1][8]= 0;
+			ordenador.keyboard_buffer[0][7]= SDLK_o;		//;
+			ordenador.keyboard_buffer[1][7]= SDLK_LCTRL;
+			ordenador.keyboard_buffer[0][6]= SDLK_p;		//"
+			ordenador.keyboard_buffer[1][6]= SDLK_LCTRL;
+			ordenador.keyboard_buffer[0][5]= SDLK_r;		//r
+			ordenador.keyboard_buffer[1][5]= 0;
+			ordenador.keyboard_buffer[0][4]= SDLK_u;		//u
+			ordenador.keyboard_buffer[1][4]= 0;
+			ordenador.keyboard_buffer[0][3]= SDLK_n;		//n
+			ordenador.keyboard_buffer[1][3]= 0;
+			ordenador.keyboard_buffer[0][2]= SDLK_p;		//"
+			ordenador.keyboard_buffer[1][2]= SDLK_LCTRL;
+			ordenador.keyboard_buffer[0][1]= SDLK_RETURN;	// Return
+			ordenador.keyboard_buffer[1][1]= 0;
+			
+			ordenador.kbd_buffer_pointer=14;
+			break;
+		}
+}	
+
+static int microdrive()
 {
 	
 	unsigned int submenus[3], submenus_old[3];
@@ -997,12 +1097,15 @@ static void microdrive()
 	opt = menu_select_title("Microdrive",
 			microdrive_messages, submenus);
 	if (opt < 0)
-		return;
+		return retorno;
 	
-	ordenador.mdr_active = !submenus[1];
+	if ((ordenador.mode128k == 3)&&(!submenus[1])) 
+		msgInfo("Interface I not compatible", 3000, NULL);
+	else  
+		ordenador.mdr_active = !submenus[1];
 	
+	if (ordenador.mdr_active == submenus_old[1]) {ResetComputer();retorno=-2;}
 	
-	if (submenus[1]!=submenus_old[1]) ResetComputer();
 	if (submenus[2]!=submenus_old[2]) 
 		{if(ordenador.mdr_cartridge[137922])
 				ordenador.mdr_cartridge[137922]=0;
@@ -1014,20 +1117,26 @@ static void microdrive()
 				fclose(ordenador.mdr_file);
 				ordenador.mdr_file=NULL;
 				ordenador.mdr_modified=0;
-			}			
+			}
+		retorno=-2;	
 		}
 	
 	if (opt==0)
 		switch (submenus[0]) 
 		{
 		case 0: // Insert microdrive 
-			retorno = select_mdr();
+			select_mdr();
+			retorno=0;
 			break;
-		case 1: // Create microdrive file
+		case 1: // load microdrive file
+			load_mdr_file();
+			retorno=-2;
+			break;	
+		case 2: // Create microdrive file
 			create_mdrfile_sdl();
 			retorno=0;
 			break;
-		case 2: // Delete microdrive file
+		case 3: // Delete microdrive file
 			delete_mdr();
 			retorno=0;
 			break;
@@ -1035,6 +1144,8 @@ static void microdrive()
 			break;
 		}
 	} while (!retorno); //Stay in menu if create or delete are selected	
+		
+	return retorno;
 }
 	
 static void delete_scr()
@@ -1948,7 +2059,7 @@ void main_menu()
 			manage_configurations();
 			break;
 		case 12:
-			microdrive();
+			if  (microdrive() ==-2) retorno=-1;
 			break;	
 		case 13:
 			if (tools()==-2) retorno=-1;

@@ -26,7 +26,7 @@
 
 // #define MUT
 
-#define KB_BUFFER_LENGHT 10
+#define KB_BUFFER_LENGHT 24
 #define MAX_PATH_LENGTH 256
 #define N_SAMPLES 8
 
