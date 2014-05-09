@@ -113,18 +113,16 @@ static const char *tape_messages[] = {
 static const char *audio_messages[] = {
 		/*00*/		"Volume",
 		/*01*/		"^|0|1|2|3|4|5|6|7|max",
-		/*02*/		"  ",
-		/*03*/		"AY-3-8912 Emulation",
-		/*04*/		"^|on|off",	
-		/*05*/		"  ",
-		/*06*/		"Fuller Box Audio",
+		/*02*/		"AY-3-8912 Emulation",
+		/*03*/		"^|on|off",	
+		/*04*/		"Fuller Box Audio",
+		/*05*/		"^|on|off",	
+		/*06*/		"Currah microspeech",
 		/*07*/		"^|on|off",	
-		/*08*/		"  ",
-		/*09*/		"Audio mode",
-		/*10*/		"^|mono|ABC|ACB|BAC",
-		/*11*/		"  ", 
-		/*12*/		"Gui sound",
-		/*13*/		"^|on|off",
+		/*08*/		"Audio mode",
+		/*09*/		"^|mono|ABC|ACB|BAC",
+		/*10*/		"Gui sound",
+		/*11*/		"^|on|off",
 		NULL
 };
 
@@ -557,6 +555,7 @@ static void set_machine_model(int which)
 			ordenador.mode128k=1;
 			ordenador.ay_emul=1;
 			ordenador.videosystem =0;
+			ordenador.currah_active = 0;
 		break;
 	case 2: //Amstrad +2
 			ordenador.issue=3;
@@ -570,12 +569,14 @@ static void set_machine_model(int which)
 			ordenador.ay_emul=1;
 			ordenador.mdr_active=0;
 			ordenador.videosystem =0;
+			ordenador.currah_active = 0;
 		break;
 	case 4: //128K Spanish
 			ordenador.issue=3;
 			ordenador.mode128k=4;
 			ordenador.ay_emul=1;
 			ordenador.videosystem =0;
+			ordenador.currah_active = 0;
 		break;
 	case 5: //48k ntsc
 			ordenador.mode128k=0;
@@ -698,11 +699,12 @@ static void tape_settings(void)
 }
 
 
-static void audio_settings(void)
+static int audio_settings(void)
 {
-	unsigned int submenus[5];
-	int opt;
+	unsigned int submenus[6], old_submenus_3;
+	int opt, retorno;
 
+	retorno = 0;
 	
 	memset(submenus, 0, sizeof(submenus));
 	
@@ -710,21 +712,29 @@ static void audio_settings(void)
 	submenus[0] = ordenador.volume/2;
 	submenus[1] = !ordenador.ay_emul;
 	submenus[2] = !ordenador.fuller_box_sound;
-	submenus[3] = ordenador.audio_mode;
-	submenus[4] = !ordenador.gui_sound;
+	submenus[3] = !ordenador.currah_active;
+	submenus[4] = ordenador.audio_mode;
+	submenus[5] = !ordenador.gui_sound;
+	
+	old_submenus_3 = submenus[3];
 	
 	opt = menu_select_title("Audio settings",
 			audio_messages, submenus);
 	if (opt < 0)
-		return;
+		return 0;
 
-	
 	ordenador.volume = submenus[0]*2; 
 	ordenador.ay_emul = !submenus[1];
 	ordenador.fuller_box_sound = !submenus[2];
-	ordenador.audio_mode = submenus[3];
-	ordenador.gui_sound = !submenus[4];
+	if ((submenus[3]==0)&&(ordenador.mode128k))  {ordenador.currah_active=0; msgInfo("Currah only in 48k mode", 3000, NULL);}
+	else if (ordenador.currah_rom_unavailable) {ordenador.currah_active=0; msgInfo("Currah rom not present", 3000, NULL);}
+	else ordenador.currah_active = !submenus[3];
+	ordenador.audio_mode = submenus[4];
+	ordenador.gui_sound = !submenus[5];
 	
+	if (old_submenus_3 == ordenador.currah_active) {ResetComputer(); retorno = -2;}
+	
+	return retorno;
 }
 
 static void save_load_general_configurations(int);
@@ -979,7 +989,7 @@ void create_mdrfile_sdl() {
 
 void load_mdr_file(void)
 {
-	char model128k;
+	unsigned char model128k;
 	
 	model128k = ordenador.mode128k;
 	
@@ -1924,7 +1934,7 @@ static void save_load_general_configurations(int which)
 {
 
 	int retorno;
-	unsigned char old_bw,old_mode;
+	unsigned char old_bw,old_mode, old_currah;
 	char config_path[MAX_PATH_LENGTH];
 	int length;
 	FILE *fconfig; 
@@ -1952,9 +1962,11 @@ static void save_load_general_configurations(int which)
 			{
 				old_bw = ordenador.bw;
 				old_mode= ordenador.mode128k;
+				old_currah = ordenador.currah_active;
 				if (!load_config(&ordenador,config_path)) msgInfo("General confs loaded",3000,NULL);
 				if (old_bw!=ordenador.bw) computer_set_palete();
-				if (old_mode != ordenador.mode128k) ResetComputer();
+				if (ordenador.currah_rom_unavailable) ordenador.currah_active =0;
+				if ((old_mode != ordenador.mode128k)||(old_currah != ordenador.currah_active)) ResetComputer();
 				break;
 			}
 			else // Delete config file
@@ -2053,7 +2065,7 @@ void main_menu()
 			screen_settings();
 			break;
 		case 10:
-			audio_settings();
+			if (audio_settings()==-2) retorno=-1;
 			break;	
 		case 11:
 			manage_configurations();

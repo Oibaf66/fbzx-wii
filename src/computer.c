@@ -31,6 +31,7 @@
 //#include <sys/wait.h>
 #include "tape.h"
 #include "microdrive.h"
+#include "currah_microspeech.h"
 #include "Virtualkeyboard.h"
 #include "gui_sdl.h"
 #include "menu_sdl.h"
@@ -136,6 +137,7 @@ void computer_init () { //Called only on start-up
 		ordenador.ay_registers[bucle] = 0;
 	ordenador.ay_emul = 0;
 	ordenador.fuller_box_sound = 0;
+	ordenador.currah_active = 0;
 	ordenador.gui_sound = 1;
 	ordenador.aych_a = 0;
 	ordenador.aych_b = 0;
@@ -1862,6 +1864,8 @@ void ResetComputer () {
 	ordenador.currline=0;
 	ordenador.currpix=0;
 	ordenador.interr = 0;
+	
+	currah_microspeech_reset();
 }
 
 // check if there's contention and waits the right number of tstates
@@ -1921,6 +1925,25 @@ void do_contention_precision() {
 
 void Z80free_Wr (register word Addr, register byte Value) {
 	
+	
+	// Currah microspeech ouput
+	if((ordenador.currah_active)&&(ordenador.currah_paged))
+	{
+	
+	//if (Addr==0x3000) {printf("write to 3000h\n");ordenador.intonation_allophone = 0;}
+	//if (Addr==0x3001) {printf("write to 3001h\n");ordenador.intonation_allophone = 1;}
+	
+	if ((Addr==0x1000)&&(!ordenador.currah_status)) //do not accept a new allophone if the previous is not finished
+		{
+		//if (Value) printf("Currah output=%0xh\n",Value);
+			ordenador.current_allophone = (Value&0x3F);
+			//ordenador.intonation_allophone = (Value&0x40); //to be implemented
+			ordenador.currah_status = 1; //Currah busy
+			ordenador.allophone_sound_cuantity = 0;
+			return;
+		}
+		
+	}	 
 	ordenador.wr+=3;
 	switch (Addr & 0xC000) {
 	case 0x0000:
@@ -1982,7 +2005,22 @@ byte Z80free_Rd_fetch (register word Addr) {
 	if((ordenador.mdr_active)&&(ordenador.mdr_paged)&&(Addr<8192)) // Interface I
 		return((byte)ordenador.shadowrom[Addr]);
 	
-	ordenador.r_fetch+=4;	
+	// Currah microspeech
+	
+	if (ordenador.currah_active)
+	{
+		if (Addr == 0x0038) ordenador.currah_paged =  !ordenador.currah_paged; 
+	
+		if (ordenador.currah_paged)
+		{
+			if (Addr==0x1000) // Currah microspeech status - it would not be necessary here
+			return (byte) ordenador.currah_status;
+			
+			if (Addr<2048) return((byte)ordenador.currahrom[Addr]);
+		}
+	}
+		
+		ordenador.r_fetch+=4;
 		switch (Addr & 0xC000) {
 		case 0x0000:
 			if (ordenador.precision) {ordenador.fetch_state=4;show_screen_precision (4);}
@@ -2020,6 +2058,21 @@ byte Z80free_Rd (register word Addr) {
 	
 	if((ordenador.mdr_active)&&(ordenador.mdr_paged)&&(Addr<8192)) // Interface I
 		return((byte)ordenador.shadowrom[Addr]);
+	
+	// Currah microspeech
+	
+	if (ordenador.currah_active)
+	{
+		if (Addr == 0x0038) ordenador.currah_paged =  !ordenador.currah_paged; // it would not be necessary here
+	
+		if (ordenador.currah_paged)
+		{
+			if (Addr==0x1000) // Currah microspeech status
+			return (byte) ordenador.currah_status;
+			
+			if (Addr<2048) return((byte)ordenador.currahrom[Addr]);
+		}
+	}
 	
 		ordenador.wr+=3;
 		switch (Addr & 0xC000) {
@@ -2376,6 +2429,10 @@ byte Z80free_In (register word Port) {
 	
 	if(((Port &0x0018)!=0x0018)&&(ordenador.mdr_active))
 		return(microdrive_in(Port));
+	
+	//Currah microspeech
+	
+	if ((ordenador.currah_active)&&(temporal_io ==0x0038)) ordenador.currah_paged =  !ordenador.currah_paged;
 	
 	pines=bus_empty();
 	

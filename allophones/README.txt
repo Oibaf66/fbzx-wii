@@ -1,0 +1,1 @@
+Allophones: rate 48k, 1 channel, 8 bit unsigned

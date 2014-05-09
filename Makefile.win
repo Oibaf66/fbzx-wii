@@ -133,6 +133,7 @@ dist: $(BUILD)
 	mkdir -p $@/fbzx-wii/configurations
 	mkdir -p $@/fbzx-wii/poke
 	mkdir -p $@/fbzx-wii/doc
+	mkdir -p $@/fbzx-wii/fbzx/allophones
 	cp fbzx-wii.exe $@/fbzx-wii/fbzx-wii.exe
 	cp meta.xml $@/fbzx-wii/meta.xml
 	cp spectrum-roms/* $@/fbzx-wii/spectrum-roms
@@ -154,6 +155,7 @@ dist: $(BUILD)
 	cp sound/unselect_LE.raw $@/fbzx-wii/fbzx	
 	cp fbzx.net $@/fbzx-wii
 	cp AMSTRAD CAPABILITIES COPYING FAQ README README.TZX VERSIONS VERSIONS.wii README_WIN.txt $@/fbzx-wii/doc
+	cp allophones/*.* $@/fbzx-wii/fbzx/allophones
 	touch $@/fbzx-wii/tapes/dummy
 	touch $@/fbzx-wii/snapshots/dummy
 	touch $@/fbzx-wii/snapshots/rom-cartridges/dummy

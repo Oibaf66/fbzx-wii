@@ -123,6 +123,7 @@ dist: $(BUILD)
 	mkdir -p $@/fbzx-wii/configurations
 	mkdir -p $@/fbzx-wii/poke
 	mkdir -p $@/apps/fbzx-wii/doc
+	mkdir -p $@/apps/fbzx/allophones
 	cp fbzx.dol $@/apps/fbzx-wii/boot.dol
 	cp meta.xml $@/apps/fbzx-wii/meta.xml
 	cp icon.png $@/apps/fbzx-wii/icon.png
@@ -144,6 +145,7 @@ dist: $(BUILD)
 	cp sound/unselect_BE.raw $@/fbzx-wii/fbzx
 	cp fbzx.net $@/fbzx-wii
 	cp AMSTRAD CAPABILITIES COPYING FAQ README README.TZX VERSIONS VERSIONS.wii $@/apps/fbzx-wii/doc
+	cp allophones/*.* $@/apps/fbzx/allophones
 	touch $@/fbzx-wii/tapes/dummy
 	touch $@/fbzx-wii/snapshots/dummy
 	touch $@/fbzx-wii/snapshots/rom-cartridges/dummy

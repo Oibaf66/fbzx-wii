@@ -220,6 +220,18 @@ struct computer {
 	byte mdr_old_STATUS; // to detect an edge in COM CLK
 	unsigned char mdr_modified; // if a sector is stored, this change to know that it must be stored in the file
 
+	// Currah microspeech variables
+	
+	unsigned char currah_rom_unavailable; 
+	unsigned char currah_active;	// 0: not installed; 1: installed
+	unsigned char currah_paged;	// 0: not pagined; 1: pagined
+	unsigned char currah_status;	// 0: free; 1: busy
+	unsigned char current_allophone;	// allophone to be played
+	unsigned char intonation_allophone;
+	//int currah_env_counter;
+	//int max_envelop;
+	int allophone_sound_cuantity; //pointer to allophone sample to be played
+	
 	// OSD global variables
 
 	unsigned char osd_text[200];
@@ -235,6 +247,7 @@ struct computer {
 
 	unsigned char memoria[196608]; // memory (12 pages of 16K each one). 4 for ROM, and 8 for RAM
 	unsigned char shadowrom[8192]; // space for Interface I's ROMs
+	unsigned char currahrom[2048]; // space for Currah microspeech's ROMs
 	unsigned char interr;
 	unsigned char readkeyboard;
 	unsigned char mustlock;

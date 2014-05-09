@@ -37,6 +37,7 @@
 #include "sound.h"
 #include "tape.h"
 #include "microdrive.h"
+#include "currah_microspeech.h"
 #include "menu_sdl.h"
 #include "tape_browser.h"
 #include "VirtualKeyboard.h"
@@ -476,6 +477,20 @@ void load_rom(char type) {
 	}
 	size=fread(ordenador.shadowrom,8192,1,fichero);
   	fclose(fichero);
+	
+	fichero=myfopen("spectrum-roms/currah.rom","rb"); // load Currah ROM
+
+	if(fichero==NULL) {
+			printf("Can't open Currah ROM file\n");
+			ordenador.currah_rom_unavailable = 1;
+			ordenador.currah_active = 0;
+		}
+	else
+		{
+		ordenador.currah_rom_unavailable = 0;
+		size=fread(ordenador.currahrom,2024,1,fichero);
+		fclose(fichero);
+		}	
 }
 
 int set_video_mode()
@@ -630,6 +645,7 @@ void end_system() {
 	if(ordenador.tap_file!=NULL)
 		fclose(ordenador.tap_file);
 
+	currah_microspeech_fini();
 	VirtualKeyboard_fini();
 	menu_deinit();
 	font_fini();
@@ -749,6 +765,7 @@ int save_config(struct computer *object, char *filename) {
 	fprintf(fconfig,"joystick2=%c%c",48+object->joystick[1],10);
 	fprintf(fconfig,"ay_sound=%c%c",48+object->ay_emul,10);
 	fprintf(fconfig,"fuller_box_sound=%c%c",48+object->fuller_box_sound,10);
+	fprintf(fconfig,"currah_microspeech=%c%c",48+object->currah_active,10);
 	fprintf(fconfig,"audio_mode=%c%c",48+object->audio_mode,10);
 	fprintf(fconfig,"gui_sound=%c%c",48+object->gui_sound,10);
 	fprintf(fconfig,"interface1=%c%c",48+object->mdr_active,10);
@@ -800,8 +817,6 @@ int save_config_game(struct computer *object, char *filename, int overwrite) {
 	
 	fprintf(fconfig,"joystick1=%c%c",48+object->joystick[0],10);
 	fprintf(fconfig,"joystick2=%c%c",48+object->joystick[1],10);
-	fprintf(fconfig,"ay_sound=%c%c",48+object->ay_emul,10);
-	fprintf(fconfig,"fuller_box_sound=%c%c",48+object->fuller_box_sound,10);
 	fprintf(fconfig,"joypad1=%c%c",48+object->joypad_as_joystick[0],10);
 	fprintf(fconfig,"joypad2=%c%c",48+object->joypad_as_joystick[1],10);
 	fprintf(fconfig,"rumble1=%c%c",48+object->rumble[0],10);
@@ -941,7 +956,7 @@ int load_config(struct computer *object, char *filename) {
 	unsigned char volume=255,mode128k=255,issue=255,ntsc=255, joystick1=255,joystick2=255,ay_emul=255,mdr_active=255,
 	dblscan=255,framerate =255, screen =255, text=255, precision=255, bw=255, tap_fast=255, audio_mode=255,
 	joypad1=255, joypad2=255, rumble1=255, rumble2=255, joy_n=255, key_n=255, port=255, autoconf=255, turbo=225, vk_auto=255, vk_rumble=255,
-	rewind_on_reset=255, pause_instant_load =255, ignore_z80_joy_conf=255, gui_sound=255, fuller_box_sound=255;
+	rewind_on_reset=255, pause_instant_load =255, ignore_z80_joy_conf=255, gui_sound=255, fuller_box_sound=255, currah_active = 255;
 	
 	if (filename) strcpy(config_path,filename); 
 	else return -2;
@@ -1001,6 +1016,10 @@ int load_config(struct computer *object, char *filename) {
 		}
 		if (!strncmp(line,"fuller_box_sound=",17)) {
 			fuller_box_sound=line[17]-'0';
+			continue;
+		}
+		if (!strncmp(line,"currah_microspeech=",19)) {
+			currah_active=line[19]-'0';
 			continue;
 		}
 		if (!strncmp(line,"audio_mode=",11)) {
@@ -1123,6 +1142,9 @@ int load_config(struct computer *object, char *filename) {
 	}
 	if (fuller_box_sound<2) {
 		object->fuller_box_sound=fuller_box_sound;
+	}
+	if (currah_active<2) {
+		object->currah_active=currah_active;
 	}
 	if (audio_mode<4) {
 		object->audio_mode=audio_mode;
@@ -1597,6 +1619,9 @@ int main(int argc,char *argv[])
   
 	printf("Init microdrive\n");
 	microdrive_init();
+	
+	printf("Init Currah microspeech\n");
+	currah_microspeech_init();
 
 	printf("Reset computer\n");
 	ResetComputer();

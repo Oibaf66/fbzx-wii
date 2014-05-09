@@ -246,6 +246,7 @@ void settings_menu() {
 			ordenador.mode128k=1;
 			ordenador.ay_emul=1;
 			ordenador.videosystem=0;
+			ordenador.currah_active = 0;
 			ResetComputer();
 		break;
 		case SDLK_4:
@@ -253,6 +254,7 @@ void settings_menu() {
 			ordenador.mode128k=2;
 			ordenador.ay_emul=1;
 			ordenador.videosystem=0;
+			ordenador.currah_active = 0;
 			ResetComputer();
 		break;
 		case SDLK_5:
@@ -261,6 +263,7 @@ void settings_menu() {
 			ordenador.ay_emul=1;
 			ordenador.videosystem=0;
 			ordenador.mdr_active=0;
+			ordenador.currah_active = 0;
 			ResetComputer();
 		break;
 		case SDLK_6:
@@ -268,6 +271,7 @@ void settings_menu() {
 			ordenador.mode128k=4;
 			ordenador.ay_emul=1;
 			ordenador.videosystem=0;
+			ordenador.currah_active = 0;
 			ResetComputer();
 		break;
 		case SDLK_7:

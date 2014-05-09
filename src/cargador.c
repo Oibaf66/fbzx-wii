@@ -666,6 +666,7 @@ void load_snap(struct z80snapshot *snap) {
       ordenador.memoria[bucle+180224]=snap->page[7][bucle];
     }
     ordenador.ay_emul=1;
+	ordenador.currah_active = 0;
     for(bucle=0;bucle<16;bucle++)
       ordenador.ay_registers[bucle]=snap->ay_regs[bucle];
     ordenador.ay_latch=snap->ay_latch;

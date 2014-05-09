@@ -22,6 +22,7 @@
 
 #include "emulator.h"
 #include "sound.h"
+#include "currah_microspeech.h"
 #include <stdlib.h>
 
 unsigned int beeper = 0, lvalue_sum=0, rvalue_sum=0 ;
@@ -365,8 +366,23 @@ inline void play_sound (unsigned int tstados) {
 		
 		if (sample_count==(N_SAMPLES-1))
 		{
+			if ((ordenador.currah_active)&&(!ordenador.turbo_state))
+			{
+				*ordenador.current_buffer =	(rvalue_sum/N_SAMPLES+((unsigned int)allophone_buffer[ordenador.current_allophone][ordenador.allophone_sound_cuantity])*64)<<16
+				|(lvalue_sum/N_SAMPLES+((unsigned int)allophone_buffer[ordenador.current_allophone][ordenador.allophone_sound_cuantity])*64);
+
+				ordenador.allophone_sound_cuantity++; 
 		
-			*ordenador.current_buffer =	((rvalue_sum/N_SAMPLES)<<16)|(lvalue_sum/N_SAMPLES);
+				if (ordenador.allophone_sound_cuantity >= allophone_lenght[ordenador.current_allophone]) //allophone completed
+				{
+					ordenador.allophone_sound_cuantity = allophone_lenght[ordenador.current_allophone]*7/8; //repeat the last part
+					ordenador.currah_status = 0; //Ready for a new allophone
+				}	
+				
+			}
+			else
+				*ordenador.current_buffer =	(rvalue_sum/N_SAMPLES)<<16|(lvalue_sum/N_SAMPLES);
+			
 			ordenador.current_buffer++;
 		
 			ordenador.sound_cuantity++;
@@ -388,6 +404,7 @@ void reset_sound(void)
 		//memset(ordenador.current_buffer,0, (ordenador.buffer_len-ordenador.sound_cuantity)*ordenador.increment);
 		sound_play();
 		ordenador.sound_cuantity = 0;
+		ordenador.allophone_sound_cuantity = 0;
 		sample_count=0;
 		lvalue_sum=0;
 		rvalue_sum=0;
