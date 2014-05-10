@@ -87,11 +87,14 @@ static const char *emulation_messages[] = {
 		/*03*/		"48K model",
 		/*04*/		"^|issue2|issue3",	
 		/*05*/		"  ",
-		/*06*/		"Frame rate",
-		/*07*/		"^|100%|50%|33%|25%|20%",
-		/*08*/		"  ",		
-		/*09*/		"Precision",
-		/*10*/		"^|on|off",	
+		/*06*/		"Open SE Basic",
+		/*07*/		"^|on|off",	
+		/*08*/		"  ",
+		/*09*/		"Frame rate",
+		/*10*/		"^|100%|50%|33%|25%|20%",
+		/*11*/		"  ",		
+		/*12*/		"Precision",
+		/*13*/		"^|on|off",	
 		NULL
 };
 
@@ -427,6 +430,7 @@ void create_tapfile_sdl() {
 static int manage_tape(int which)
 {
 	int retorno=0; //Stay in menu as default
+	unsigned char model128k;
 	switch (which)
 	{
 	case 0: //Insert
@@ -434,7 +438,15 @@ static int manage_tape(int which)
 		break;
 	case 1: //Emulate load ""
 		countdown_buffer=8;
-		switch (ordenador.mode128k)
+		model128k = ordenador.mode128k;
+	
+		if ((ordenador.mport1 & 0x10)&&(ordenador.mode128k!=4)) //ROM 48k 
+		model128k =0;
+	
+		if ((ordenador.mode128k==0)&&(ordenador.se_basic))
+		model128k =4;
+		
+		switch (model128k)
 		{
 		case 4://Spanish 128k
 			ordenador.keyboard_buffer[0][8]= SDLK_l;		
@@ -459,16 +471,6 @@ static int manage_tape(int which)
 		case 2: //+2
 		case 1: //128k
 			ordenador.kbd_buffer_pointer=2;
-			if (ordenador.mport1 & 0x10) //ROM 48k
-			{
-			ordenador.keyboard_buffer[0][5]= SDLK_j;		//Load
-			ordenador.keyboard_buffer[1][5]= 0;
-			ordenador.keyboard_buffer[0][4]= SDLK_p;		//"
-			ordenador.keyboard_buffer[1][4]= SDLK_LCTRL;
-			ordenador.keyboard_buffer[0][3]= SDLK_p;		//"
-			ordenador.keyboard_buffer[1][3]= SDLK_LCTRL;
-			ordenador.kbd_buffer_pointer=5;
-			}
 			ordenador.keyboard_buffer[0][2]= SDLK_RETURN;	// Return
 			ordenador.keyboard_buffer[1][2]= 0;
 			ordenador.keyboard_buffer[0][1]= SDLK_F6;		//F6 - play
@@ -588,7 +590,7 @@ static void set_machine_model(int which)
 
 static int emulation_settings(void)
 {
-	unsigned int submenus[4],submenus_old[4];
+	unsigned int submenus[5],submenus_old[5];
 	int opt, i, retorno;
 	unsigned char old_mode, old_videosystem;
 	
@@ -598,10 +600,11 @@ static int emulation_settings(void)
 	
 	submenus[0] = get_machine_model();
 	submenus[1] = ordenador.issue-2;
-	submenus[2] = jump_frames;
-	submenus[3] = !ordenador.precision;
+	submenus[2] = !ordenador.se_basic;
+	submenus[3] = jump_frames;
+	submenus[4] = !ordenador.precision;
 
-	for (i=0; i<4; i++) submenus_old[i] = submenus[i];
+	for (i=0; i<5; i++) submenus_old[i] = submenus[i];
 	old_mode=ordenador.mode128k;
 	old_videosystem = ordenador.videosystem;
 	
@@ -617,11 +620,15 @@ static int emulation_settings(void)
 	
 	if (ordenador.mode128k==0) ordenador.issue= submenus[1]+2; else ordenador.issue = 3;
 	
-	jump_frames = submenus[2];
+	ordenador.se_basic = !submenus[2];
 	
-	if (submenus[3] != submenus_old[3])
+	if (submenus[2]!=submenus_old[2]) {ResetComputer ();retorno=-2;}
+	
+	jump_frames = submenus[3];
+	
+	if (submenus[3] != submenus_old[4])
 	{
-	ordenador.precision = !submenus[3];
+	ordenador.precision = !submenus[4];
 	ordenador.precision_old=ordenador.precision;
 	if (ordenador.turbo_state!=1)  //Tape is not loading with auto mode
 	 if (ordenador.precision)
@@ -995,6 +1002,9 @@ void load_mdr_file(void)
 	
 	if ((ordenador.mport1 & 0x10)&&(ordenador.mode128k!=4)) //ROM 48k 
 	model128k =0;
+	
+	if ((ordenador.mode128k==0)&&(ordenador.se_basic))
+	model128k =4;
 	
 	//Emulate load *"m";1;"run"
 		countdown_buffer=8;
@@ -1934,7 +1944,7 @@ static void save_load_general_configurations(int which)
 {
 
 	int retorno;
-	unsigned char old_bw,old_mode, old_currah;
+	unsigned char old_bw,old_mode, old_currah, old_se_basic;
 	char config_path[MAX_PATH_LENGTH];
 	int length;
 	FILE *fconfig; 
@@ -1963,10 +1973,12 @@ static void save_load_general_configurations(int which)
 				old_bw = ordenador.bw;
 				old_mode= ordenador.mode128k;
 				old_currah = ordenador.currah_active;
+				old_se_basic = ordenador.se_basic;
 				if (!load_config(&ordenador,config_path)) msgInfo("General confs loaded",3000,NULL);
 				if (old_bw!=ordenador.bw) computer_set_palete();
 				if (ordenador.currah_rom_unavailable) ordenador.currah_active =0;
-				if ((old_mode != ordenador.mode128k)||(old_currah != ordenador.currah_active)) ResetComputer();
+				if ((old_mode != ordenador.mode128k)||(old_currah != ordenador.currah_active)||
+					(old_se_basic != ordenador.se_basic)) ResetComputer();
 				break;
 			}
 			else // Delete config file

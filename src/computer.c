@@ -557,7 +557,7 @@ void register_screen (SDL_Surface * pantalla) {
 	
 	ordenador.tstados_counter_sound = 0;
 	ordenador.current_buffer = sound[0];
-	ordenador.num_buff = 0;	// first buffer
+	//ordenador.num_buff = 0;	// first buffer
 	ordenador.sound_cuantity = 0;
 	//ordenador.sound_current_value = 0;
 	
@@ -1190,6 +1190,7 @@ inline void paint_one_pixel(unsigned char *colour,unsigned char *address ) {
 inline void read_keyboard () {
 
 	unsigned int temporal_io;
+	unsigned char model128k;
 	SDL_Event evento,*pevento;
 	enum joystate_x {JOY_CENTER_X, JOY_LEFT, JOY_RIGHT};
 	enum joystate_y {JOY_CENTER_Y, JOY_UP, JOY_DOWN};
@@ -1346,7 +1347,15 @@ inline void read_keyboard () {
 		case SDLK_F9:
 			//Emulate load ""
 			countdown_buffer=8;
-			switch (ordenador.mode128k)
+			model128k = ordenador.mode128k;
+	
+			if ((ordenador.mport1 & 0x10)&&(ordenador.mode128k!=4)) //ROM 48k 
+			model128k =0;
+	
+			if ((ordenador.mode128k==0)&&(ordenador.se_basic))
+			model128k =4;
+			
+			switch (model128k)
 			{
 			case 4://Spanish 128k
 				ordenador.keyboard_buffer[0][8]= SDLK_l;		
@@ -1371,16 +1380,6 @@ inline void read_keyboard () {
 			case 2: //+2
 			case 1: //128k
 				ordenador.kbd_buffer_pointer=2;
-				if (ordenador.mport1 & 0x10) //ROM 48k
-				{
-				ordenador.keyboard_buffer[0][5]= SDLK_j;		//Load
-				ordenador.keyboard_buffer[1][5]= 0;
-				ordenador.keyboard_buffer[0][4]= SDLK_p;		//"
-				ordenador.keyboard_buffer[1][4]= SDLK_LCTRL;
-				ordenador.keyboard_buffer[0][3]= SDLK_p;		//"
-				ordenador.keyboard_buffer[1][3]= SDLK_LCTRL;
-				ordenador.kbd_buffer_pointer=5;
-				}
 				ordenador.keyboard_buffer[0][2]= SDLK_RETURN;	// Return
 				ordenador.keyboard_buffer[1][2]= 0;
 				ordenador.keyboard_buffer[0][1]= SDLK_F6;		//F6 - play

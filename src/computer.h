@@ -133,7 +133,7 @@ struct computer {
 	unsigned char sound_bit_mic;
 	unsigned int tstados_counter_sound;
 	unsigned int *current_buffer;
-	unsigned char num_buff;
+	//unsigned char num_buff;
 	unsigned int sound_cuantity; // counter for the buffer
 	unsigned char ay_registers[16]; // registers for the AY emulation
 	unsigned int aych_a,aych_b,aych_c,aych_n,aych_envel; // counters for AY emulation
@@ -162,6 +162,7 @@ struct computer {
 	unsigned char issue; // 2= 48K issue 2, 3= 48K issue 3
 	unsigned char mode128k; // 0=48K, 1=128K, 2=+2, 3=+3 4=sp
 	unsigned char videosystem; //0=PAL, 1=NTSC
+	unsigned char se_basic; //0=0ff; 1=0n
 	unsigned char joystick[2]; // 0=cursor, 1=kempston, 2=sinclair1, 3=sinclair2, 4=Fuller, 5=QAOP
 	unsigned char port254;
 

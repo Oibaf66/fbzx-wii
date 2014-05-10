@@ -394,7 +394,7 @@ void load_rom(char type) {
 
 	switch(type) {
 	case 0:
-		filenames[0]="spectrum-roms/48.rom";
+		if (ordenador.se_basic) filenames[0]="spectrum-roms/opense.rom"; else filenames[0]="spectrum-roms/48.rom";
 		filenames[1]=NULL;
 		if (rom_cartridge[0]) retval = load_rom_cartridge(); else retval=load_a_rom(filenames);
 		if (retval) {
@@ -761,6 +761,7 @@ int save_config(struct computer *object, char *filename) {
 	fprintf(fconfig,"mode=%c%c",48+object->mode128k,10);
 	fprintf(fconfig,"issue=%c%c",48+object->issue,10);
 	fprintf(fconfig,"ntsc=%c%c",48+object->videosystem,10);
+	fprintf(fconfig,"se_basic=%c%c",48+object->se_basic,10);
 	fprintf(fconfig,"joystick1=%c%c",48+object->joystick[0],10);
 	fprintf(fconfig,"joystick2=%c%c",48+object->joystick[1],10);
 	fprintf(fconfig,"ay_sound=%c%c",48+object->ay_emul,10);
@@ -956,7 +957,7 @@ int load_config(struct computer *object, char *filename) {
 	unsigned char volume=255,mode128k=255,issue=255,ntsc=255, joystick1=255,joystick2=255,ay_emul=255,mdr_active=255,
 	dblscan=255,framerate =255, screen =255, text=255, precision=255, bw=255, tap_fast=255, audio_mode=255,
 	joypad1=255, joypad2=255, rumble1=255, rumble2=255, joy_n=255, key_n=255, port=255, autoconf=255, turbo=225, vk_auto=255, vk_rumble=255,
-	rewind_on_reset=255, pause_instant_load =255, ignore_z80_joy_conf=255, gui_sound=255, fuller_box_sound=255, currah_active = 255;
+	rewind_on_reset=255, pause_instant_load =255, ignore_z80_joy_conf=255, gui_sound=255, fuller_box_sound=255, currah_active = 255, se_basic =255;
 	
 	if (filename) strcpy(config_path,filename); 
 	else return -2;
@@ -1000,6 +1001,10 @@ int load_config(struct computer *object, char *filename) {
 		}
 		if (!strncmp(line,"ntsc=",5)) {
 			ntsc=line[5]-'0';
+			continue;
+		}
+		if (!strncmp(line,"se_basic=",9)) {
+			se_basic=line[9]-'0';
 			continue;
 		}
 		if (!strncmp(line,"joystick1=",10)) {
@@ -1130,6 +1135,9 @@ int load_config(struct computer *object, char *filename) {
 	}
 	if (ntsc<2) {
 		object->videosystem=ntsc;
+	}
+	if (se_basic<2) {
+		object->se_basic=se_basic;
 	}
 	if (joystick1<6) {
 		object->joystick[0]=joystick1;
