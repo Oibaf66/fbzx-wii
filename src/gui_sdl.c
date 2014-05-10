@@ -87,7 +87,7 @@ static const char *emulation_messages[] = {
 		/*03*/		"48K model",
 		/*04*/		"^|issue2|issue3",	
 		/*05*/		"  ",
-		/*06*/		"Open SE Basic",
+		/*06*/		"48k SE Basic",
 		/*07*/		"^|on|off",	
 		/*08*/		"  ",
 		/*09*/		"Frame rate",
@@ -622,7 +622,7 @@ static int emulation_settings(void)
 	
 	ordenador.se_basic = !submenus[2];
 	
-	if (submenus[2]!=submenus_old[2]) {ResetComputer ();retorno=-2;}
+	if ((submenus[2]!=submenus_old[2])&&(ordenador.mode128k==0)) {ResetComputer ();retorno=-2;}
 	
 	jump_frames = submenus[3];
 	
@@ -1978,7 +1978,7 @@ static void save_load_general_configurations(int which)
 				if (old_bw!=ordenador.bw) computer_set_palete();
 				if (ordenador.currah_rom_unavailable) ordenador.currah_active =0;
 				if ((old_mode != ordenador.mode128k)||(old_currah != ordenador.currah_active)||
-					(old_se_basic != ordenador.se_basic)) ResetComputer();
+					((old_se_basic != ordenador.se_basic)&&(ordenador.mode128k==0))) ResetComputer();
 				break;
 			}
 			else // Delete config file
