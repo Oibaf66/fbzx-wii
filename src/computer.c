@@ -1928,15 +1928,21 @@ void Z80free_Wr (register word Addr, register byte Value) {
 	// Currah microspeech ouput
 	if((ordenador.currah_active)&&(ordenador.currah_paged))
 	{
+		if (Addr==0x3000) {
+			//printf("write to 3000h\n");
+			ordenador.intonation_allophone = 0;
+		}
+		
+		if (Addr==0x3001) {
+			//printf("write to 3001h\n");
+			ordenador.intonation_allophone = 1;
+		}
 	
-	//if (Addr==0x3000) {printf("write to 3000h\n");ordenador.intonation_allophone = 0;}
-	//if (Addr==0x3001) {printf("write to 3001h\n");ordenador.intonation_allophone = 1;}
-	
-	if ((Addr==0x1000)&&(!ordenador.currah_status)) //do not accept a new allophone if the previous is not finished
+		if ((Addr==0x1000)&&(!ordenador.currah_status)) //do not accept a new allophone if the previous is not finished
 		{
-		//if (Value) printf("Currah output=%0xh\n",Value);
+			//if (Value) printf("Currah output=%0xh\n",Value);
 			ordenador.current_allophone = (Value&0x3F);
-			//ordenador.intonation_allophone = (Value&0x40); //to be implemented
+			ordenador.intonation_allophone = (Value&0x40); //to be implemented
 			ordenador.currah_status = 1; //Currah busy
 			ordenador.allophone_sound_cuantity = 0;
 			return;

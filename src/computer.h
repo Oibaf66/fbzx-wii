@@ -229,8 +229,6 @@ struct computer {
 	unsigned char currah_status;	// 0: free; 1: busy
 	unsigned char current_allophone;	// allophone to be played
 	unsigned char intonation_allophone;
-	//int currah_env_counter;
-	//int max_envelop;
 	int allophone_sound_cuantity; //pointer to allophone sample to be played
 	
 	// OSD global variables

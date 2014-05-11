@@ -20,13 +20,10 @@
 #ifndef H_CURRAH_MICROSPEECH
 #define H_CURRAH_MICROSPEECH
 
-#ifndef MAX_ENVELOP 
-	#define MAX_ENVELOP 80 //Is this value rigth?
+#ifndef INTONATION_INCREASE 
+	#define INTONATION_INCREASE 32 //Is this value rigth?
 #endif
 
-#ifndef ENVELOP_STEP 
-	#define ENVELOP_STEP 1 //Is this value rigth?
-#endif
 
 #define ALLOPHONES 64
 

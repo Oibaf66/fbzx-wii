@@ -368,14 +368,14 @@ inline void play_sound (unsigned int tstados) {
 		{
 			if ((ordenador.currah_active)&&(!ordenador.turbo_state))
 			{
-				*ordenador.current_buffer =	(rvalue_sum/N_SAMPLES+((unsigned int)allophone_buffer[ordenador.current_allophone][ordenador.allophone_sound_cuantity])*64)<<16
-				|(lvalue_sum/N_SAMPLES+((unsigned int)allophone_buffer[ordenador.current_allophone][ordenador.allophone_sound_cuantity])*64);
+				*ordenador.current_buffer =	(rvalue_sum/N_SAMPLES+((unsigned int)allophone_buffer[ordenador.current_allophone][ordenador.allophone_sound_cuantity/INTONATION_INCREASE])*64)<<16
+				|(lvalue_sum/N_SAMPLES+((unsigned int)allophone_buffer[ordenador.current_allophone][ordenador.allophone_sound_cuantity/INTONATION_INCREASE])*64);
 
-				ordenador.allophone_sound_cuantity++; 
+				if(!ordenador.intonation_allophone) ordenador.allophone_sound_cuantity+=INTONATION_INCREASE; else ordenador.allophone_sound_cuantity+=INTONATION_INCREASE+1; //The freq increase should be gradual
 		
-				if (ordenador.allophone_sound_cuantity >= allophone_lenght[ordenador.current_allophone]) //allophone completed
+				if (ordenador.allophone_sound_cuantity/INTONATION_INCREASE >= allophone_lenght[ordenador.current_allophone]) //allophone completed
 				{
-					ordenador.allophone_sound_cuantity = allophone_lenght[ordenador.current_allophone]*7/8; //repeat the last part
+					ordenador.allophone_sound_cuantity = allophone_lenght[ordenador.current_allophone]*7/8*INTONATION_INCREASE; //repeat the last part
 					ordenador.currah_status = 0; //Ready for a new allophone
 				}	
 				

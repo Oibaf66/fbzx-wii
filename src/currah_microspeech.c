@@ -41,13 +41,10 @@ void currah_microspeech_init() {
 	ordenador.current_allophone = 0;
 	ordenador.allophone_sound_cuantity = 0;
 	ordenador.intonation_allophone = 0;
-	//ordenador.currah_env_counter = 0;
-	//ordenador.max_envelop = MAX_ENVELOP;
 	
 	for (i=0; i<ALLOPHONES; i++)
 	{
-		sprintf(allophone_name, "fbzx/allophones/%s.wav",allophone_list[i]);
-		//sprintf(allophone_name, "fbzx/allophones/%.3d.wav",i);		
+		sprintf(allophone_name, "fbzx/allophones/%s.wav",allophone_list[i]);	
 		
 		fichero=myfopen(allophone_name,"rb");
 		if(fichero==NULL) {
@@ -89,8 +86,6 @@ void currah_microspeech_reset() {
 	ordenador.current_allophone = 0;
 	ordenador.allophone_sound_cuantity = 0;
 	ordenador.intonation_allophone = 0;
-	//ordenador.currah_env_counter = 0;
-	//ordenador.max_envelop = MAX_ENVELOP;
 }
 
 
