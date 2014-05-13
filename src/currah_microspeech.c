@@ -32,7 +32,7 @@ char *allophone_list[] = {"pa1","pa2","pa3","pa4","pa5","oy","ay","eh","kk3","pp
 
 void currah_microspeech_init() {
 	
-	int i;
+	int i,b;
 	FILE *fichero;
 	char allophone_name[16];
 	
@@ -66,7 +66,11 @@ void currah_microspeech_init() {
 		fread(allophone_buffer[i], 1, allophone_lenght[i], fichero); 	
 	
 		fclose(fichero);		
-	}	
+	}
+      
+for (i=0; i<5; i++)
+		for (b=0; b<allophone_lenght[i]; b++)
+			allophone_buffer[i][b]=0x80;
 }
 
 void currah_microspeech_fini() {
