@@ -39,12 +39,16 @@ extern char path_mdrs[MAX_PATH_LENGTH];
 extern char path_scr1[MAX_PATH_LENGTH];
 extern char path_scr2[MAX_PATH_LENGTH];
 extern char path_confs[MAX_PATH_LENGTH];
+extern char path_paste[MAX_PATH_LENGTH];
+extern char path_copy[MAX_PATH_LENGTH];
+extern char path_delete[MAX_PATH_LENGTH];
 extern char path_tmp[MAX_PATH_LENGTH];
 extern char load_path_snaps[MAX_PATH_LENGTH];
 extern char load_path_taps[MAX_PATH_LENGTH];
 extern char load_path_scr1[MAX_PATH_LENGTH];
 extern char load_path_poke[MAX_PATH_LENGTH];
 extern char rom_cartridge[MAX_PATH_LENGTH];
+extern char pasted_file[MAX_PATH_LENGTH];
 
 extern unsigned int colors[80];
 extern unsigned int jump_frames,curr_frames, turbo_n;

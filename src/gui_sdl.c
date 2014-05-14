@@ -179,16 +179,18 @@ static const char *tools_messages[] = {
 		/*01*/		"^|Save1|Save2|Load|Delete",
 		/*02*/		"Port",
 		/*03*/		"^|default|sd|usb|smb|ftp",
-		/*04*/		"Auto virtual keyboard",
-		/*05*/		"^|on|off",
-		/*06*/		"Keyboard rumble",
+		/*04*/		"Manage files",
+		/*05*/		"^|Paste|Copy|Delete",
+		/*06*/		"Auto virtual keyboard",
 		/*07*/		"^|on|off",
-		/*08*/		"  ",
-		/*09*/		"Load poke file",
+		/*08*/		"Keyboard rumble",
+		/*09*/		"^|on|off",
 		/*10*/		"  ",
-		/*11*/		"Insert poke",
+		/*11*/		"Load poke file",
 		/*12*/		"  ",
-		/*13*/		"Help",
+		/*13*/		"Insert poke",
+		/*14*/		"  ",
+		/*15*/		"Help",
 		NULL
 };
 
@@ -1318,6 +1320,7 @@ static void set_port(int which)
 		strcpy(load_path_taps,load_path_snaps);
 		strcpy(load_path_scr1,load_path_snaps);
 		strcpy(load_path_poke,load_path_snaps);
+		strcpy(path_paste,load_path_snaps);
 		strcat(load_path_snaps,"snapshots");
 		strcat(load_path_taps,"tapes");
 		strcat(load_path_scr1,"scr");
@@ -1331,6 +1334,7 @@ static void set_port(int which)
 			strcpy(load_path_taps,"sd:/");
 			strcpy(load_path_scr1,"sd:/");
 			strcpy(load_path_poke,"sd:/");
+			strcpy(path_paste,"sd:/");
 			ordenador.port = which;}
 		else
 			msgInfo("SD is not mounted",3000,NULL);
@@ -1341,6 +1345,7 @@ static void set_port(int which)
 			strcpy(load_path_taps,"usb:/");
 			strcpy(load_path_scr1,"usb:/");
 			strcpy(load_path_poke,"usb:/");
+			strcpy(path_paste,"usb:/");
 			ordenador.port = which;}
 		else
 			msgInfo("USB is not mounted",3000,NULL);
@@ -1358,6 +1363,7 @@ static void set_port(int which)
 			strcpy(load_path_taps,"smb:/");
 			strcpy(load_path_scr1,"smb:/");
 			strcpy(load_path_poke,"smb:/");
+			strcpy(path_paste,"smb:/");
 			ordenador.port = which;}
 		else
 			msgInfo("SMB is not mounted",3000,NULL);
@@ -1376,6 +1382,7 @@ static void set_port(int which)
 			strcpy(load_path_taps,"ftp:/");
 			strcpy(load_path_scr1,"ftp:/");
 			strcpy(load_path_poke,"ftp:/");
+			strcpy(path_paste,"ftp:/");
 			ordenador.port = which;}
 		else
 			msgInfo("FTP is not mounted",3000,NULL);
@@ -1696,10 +1703,113 @@ switch (which)
  return retorno;
 }
 
+static void delete_file()
+{
+	const char *filename = menu_select_file(path_delete, NULL, 0);
+	
+	if (filename==NULL) // Aborted
+		return;
+
+	if ((strstr(filename,"None") == NULL)&&(msgYesNo("Delete the file?", 0, -1, -1))) unlink(filename);
+	
+	free((void *)filename);
+}
+
+static void paste_file()
+{
+	const char *filename = menu_select_file(path_paste, NULL, 0);
+	
+	if (filename==NULL) // Aborted
+		return; 
+	
+	if (strstr(filename,"None") == NULL)
+	{
+		strcpy(pasted_file, filename);
+		msgInfo("File pasted", 2000,NULL) ;
+	}
+	
+	free((void *)filename);
+}
+
+static void copy_file()
+{
+	char copy_full_name[MAX_PATH_LENGTH];
+	char paste_name[81];
+	FILE *from_file, *to_file;
+	int c;
+	
+	if (pasted_file[0]==0) {msgInfo("No file pasted", 2000,NULL) ;return;}
+	
+	msgInfo("Select \"None\" in the dir", 2000,NULL) ;
+	
+	const char *filename = menu_select_file(path_copy, pasted_file, 0);
+	
+	if (filename==NULL) // Aborted
+		return; 
+		
+	if (strstr(filename,"None") == NULL) //We have to select None
+		goto exit;
+		
+	
+	if (strrchr(filename, '/')) *(strrchr(filename, '/')+1) = 0; //remove the filename
+		
+	strncpy(copy_full_name, filename, MAX_PATH_LENGTH);	
+
+	if (strrchr(pasted_file, '/'))
+		strncpy(paste_name, strrchr(pasted_file, '/') + 1, 80);
+	else
+		strncpy(paste_name, pasted_file, 80);
+		
+	strcat(copy_full_name,paste_name);
+
+	from_file=fopen(pasted_file, "rb");
+	
+	if (!from_file) goto exit;
+	
+	to_file=fopen(copy_full_name, "wb");
+	
+	if (!to_file) {fclose (from_file);goto exit;}
+
+	while ((c = getc(from_file)) != EOF)
+		putc(c, to_file);
+	
+	fclose (from_file);
+	fclose (to_file);
+	pasted_file[0]=0;
+	msgInfo("File copied", 2000,NULL) ;
+	
+exit:
+		
+	free((void *)filename);
+}
+
+
+static int manage_file(int which)
+{
+	int retorno = 0; //Stay in menu as default
+	
+	switch (which) 
+		{
+		case 0: // paste
+			paste_file();
+			break;
+		case 1: // save
+			copy_file();
+			break;	
+		case 2: // delete 
+			delete_file();
+			break;
+		default:
+			break;
+		}			
+
+	return retorno;
+}
+
 static int tools()
 {
 	int opt , retorno;
-	int submenus[4], old_port;
+	int submenus[5], old_port;
 
 	memset(submenus, 0, sizeof(submenus));
 
@@ -1707,8 +1817,8 @@ static int tools()
 	retorno=-1; //Exit from menu as default
  
 	submenus[1] = ordenador.port;
-	submenus[2] = !ordenador.vk_auto;
-	submenus[3] = !ordenador.vk_rumble;
+	submenus[3] = !ordenador.vk_auto;
+	submenus[4] = !ordenador.vk_rumble;
 	
 	old_port=ordenador.port;
 	
@@ -1718,21 +1828,24 @@ static int tools()
 		return 0;
 		
 	if (old_port!= submenus[1]) set_port(submenus[1]);
-	ordenador.vk_auto = !submenus[2];
-	ordenador.vk_rumble = !submenus[3];
+	ordenador.vk_auto = !submenus[3];
+	ordenador.vk_rumble = !submenus[4];
 	
 	switch(opt)
 		{
 		case 0: 
 			retorno = manage_scr(submenus[0]);
 			break;
-		case 9: // Load poke file
+		case 4: 
+			retorno = manage_file(submenus[2]);
+			break;	
+		case 11: // Load poke file
 			retorno = load_poke_file();
 			break;
-		case 11: // Insert poke
+		case 13: // Insert poke
 			retorno = do_poke_sdl();
 			break;	
-		case 13:
+		case 15:
 			help();
 			retorno = -1;
 			break;

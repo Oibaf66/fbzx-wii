@@ -75,12 +75,16 @@ char path_mdrs[MAX_PATH_LENGTH];
 char path_scr1[MAX_PATH_LENGTH];
 char path_scr2[MAX_PATH_LENGTH];
 char path_confs[MAX_PATH_LENGTH];
+char path_paste[MAX_PATH_LENGTH];
+char path_copy[MAX_PATH_LENGTH];
+char path_delete[MAX_PATH_LENGTH];
 char path_tmp[MAX_PATH_LENGTH];
 char load_path_snaps[MAX_PATH_LENGTH];
 char load_path_taps[MAX_PATH_LENGTH];
 char load_path_scr1[MAX_PATH_LENGTH];
 char load_path_poke[MAX_PATH_LENGTH];
 char rom_cartridge[MAX_PATH_LENGTH];
+char pasted_file[MAX_PATH_LENGTH];
 
 unsigned int colors[80];
 unsigned int jump_frames,curr_frames, turbo_n;
@@ -1507,6 +1511,9 @@ int main(int argc,char *argv[])
 	strcpy(path_scr2,path_snaps);
 	strcpy(path_confs,path_snaps);
 	strcpy(load_path_poke,path_snaps);
+	strcpy(path_paste,path_snaps);
+	strcpy(path_delete,path_snaps);
+	strcpy(path_copy,path_snaps);
 	strcpy(path_tmp,path_snaps);
 	strcat(path_snaps,"snapshots");
 	strcat(path_taps,"tapes");
@@ -1519,6 +1526,8 @@ int main(int argc,char *argv[])
 	strcpy(load_path_snaps,path_snaps);
 	strcpy(load_path_taps,path_taps);
 	strcpy(load_path_scr1,path_scr1);
+	
+	pasted_file[0]=0;
 
 	//Remove and make tmp dir
 	
@@ -1554,6 +1563,7 @@ int main(int argc,char *argv[])
 		strcpy(load_path_taps,"sd:/");
 		strcpy(load_path_scr1,"sd:/");
 		strcpy(load_path_poke,"sd:/");
+		strcpy(path_paste,"sd:/");
 	}
 	else ordenador.port =0;
 	break;
@@ -1564,6 +1574,7 @@ int main(int argc,char *argv[])
 		strcpy(load_path_taps,"usb:/");
 		strcpy(load_path_scr1,"usb:/");
 		strcpy(load_path_poke,"usb:/");
+		strcpy(path_paste,"usb:/");
 	}
 	else ordenador.port =0;
 	break;
@@ -1574,6 +1585,7 @@ int main(int argc,char *argv[])
 		strcpy(load_path_taps,"smb:/");
 		strcpy(load_path_scr1,"smb:/");
 		strcpy(load_path_poke,"smb:/");
+		strcpy(path_paste,"smb:/");
 	}
 	else ordenador.port =0;
 	break;
@@ -1584,6 +1596,7 @@ int main(int argc,char *argv[])
 		strcpy(load_path_taps,"ftp:/");
 		strcpy(load_path_scr1,"ftp:/");
 		strcpy(load_path_poke,"ftp:/");
+		strcpy(path_paste,"ftp:/");
 	}
 	else ordenador.port =0;
 	break;
