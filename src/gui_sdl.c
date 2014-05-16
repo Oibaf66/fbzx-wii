@@ -1172,7 +1172,7 @@ static int microdrive()
 	
 static void delete_scr()
 {
-	const char *filename = menu_select_file(getenv("HOME"), NULL, 0); //Start from Home
+	const char *filename = menu_select_file(load_path_scr1, NULL, 0); //Delete in the load dir
 	
 	if (filename==NULL) // Aborted
 		return; 
