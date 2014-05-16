@@ -1942,7 +1942,7 @@ void Z80free_Wr (register word Addr, register byte Value) {
 		{
 			//if (Value) printf("Currah output=%0xh\n",Value);
 			ordenador.current_allophone = (Value&0x3F);
-			ordenador.intonation_allophone = (Value&0x40); //to be implemented
+			ordenador.intonation_allophone = (Value&0x40);
 			ordenador.currah_status = 1; //Currah busy
 			ordenador.allophone_sound_cuantity = 0;
 			return;
@@ -2018,8 +2018,8 @@ byte Z80free_Rd_fetch (register word Addr) {
 	
 		if (ordenador.currah_paged)
 		{
-			if (Addr==0x1000) // Currah microspeech status - it would not be necessary here
-			return (byte) ordenador.currah_status;
+			//if (Addr==0x1000) // Currah microspeech status - it would not be necessary here
+			//return (byte) ordenador.currah_status;
 			
 			if (Addr<2048) return((byte)ordenador.currahrom[Addr]);
 		}
