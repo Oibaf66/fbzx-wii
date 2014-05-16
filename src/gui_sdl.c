@@ -364,7 +364,7 @@ static void delete_tape()
 	
 	if ((ext_matches(filename, ".tap")|ext_matches(filename, ".TAP")|ext_matches(filename, ".tzx")|
 	ext_matches(filename, ".TZX"))
-	&& (msgYesNo("Delete the file?", 0, -1, -1))) unlink(filename);
+	&& (msgYesNo("Delete the file?", 0, -1, -1))) {unlink(filename);msgInfo("File deleted", 2000,NULL) ;}
 	
 	free((void *)filename);
 }
@@ -932,7 +932,7 @@ static void delete_mdr()
 		return; 
 	
 	if ((ext_matches(filename, ".mdr")|ext_matches(filename, ".MDR"))
-	&& (msgYesNo("Delete the file?", 0,-1, -1))) unlink(filename);
+	&& (msgYesNo("Delete the file?", 0,-1, -1))) {unlink(filename);msgInfo("File deleted", 2000,NULL) ;}
 	
 	free((void *)filename);
 }
@@ -1178,7 +1178,7 @@ static void delete_scr()
 		return; 
 	
 	if ((ext_matches(filename, ".scr")|ext_matches(filename, ".SCR"))
-	&& (msgYesNo("Delete the file?", 0, -1, -1))) unlink(filename);
+	&& (msgYesNo("Delete the file?", 0, -1, -1))) {unlink(filename);msgInfo("File deleted", 2000,NULL) ;}
 	
 	free((void *)filename);
 }
@@ -1710,7 +1710,7 @@ static void delete_file()
 	if (filename==NULL) // Aborted
 		return;
 
-	if ((strstr(filename,"None") == NULL)&&(msgYesNo("Delete the file?", 0, -1, -1))) unlink(filename);
+	if ((strstr(filename,"None") == NULL)&&(msgYesNo("Delete the file?", 0, -1, -1))) {unlink(filename);msgInfo("File deleted", 2000,NULL) ;}
 	
 	free((void *)filename);
 }
@@ -1827,7 +1827,7 @@ static int tools()
 	if (opt < 0)
 		return 0;
 		
-	if (old_port!= submenus[1]) set_port(submenus[1]);
+	if (old_port!= submenus[1]) {set_port(submenus[1]);retorno=0;}
 	ordenador.vk_auto = !submenus[3];
 	ordenador.vk_rumble = !submenus[4];
 	
@@ -1943,7 +1943,7 @@ static int save_load_snapshot(int which)
 				}
 			}
 			else // Delete snashot file
-				if (msgYesNo("Delete the file?", 0, -1, -1)) unlink(filename);
+				if (msgYesNo("Delete the file?", 0, -1, -1)) {unlink(filename);msgInfo("File deleted", 2000,NULL) ;}
 		}	
 		free((void*)filename);
 	} break;
@@ -2005,7 +2005,7 @@ static int save_load_game_configurations(int which)
 				if (!load_config(&ordenador,(char *)filename)) {msgInfo("Game confs loaded",3000,NULL);retorno2=-1;}
 			}
 			else // Delete config file
-				if (msgYesNo("Delete the file?", 0, -1, -1)) unlink(filename);
+				if (msgYesNo("Delete the file?", 0, -1, -1)) {unlink(filename);msgInfo("File deleted", 2000,NULL) ;}
 		}	
 		free((void*)filename);
 	} break;
@@ -2095,7 +2095,7 @@ static void save_load_general_configurations(int which)
 				break;
 			}
 			else // Delete config file
-				if (msgYesNo("Delete the file?", 0, -1, -1)) unlink(config_path);
+				if (msgYesNo("Delete the file?", 0, -1, -1)) {unlink(config_path);msgInfo("File deleted", 2000,NULL) ;}
 		
 	} break;
 	case 1: // Save configuration file
