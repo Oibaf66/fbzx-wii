@@ -22,6 +22,15 @@
 #include "computer.h"
 #include "emulator.h"
 
+#ifdef DEBUG
+extern FILE *fdebug;
+#define printf(...) fprintf(fdebug,__VA_ARGS__)
+#else
+ #ifdef GEKKO
+ #define printf(...)
+ #endif
+#endif
+
 int allophone_lenght[ALLOPHONES];
 signed char *allophone_buffer[ALLOPHONES];
 
