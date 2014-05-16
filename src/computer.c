@@ -1726,6 +1726,7 @@ void ResetComputer () {
 
 	static int bucle;
 
+	printf("Reset computer\n");
 	Z80free_reset (&procesador);
 	load_rom (ordenador.mode128k);
 	

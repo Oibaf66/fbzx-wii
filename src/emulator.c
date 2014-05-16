@@ -492,7 +492,7 @@ void load_rom(char type) {
 	else
 		{
 		ordenador.currah_rom_unavailable = 0;
-		size=fread(ordenador.currahrom,2024,1,fichero);
+		size=fread(ordenador.currahrom,2048,1,fichero);
 		fclose(fichero);
 		}	
 }
@@ -1644,7 +1644,6 @@ int main(int argc,char *argv[])
 	printf("Init Currah microspeech\n");
 	currah_microspeech_init();
 
-	printf("Reset computer\n");
 	ResetComputer();
 
 	SDL_Delay(1000);
