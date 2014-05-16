@@ -28,7 +28,7 @@
 #define ALLOPHONES 64
 
 extern int allophone_lenght[ALLOPHONES];
-extern unsigned char *allophone_buffer[ALLOPHONES];
+extern signed char *allophone_buffer[ALLOPHONES];
 
 void currah_microspeech_init();
 void currah_microspeech_reset();

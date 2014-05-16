@@ -23,7 +23,7 @@
 #include "emulator.h"
 
 int allophone_lenght[ALLOPHONES];
-unsigned char *allophone_buffer[ALLOPHONES];
+signed char *allophone_buffer[ALLOPHONES];
 
 char *allophone_list[] = {"pa1","pa2","pa3","pa4","pa5","oy","ay","eh","kk3","pp","jh","nn1","ih","tt2","rr1",
 "ax","mm","tt1","dh1","iy","ey","dd1","uw1","ao","aa","yy2","ae","hh1","bb1","th","uh","uw2","aw","dd2","gg3","vv",
@@ -32,7 +32,7 @@ char *allophone_list[] = {"pa1","pa2","pa3","pa4","pa5","oy","ay","eh","kk3","pp
 
 void currah_microspeech_init() {
 	
-	int i,b;
+	int i;
 	FILE *fichero;
 	char allophone_name[16];
 	
@@ -44,7 +44,7 @@ void currah_microspeech_init() {
 	
 	for (i=0; i<ALLOPHONES; i++)
 	{
-		sprintf(allophone_name, "fbzx/allophones/%s.wav",allophone_list[i]);	
+		sprintf(allophone_name, "fbzx/allophones/%s.raw",allophone_list[i]);	
 		
 		fichero=myfopen(allophone_name,"rb");
 		if(fichero==NULL) {
@@ -56,7 +56,7 @@ void currah_microspeech_init() {
 		allophone_lenght[i]=ftell (fichero);
 		fseek (fichero, 0, SEEK_SET);
 	
-		allophone_buffer[i]= (unsigned char *) malloc(allophone_lenght[i]);
+		allophone_buffer[i]= (signed char *) malloc(allophone_lenght[i]);
 	
 		if (allophone_buffer[i]==NULL) {
 			printf("Can't allocate allophone: %d\n",i);
@@ -69,8 +69,7 @@ void currah_microspeech_init() {
 	}
       
 for (i=0; i<5; i++)
-		for (b=0; b<allophone_lenght[i]; b++)
-			allophone_buffer[i][b]=0x80;
+		memset(allophone_buffer[i], 0x00, allophone_lenght[i]); 
 }
 
 void currah_microspeech_fini() {
