@@ -398,9 +398,12 @@ void load_rom(char type) {
 
 	switch(type) {
 	case 0:
+		if (rom_cartridge[0])
+			{if (load_rom_cartridge()) {msgInfo("Cartridge must be 16KB long", 3000, NULL);} else break;}
+		
 		if (ordenador.se_basic) filenames[0]="spectrum-roms/opense.rom"; else filenames[0]="spectrum-roms/48.rom";
 		filenames[1]=NULL;
-		if (rom_cartridge[0]) retval = load_rom_cartridge(); else retval=load_a_rom(filenames);
+		retval=load_a_rom(filenames);
 		if (retval) {
 			printf("Can't load file %s\n",retval);
 			exit(1);
