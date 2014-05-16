@@ -1618,7 +1618,7 @@ int menu_is_inited(void)
 }
 
 //Sound must be reseted before calling this function (except for ASND)
-void play_click(sound)
+void play_click(int sound)
 {
 	if (!ordenador.gui_sound) return;
 #ifdef GEKKO	

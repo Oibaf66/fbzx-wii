@@ -87,7 +87,8 @@ char rom_cartridge[MAX_PATH_LENGTH];
 char pasted_file[MAX_PATH_LENGTH];
 
 unsigned int colors[80];
-unsigned int jump_frames,curr_frames, turbo_n;
+unsigned int curr_frames, turbo_n;
+int jump_frames;
 
 static SDL_Surface *image;
 

@@ -482,7 +482,7 @@ int select_block(FILE * fichero)
 	
 	block_n_int=atoi(block_n);
 	
-	if ((block_n_int<0)||(block_n_int >(MAX_SELECT_ITEM-1))||block_select_list[block_n_int]==NULL) return -1;
+	if ((block_n_int >(MAX_SELECT_ITEM-1))||block_select_list[block_n_int]==NULL) return -1;
 	
 	if ((block_select_list[block_n_int]->offset+blk_sel_pos) > (MAX_BROWSER_ITEM-1)) return -1;
 	

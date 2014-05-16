@@ -51,7 +51,8 @@ extern char rom_cartridge[MAX_PATH_LENGTH];
 extern char pasted_file[MAX_PATH_LENGTH];
 
 extern unsigned int colors[80];
-extern unsigned int jump_frames,curr_frames, turbo_n;
+extern unsigned int curr_frames, turbo_n;
+extern  int jump_frames;
 extern unsigned char sdismount, usbismount, smbismount, tmpismade, ftpismount,networkisinit;
 
 void SDL_Fullscreen_Switch(void);

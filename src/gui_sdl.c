@@ -272,7 +272,7 @@ static void tape_browser()
 	
 	block_n_int=atoi(block_n);
 	
-	if ((block_n_int<0)||(block_n_int >(MAX_BROWSER_ITEM-1))) return;
+	if (block_n_int >(MAX_BROWSER_ITEM-1)) return;
 	
 	tape_position=browser_list[block_n_int]->position;
  
