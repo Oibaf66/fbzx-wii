@@ -373,7 +373,7 @@ char *load_a_rom(char **filenames) {
 	return (NULL);
 }
 
-char *load_rom_cartridge(void) {
+void load_rom_cartridge(void) {
 	
 	FILE *fichero;
 	int size;
@@ -381,13 +381,11 @@ char *load_rom_cartridge(void) {
 	printf("Opening %s\n", rom_cartridge);
 	fichero=fopen(rom_cartridge,"rb");
 	if(fichero==NULL) {
-			return (rom_cartridge);
+			return;
 	}
 	size=fread(ordenador.memoria,1,16384,fichero);
-	if (size != 16384) return (rom_cartridge);
 	
 	fclose(fichero);
-	return (0);
 }
 
 void load_rom(char type) {
@@ -399,9 +397,6 @@ void load_rom(char type) {
 
 	switch(type) {
 	case 0:
-		if (rom_cartridge[0])
-			{if (load_rom_cartridge()) {msgInfo("Cartridge must be 16KB long", 3000, NULL);} else break;}
-		
 		if (ordenador.se_basic) filenames[0]="spectrum-roms/opense.rom"; else filenames[0]="spectrum-roms/48.rom";
 		filenames[1]=NULL;
 		retval=load_a_rom(filenames);
@@ -409,6 +404,8 @@ void load_rom(char type) {
 			printf("Can't load file %s\n",retval);
 			exit(1);
 		}
+		
+		if (rom_cartridge[0]) load_rom_cartridge();
 	break;
 	case 1:
 		filenames[0]="spectrum-roms/128-0.rom";
