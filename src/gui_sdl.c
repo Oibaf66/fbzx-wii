@@ -628,7 +628,7 @@ static int emulation_settings(void)
 	
 	jump_frames = submenus[3];
 	
-	if (submenus[3] != submenus_old[4])
+	if (submenus[4] != submenus_old[4])
 	{
 	ordenador.precision = !submenus[4];
 	ordenador.precision_old=ordenador.precision;
@@ -736,7 +736,7 @@ static int audio_settings(void)
 	ordenador.ay_emul = !submenus[1];
 	ordenador.fuller_box_sound = !submenus[2];
 	if ((submenus[3]==0)&&(ordenador.mode128k))  {ordenador.currah_active=0; msgInfo("Currah only in 48k mode", 3000, NULL);}
-	else if (ordenador.currah_rom_unavailable) {ordenador.currah_active=0; msgInfo("Currah rom not present", 3000, NULL);}
+	else if (ordenador.currah_rom_unavailable) {ordenador.currah_active=0; msgInfo("currah.rom not present", 3000, NULL);}
 	else ordenador.currah_active = !submenus[3];
 	ordenador.audio_mode = submenus[4];
 	ordenador.gui_sound = !submenus[5];
