@@ -1699,8 +1699,6 @@ int main(int argc,char *argv[])
 		FAST_LOAD is 1, we must load the block in memory and return */
 
 		if((!ordenador.mdr_paged)&&(!ordenador.currah_paged)&&(PC==0x056c) && (ordenador.tape_fast_load==1)&&(ordenador.tape_stop_fast == 0)) {
-			if (ordenador.tap_file!=NULL)
-				{
 				if (ordenador.pause_fastload_countdwn==0)
 					{
 					if (ordenador.tape_file_type==TAP_TAP) fastload_block_tap(ordenador.tap_file);
@@ -1715,11 +1713,6 @@ int main(int argc,char *argv[])
 						if (ordenador.tape_stop ==1) fastload_block_tzx(ordenador.tap_file);
 						}
 					}
-				}
-			else {
-				sprintf(ordenador.osd_text,"No TAP file selected");
-				ordenador.osd_time=50;
-			}
 		}
 		
 		/* if PC is 0x04C2, a call to SA_BYTES has been made, so if

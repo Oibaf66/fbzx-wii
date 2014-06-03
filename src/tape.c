@@ -777,7 +777,7 @@ void fastload_block_tap (FILE * fichero) {
 
 	/*Frome Fuse On exit:
    *  A = calculated parity byte if parity checked, else 0 (CHECKME)
-   *  F : if parity checked, all flags are modified
+   *  F : if parity checked, all flags are modified : 0X93 (OK), 0x82 (paity err), 0x50 (DE > lenght), 0x00 (flag byte err)
    *      else carry only is modified (FIXME)
    *  B = 0xB0 (success) or 0x00 (failure)
    *  C = 0x01 (confirmed), 0x21, 0xFE or 0xDE (CHECKME)
@@ -804,16 +804,18 @@ void fastload_block_tap (FILE * fichero) {
 		return;
 	}
 	
-	procesador.Rm.br.B=0;
+	//In case of error
+	procesador.Rm.br.A=0X00;
+	procesador.Rm.br.B=0X00;
+	procesador.Rm.br.C=0x01;
 	procesador.Rm.br.L=0x01;
+	procesador.Ra.br.F=0x01;
 
 	empty=file_empty(fichero);
 
 	
 	if ((fichero == NULL)||(empty)) {
 		procesador.Rm.br.F &= (~F_C);	// Load error
-		procesador.Rm.wr.IX += procesador.Rm.wr.DE;
-		procesador.Rm.wr.DE = 0;
 		if(empty)
 			sprintf (ordenador.osd_text, "Tape file empty");
 		else
@@ -833,13 +835,26 @@ void fastload_block_tap (FILE * fichero) {
 	longitud = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1]);
 	longitud_block=longitud;
 		
+	if (procesador.Rm.wr.DE == 0)	printf("TAP: warning, DE=0\n");
+	
+	if (longitud<2)
+		{
+		procesador.Rm.br.F = 0x50;	// Load error
+		printf("TAP: File error, length=%d\n", longitud);
+		retval=fread (value, 1,longitud, fichero); //read the remaining bytes
+		return;
+		}
+		
+	if ((longitud-2)!=procesador.Rm.wr.DE) 
+		{
+		printf("TAP: length block error, expected by CPU (DE) %x, written in file %x\n", procesador.Rm.wr.DE, longitud-2);
+		}	
+		
 	retval=fread (value, 1,1, fichero); //Flag Byte
 	if (retval!=1)
 		{
 		procesador.Rm.br.F &= (~F_C);	// Load error
-		procesador.Rm.wr.IX += procesador.Rm.wr.DE;
-		procesador.Rm.wr.DE = 0;
-		printf("TAP: Read file error\n");
+		printf("TAP: File error, flag byte missing\n");
 		return;
 		}
 
@@ -849,21 +864,14 @@ void fastload_block_tap (FILE * fichero) {
 	if (value[0] != procesador.Ra.br.A) // different flag
 		{
 		procesador.Rm.br.F &= (~F_C);	// Load error
-		procesador.Rm.wr.IX += procesador.Rm.wr.DE;
-		procesador.Rm.wr.DE = 0;
+		printf("TAP: Flag byte error, expected by CPU %X, written in file %X\n", procesador.Ra.br.A, value[0] );
+		procesador.Rm.br.A = procesador.Ra.br.A - value[0]; 
+		procesador.Rm.br.F = 0x00;
 		retval=fread (value, 1,longitud, fichero); //read the remaining bytes
-		printf("TAP: Flag byte error, expected %X\n", procesador.Ra.br.A);
 		return;
 		}
 			
 	parity=(byte) value[0];	
-		
-	if ((longitud-1)!=procesador.Rm.wr.DE) 
-		{
-		printf("TAP: length block error\n");
-		printf("TAP: expected by system %d\n", procesador.Rm.wr.DE);
-		printf("TAP: expected by file %d\n", longitud-1);
-		}
 	
 	number_bytes = min(procesador.Rm.wr.DE,longitud-1);
 	
@@ -871,9 +879,7 @@ void fastload_block_tap (FILE * fichero) {
 	if (retval!=(number_bytes+1))
 		{
 		procesador.Rm.br.F &= (~F_C);	// Load error
-		procesador.Rm.wr.IX += procesador.Rm.wr.DE;
-		procesador.Rm.wr.DE = 0;
-		printf("TAP: Read file error\n");
+		printf("TAP: Read file error, bytes missing\n");
 		return;
 		}
 
@@ -885,20 +891,26 @@ void fastload_block_tap (FILE * fichero) {
 			longitud--;
 			parity^=(byte) value[bucle];
 		}
-
-	parity^=(byte) value[number_bytes]; // checksum
+		
+	if (number_bytes) parity^=(byte) value[number_bytes]; // checksum
 	
 	if (parity) printf("TAP: Parity error\n");
 	longitud--;
 	if (longitud>0) retval=fread (value, 1,longitud, fichero); //read the remaining bytes
 	
-	procesador.Rm.br.C=0x01;
 	procesador.Rm.br.H=parity;
-	procesador.Rm.br.L=value[number_bytes-1];
+	if (number_bytes) procesador.Rm.br.L=value[number_bytes-1];
+	procesador.Rm.br.A=parity;
 	
-	if (procesador.Rm.wr.DE==0) //OK
+	if (procesador.Rm.wr.DE) {	
+			procesador.Rm.wr.IX++;
+			procesador.Rm.wr.DE--;
+			procesador.Rm.br.F = 0x50; // Load error
+			goto end_fast_load_routine;
+			}
+	
+	if ((procesador.Rm.wr.DE==0)&&(!parity)) //OK
 	{
-		procesador.Rm.br.A=parity;
 		//CP 01
 		Z80free_doArithmetic(&procesador,procesador.Rm.br.A,0x01,0,1);
 		Z80free_adjustFlags(&procesador,0x01);
@@ -909,10 +921,12 @@ void fastload_block_tap (FILE * fichero) {
 	}
 	else // Load error
 	{
-		procesador.Rm.br.B=0;
-		procesador.Rm.br.A=0;
-		procesador.Rm.br.F &= (~F_C);	// Load error
+		procesador.Rm.br.F = 0x50; // Load error	
 	}
+	
+	if (parity) procesador.Rm.br.F = 0x82;
+	
+end_fast_load_routine:	
 	
 	if (ordenador.pause_instant_load) 
 		{
@@ -927,7 +941,7 @@ void fastload_block_tzx (FILE * fichero) {
 
 	/* From Fuse - On exit:
    *  A = calculated parity byte if parity checked, else 0 (CHECKME)
-   *  F : if parity checked, all flags are modified
+   *  F : if parity checked, all flags are modified : 0X93 (OK), 0x82 (paity err), 0x50 (DE > lenght), 0x00 (flag byte err)
    *      else carry only is modified (FIXME)
    *  B = 0xB0 (success) or 0x00 (failure)
    *  C = 0x01 (confirmed), 0x21, 0xFE or 0xDE (CHECKME)
@@ -948,14 +962,23 @@ void fastload_block_tzx (FILE * fichero) {
 	
 	longitud =0;
 	pause[0]=pause[1]=0;
+	
+	
+	if (!(procesador.Ra.br.F & F_C)) { // if Carry=0, is VERIFY, so return OK
+		printf("Verify OK\n");
+		procesador.Rm.br.F |= F_C;	 // verify OK
+		procesador.Rm.wr.IX += procesador.Rm.wr.DE;
+		procesador.Rm.wr.DE = 0;
+		procesador.PC=0x5e2;
+		return;
+	}
+	
 
 	empty=file_empty(fichero);
 
 	if ((fichero == NULL)||(empty)) {
 		procesador.PC=0x5e2;
 		procesador.Rm.br.F &= (~F_C);	// Load error
-		procesador.Rm.wr.IX += procesador.Rm.wr.DE;
-		procesador.Rm.wr.DE = 0;
 		if(empty)
 			sprintf (ordenador.osd_text, "Tape file empty");
 		else
@@ -979,25 +1002,49 @@ void fastload_block_tzx (FILE * fichero) {
 		printf("TZX: ID_fast: %X en %ld\n",blockid,ftell(fichero));
 		switch(blockid) {
 				case 0x10: // classic tape block
+				
+				procesador.PC=0x5e2;
+	
+				//In case of error
+				procesador.Rm.br.A=0X00;
+				procesador.Rm.br.B=0X00;
+				procesador.Rm.br.C=0x01;
+				procesador.Rm.br.L=0x01;
+				procesador.Ra.br.F=0x01;
+				
 				retval=fread (pause, 1, 2, fichero); //pause lenght
 				retval=fread (value, 1, 2, fichero);	// read length of current block
+				longitud = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1]);
+				
+				if (procesador.Rm.wr.DE == 0)	printf("TZX: warning, DE=0\n");
+	
+				if (longitud<2)
+				{
+					procesador.Rm.br.F = 0x50;	// Load error
+					printf("TZX: File error, length=%d\n", longitud);
+					retval=	fread(value, 1,longitud, fichero); //read the remaining bytes
+					return;
+				}
+		
+				if ((longitud-2)!=procesador.Rm.wr.DE) 
+				{
+					printf("TZX: length block error, expected by CPU (DE) %x, written in file %x\n", procesador.Rm.wr.DE, longitud-2);
+				}
+				
 				byte_position2=ftell(fichero);
 				retval=fread (&flag_byte, 1, 1, fichero);
 				if ((retval!=1))
 					{			
 					procesador.Rm.br.F &= (~F_C);	// Load error
-					procesador.Rm.wr.IX += procesador.Rm.wr.DE;
-					procesador.Rm.wr.DE = 0;
-					printf("TZX: Read file error\n");
+					printf("TZX: File error, flag byte missing\n");
 					return;
 					}	
-				longitud = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1]);
-					
+				
 					switch(flag_byte)
 					{
 					case 0x00: //header
 						retval=fread (value, 1, 18, fichero);
-						if (retval!=18) {procesador.Rm.br.F &= (~F_C);return;}
+						if (retval!=18) {printf("TZX: File error, header bytes missing\n"); procesador.Rm.br.F &= (~F_C);return;}
 						switch(value[0]	) //Type
 							{
 							case 0x00:
@@ -1020,7 +1067,7 @@ void fastload_block_tzx (FILE * fichero) {
 							ordenador.next_block=NOBLOCK;
 					break;
 					}
-				retorno=1;		
+				retorno=1;	//Exit to Fast load routine	
 				fseek(fichero, byte_position2, SEEK_SET);	
 				break;	
 					case 0x11: // turbo 
@@ -1041,13 +1088,13 @@ void fastload_block_tzx (FILE * fichero) {
 
 				case 0x20: // pause
 					retval=fread(value,1,2,fichero);
-					if (retval!=2) {procesador.Rm.br.F &= (~F_C);return;} 
+					if (retval!=2) {printf("TZX: File error, bytes missing\n");procesador.Rm.br.F &= (~F_C);return;} 
 					if (!value[0]&&!value[1]) {retorno=2;} //stop the tape
 				break;
 					
 				case 0x21: // group start
 					retval=fread(value,1,1,fichero);
-					if (retval!=1) {procesador.Rm.br.F &= (~F_C);return;} 
+					if (retval!=1) {printf("TZX: File error, bytes missing\n");procesador.Rm.br.F &= (~F_C);return;} 
 					len = (unsigned int) value[0];
 					retval=fread(value,1,len,fichero);	
 				break;
@@ -1057,7 +1104,7 @@ void fastload_block_tzx (FILE * fichero) {
 				
 				case 0x23: // jump to block
 					retval=fread(block_jump,1,2,fichero);
-					if (retval!=2) {procesador.Rm.br.F &= (~F_C);return;} 
+					if (retval!=2) {printf("TZX: File error, bytes missing\n");procesador.Rm.br.F &= (~F_C);return;} 
 					jump_to_block(fichero, (int) block_jump[0] + 256*((int) block_jump[1]));
 				break;
 				
@@ -1076,7 +1123,7 @@ void fastload_block_tzx (FILE * fichero) {
 					{
 						fseek(fichero, byte_position2, SEEK_SET);
 						retval=fread(value,1,2,fichero);
-						if (retval!=2) {procesador.Rm.br.F &= (~F_C);return;} 
+						if (retval!=2) {printf("TZX: File error, bytes missing\n");procesador.Rm.br.F &= (~F_C);return;} 
 						len = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1]);
 						retval=fread(value,1,len,fichero);
 					}
@@ -1090,22 +1137,22 @@ void fastload_block_tzx (FILE * fichero) {
 					
 				case 0x30: // text description
 					retval=fread(value,1,1,fichero); // length
-					if (retval!=1) {procesador.Rm.br.F &= (~F_C);return;} 
+					if (retval!=1) {printf("TZX: File error, bytes missing\n");procesador.Rm.br.F &= (~F_C);return;} 
 					len = (unsigned int) value[0] ;
 					retval=fread(value,1,len,fichero);
 				break;
 					
 				case 0x31: // show text
 					retval=fread(value,1,1,fichero);
-					if (retval!=1) {procesador.Rm.br.F &= (~F_C);return;} 
+					if (retval!=1) {printf("TZX: File error, bytes missing\n");procesador.Rm.br.F &= (~F_C);return;} 
 					if (value[0] < 11) ordenador.osd_time=value[0]*50; else ordenador.osd_time=500;//max 10 sec	
 					retval=fread(value,1,1,fichero); // length
-					if (retval!=1) {procesador.Rm.br.F &= (~F_C);return;} 
+					if (retval!=1) {printf("TZX: File error, bytes missing\n");procesador.Rm.br.F &= (~F_C);return;} 
 					len = (unsigned int) value[0];
 					for(bucle=0;bucle<len;bucle++)
 					{
 					retval=fread(value,1,1,fichero);
-					if (retval!=1) {procesador.Rm.br.F &= (~F_C);return;} 
+					if (retval!=1) {printf("TZX: File error, bytes missing\n");procesador.Rm.br.F &= (~F_C);return;} 
 					if (bucle<199) ordenador.osd_text[bucle] = value[0];
 					}
 					if (bucle>199) ordenador.osd_text[199]=0; else ordenador.osd_text[bucle]=0;
@@ -1113,14 +1160,14 @@ void fastload_block_tzx (FILE * fichero) {
 					
 				case 0x32: // archive info
 					retval=fread(value,1,2,fichero); // length
-					if (retval!=2) {procesador.Rm.br.F &= (~F_C);return;} 
+					if (retval!=2) {printf("TZX: File error, bytes missing\n");procesador.Rm.br.F &= (~F_C);return;} 
 					len = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1]);
 					retval=fread(value,1,len,fichero);
 				break;
 				
 				case 0x33: // hardware info
 					retval=fread(value,1,1,fichero);
-					if (retval!=1) {procesador.Rm.br.F &= (~F_C);return;} 
+					if (retval!=1) {printf("TZX: File error, bytes missing\n");procesador.Rm.br.F &= (~F_C);return;} 
 					len = (unsigned int) value[0] *3;
 					retval=fread(value,1,len,fichero);
 				break;
@@ -1132,7 +1179,7 @@ void fastload_block_tzx (FILE * fichero) {
 				case 0x35: // custom info					
 					retval=fread(value,1,16,fichero);
 					retval=fread(value,1,4,fichero);
-					if (retval!=4) {procesador.Rm.br.F &= (~F_C);return;} 
+					if (retval!=4) {printf("TZX: File error, bytes missing\n");procesador.Rm.br.F &= (~F_C);return;} 
 					len = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1]) + 65536*((unsigned int) value[2]);// + 16777216*((unsigned int) value[3]);
 					retval=fread(value,1,len,fichero);
 				break;
@@ -1154,59 +1201,37 @@ void fastload_block_tzx (FILE * fichero) {
 		
 		//Fast load routine
 	
-	procesador.PC=0x5e2;
-	
-	if (!(procesador.Ra.br.F & F_C)) { // if Carry=0, is VERIFY, so return OK
-		procesador.Rm.br.F |= F_C;	 // verify OK
-		procesador.Rm.wr.IX += procesador.Rm.wr.DE;
-		procesador.Rm.wr.DE = 0;
-		return;
-	}
-	
-	procesador.Rm.br.B=0;
-	procesador.Rm.br.L=0x01;	
 		
-	retval=fread (&flag_byte, 1,1, fichero); //Flag Byte
+	retval=fread (value, 1,1, fichero); //Flag Byte
 	if (retval!=1)
 		{
 		procesador.Rm.br.F &= (~F_C);	// Load error
-		procesador.Rm.wr.IX += procesador.Rm.wr.DE;
-		procesador.Rm.wr.DE = 0;
-		printf("TZX: Read file error\n");
+		printf("TZX: File error, flag byte missing\n");
 		return;
 		}
 
 	longitud--;
-	printf("TZX: Flag_byte_fast: %X en %ld\n",flag_byte,ftell(fichero));
+	printf("TZX: Flag_byte_fast: %X en %ld\n",value[0],ftell(fichero));
 	
-	if (flag_byte != procesador.Ra.br.A) // different flag
+	if (value[0] != procesador.Ra.br.A) // different flag
 		{
 		procesador.Rm.br.F &= (~F_C);	// Load error
-		procesador.Rm.wr.IX += procesador.Rm.wr.DE;
-		procesador.Rm.wr.DE = 0;
+		printf("TZX: Flag byte error, expected by CPU %X, written in file %X\n", procesador.Ra.br.A, value[0] );
+		procesador.Rm.br.A = procesador.Ra.br.A - value[0]; 
+		procesador.Rm.br.F = 0x00;
 		retval=fread (value, 1,longitud, fichero); //read the remaining bytes
-		printf("TZX Flag byte error, expected %X\n", procesador.Ra.br.A);
 		return;
 		}
 			
-	parity=(byte) flag_byte;	
-		
-	if ((longitud-1)!=procesador.Rm.wr.DE) 
-		{
-		printf("TZX: length block error\n");
-		printf("TZX: expected by system %d\n", procesador.Rm.wr.DE);
-		printf("TZX: expected by file %d\n", longitud-1);
-		}
+	parity=(byte) value[0];	
 	
 	number_bytes = min(procesador.Rm.wr.DE,longitud-1);
- 
+	
 	retval=fread (value, 1,number_bytes+1, fichero); //read also checksum byte
 	if (retval!=(number_bytes+1))
 		{
 		procesador.Rm.br.F &= (~F_C);	// Load error
-		procesador.Rm.wr.IX += procesador.Rm.wr.DE;
-		procesador.Rm.wr.DE = 0;
-		printf("TZX: Read file error\n");
+		printf("TZX: Read file error, bytes missing\n");
 		return;
 		}
 
@@ -1218,20 +1243,26 @@ void fastload_block_tzx (FILE * fichero) {
 			longitud--;
 			parity^=(byte) value[bucle];
 		}
-	
-	parity^=(byte) value[number_bytes]; // checksum
+		
+	if (number_bytes) parity^=(byte) value[number_bytes]; // checksum
 	
 	if (parity) printf("TZX: Parity error\n");
 	longitud--;
 	if (longitud>0) retval=fread (value, 1,longitud, fichero); //read the remaining bytes
 	
-	procesador.Rm.br.C=0x01;
 	procesador.Rm.br.H=parity;
-	procesador.Rm.br.L=value[number_bytes-1];
+	if (number_bytes) procesador.Rm.br.L=value[number_bytes-1];
+	procesador.Rm.br.A=parity;
 	
-	if (procesador.Rm.wr.DE==0) //OK
+	if (procesador.Rm.wr.DE) {	
+			procesador.Rm.wr.IX++;
+			procesador.Rm.wr.DE--;
+			procesador.Rm.br.F = 0x50; // Load error
+			goto end_fast_load_routine;
+			}
+	
+	if ((procesador.Rm.wr.DE==0)&&(!parity)) //OK
 	{
-		procesador.Rm.br.A=parity;
 		//CP 01
 		Z80free_doArithmetic(&procesador,procesador.Rm.br.A,0x01,0,1);
 		Z80free_adjustFlags(&procesador,0x01);
@@ -1242,10 +1273,12 @@ void fastload_block_tzx (FILE * fichero) {
 	}
 	else // Load error
 	{
-		procesador.Rm.br.B=0;
-		procesador.Rm.br.A=0;
-		procesador.Rm.br.F &= (~F_C);	// Load error
+		procesador.Rm.br.F = 0x50; // Load error	
 	}
+	
+	if (parity) procesador.Rm.br.F = 0x82;
+	
+end_fast_load_routine:
 	
 	byte_position=ftell(fichero);
 	
