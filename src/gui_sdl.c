@@ -177,8 +177,8 @@ static const char *microdrive_messages[] = {
 static const char *tools_messages[] = {
 		/*00*/		"Screen shot",
 		/*01*/		"^|Save1|Save2|Load|Delete",
-		/*02*/		"Port",
-		/*03*/		"^|default|sd|usb|smb|ftp",
+		/*02*/		"Files source",
+		/*03*/		"^|default|sd|usb|smb|wos",
 		/*04*/		"Manage files",
 		/*05*/		"^|Paste|Copy|Delete",
 		/*06*/		"Auto virtual keyboard",
