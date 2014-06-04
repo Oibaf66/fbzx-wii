@@ -2,8 +2,8 @@
   <app version="1">
     <name>FBZX Wii</name>
     <coder>Oibaf (Fabio Olimpieri)</coder>
-    <version>11.0</version>
-    <release_date>20140426</release_date>
+    <version>12.0</version>
+    <release_date>20140608</release_date>
     <short_description>ZX Spectrum Emulator</short_description>
     <long_description>A ZX Spectrum emulator. 
 The project is based on FBZX originally written by Sergio Costas (http://www.rastersoft.com/fbzx.html). 
@@ -34,7 +34,7 @@ You can also save the game preferences which can be automatically loaded with th
 
 If you save the screen shots they will appear on the screen during the menu navigation.
 
-You can also load a file from a usb disk, from your PC and from Internet via FTP using a wi-fi connection. For the wi-fi you should set the parameters in fbzx.net file.
+You can also load a file from a usb disk, from your PC using a wi-fi connection and from Internet (e.g. WOS) via FTP . For the PC connection you should set the parameters in fbzx.net file.
 
 If Rumble is enabled, the wiimote rumbles each time the fire button is pressed. 
 

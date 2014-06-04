@@ -1,3 +1,14 @@
+version 12:
+	* Added Currah microspeech emulation
+	* Added Fuller box sound and joystick emulation
+	* Added ZX Interface II Rom cartridge loading support
+	* Added support for Open SE basic ROM for 48k model
+	* Added file management (paste, copy and delete)
+	* Added load command for microdrive
+	* Improved tape fast loading routine
+
+	-- Fabio Olimpieri <fabio.olimpieri@tin.it> Jun 8 2014
+
 version 11:
 	* Gui interface with ZX Spectrum style and sound
 	* Added screen preview in scr menu
