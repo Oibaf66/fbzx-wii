@@ -102,7 +102,11 @@ void computer_init () { //Called only on start-up
 	ordenador.joystick[1] = 0; // Cursor
 	ordenador.joypad_as_joystick[0]= 1;
 	ordenador.joypad_as_joystick[1]= 1;
+#ifdef GEKKO
+	ordenador.vk_auto = 1; //auto Vk
+#else	
 	ordenador.vk_auto = 0; //Vk called by +
+#endif	
 	ordenador.vk_rumble = 1; //enabled
 	ordenador.rumble[0] = 0;
 	ordenador.rumble[1] = 0;
