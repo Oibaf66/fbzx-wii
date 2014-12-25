@@ -811,18 +811,22 @@ void fastload_block_tap (FILE * fichero) {
 	procesador.Rm.br.L=0x01;
 	procesador.Ra.br.F=0x01;
 
-	empty=file_empty(fichero);
-
-	
-	if ((fichero == NULL)||(empty)) {
+	if (fichero == NULL) {
 		procesador.Rm.br.F &= (~F_C);	// Load error
-		if(empty)
-			sprintf (ordenador.osd_text, "Tape file empty");
-		else
-			sprintf (ordenador.osd_text, "No tape selected");
+		sprintf (ordenador.osd_text, "No tape selected");
 		ordenador.osd_time = 100;
 		return;
 	}
+	
+	empty=file_empty(fichero);
+	
+	if (empty) {
+		procesador.Rm.br.F &= (~F_C);	// Load error
+		sprintf (ordenador.osd_text, "Tape file empty");
+		ordenador.osd_time = 100;
+		return;
+	}
+	
 	ordenador.tape_position=ftell(fichero);
 	retval=fread (value, 1, 2, fichero);	// read length of current block
 		if (feof (fichero))	{			// end of file?
@@ -973,16 +977,18 @@ void fastload_block_tzx (FILE * fichero) {
 		return;
 	}
 	
-
-	empty=file_empty(fichero);
-
-	if ((fichero == NULL)||(empty)) {
-		procesador.PC=0x5e2;
+	if (fichero == NULL) {
 		procesador.Rm.br.F &= (~F_C);	// Load error
-		if(empty)
-			sprintf (ordenador.osd_text, "Tape file empty");
-		else
-			sprintf (ordenador.osd_text, "No tape selected");
+		sprintf (ordenador.osd_text, "No tape selected");
+		ordenador.osd_time = 100;
+		return;
+	}
+	
+	empty=file_empty(fichero);
+	
+	if (empty) {
+		procesador.Rm.br.F &= (~F_C);	// Load error
+		sprintf (ordenador.osd_text, "Tape file empty");
 		ordenador.osd_time = 100;
 		return;
 	}
