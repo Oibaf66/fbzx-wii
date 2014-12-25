@@ -168,8 +168,8 @@ void computer_init () { //Called only on start-up
 	ordenador.kbd_buffer_pointer = 0;
 	ordenador.vk_is_active=0;
 	ordenador.key = SDL_GetKeyState(NULL);
-	ordenador.joybuttonkey[0][0]=SDLK_LALT; //Fire button to wiimote1 button A
-	ordenador.joybuttonkey[1][0]=SDLK_LALT; //Fire button to wiimote1 button A
+	ordenador.joybuttonkey[0][3]=SDLK_LALT; //Fire button to wiimote1 button 2
+	ordenador.joybuttonkey[1][3]=SDLK_LALT; //Fire button to wiimote1 button 2
 	ordenador.port=0; //PORT SD
 	ordenador.smb_enable=0;
 	strcpy (ordenador.SmbUser,"User");
