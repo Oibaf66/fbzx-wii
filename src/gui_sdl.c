@@ -124,8 +124,8 @@ static const char *audio_messages[] = {
 		/*07*/		"^|on|off",	
 		/*08*/		"Audio mode",
 		/*09*/		"^|mono|ABC|ACB|BAC",
-		/*10*/		"Gui sound",
-		/*11*/		"^|on|off",
+		/*10*/		"Gui Volume",
+		/*11*/		"^|0|1|2|3|4|5",
 		NULL
 };
 
@@ -723,7 +723,7 @@ static int audio_settings(void)
 	submenus[2] = !ordenador.fuller_box_sound;
 	submenus[3] = !ordenador.currah_active;
 	submenus[4] = ordenador.audio_mode;
-	submenus[5] = !ordenador.gui_sound;
+	submenus[5] = ordenador.gui_volume;
 	
 	old_submenus_3 = submenus[3];
 	
@@ -739,7 +739,7 @@ static int audio_settings(void)
 	else if (ordenador.currah_rom_unavailable) {ordenador.currah_active=0; msgInfo("currah.rom not present", 3000, NULL);}
 	else ordenador.currah_active = !submenus[3];
 	ordenador.audio_mode = submenus[4];
-	ordenador.gui_sound = !submenus[5];
+	ordenador.gui_volume = submenus[5];
 	
 	if (old_submenus_3 == ordenador.currah_active) {ResetComputer(); retorno = -2;}
 	

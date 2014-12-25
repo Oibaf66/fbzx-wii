@@ -141,7 +141,7 @@ struct computer {
 	unsigned char ay_emul; // 0: no AY emulation; 1: AY emulation
 	unsigned char fuller_box_sound; // 0: no AY emulation; 1: AY emulation
 	unsigned char audio_mode; //mono, ABC, ACB, BAC
-	unsigned char gui_sound;
+	unsigned int gui_volume;
 	unsigned int vol_a,vol_b,vol_c;
 	unsigned int tst_ay;
 	unsigned int ay_latch;

@@ -142,7 +142,7 @@ void computer_init () { //Called only on start-up
 	ordenador.ay_emul = 0;
 	ordenador.fuller_box_sound = 0;
 	ordenador.currah_active = 0;
-	ordenador.gui_sound = 1;
+	ordenador.gui_volume = 3;
 	ordenador.aych_a = 0;
 	ordenador.aych_b = 0;
 	ordenador.aych_c = 0;

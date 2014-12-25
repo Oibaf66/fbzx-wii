@@ -1620,12 +1620,12 @@ int menu_is_inited(void)
 //Sound must be reseted before calling this function (except for ASND)
 void play_click(int sound)
 {
-	if (!ordenador.gui_sound) return;
+	if (!ordenador.gui_volume) return;
 #ifdef GEKKO	
 	if (sound_type == SOUND_ASND)
 	{
 		ASND_SetVoice(2,VOICE_STEREO_16BIT_BE,ordenador.freq,0, click_buffer_pointer[sound],len_click_buffer[sound],
-			255, 255, NULL);
+			ordenador.gui_volume*51, ordenador.gui_volume*51, NULL);
 		return;
 	}
 #endif	
