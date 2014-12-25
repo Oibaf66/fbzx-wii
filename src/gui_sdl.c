@@ -87,7 +87,7 @@ static const char *emulation_messages[] = {
 		/*03*/		"48K model",
 		/*04*/		"^|issue2|issue3",	
 		/*05*/		"  ",
-		/*06*/		"48k SE Basic",
+		/*06*/		"SE Basic",
 		/*07*/		"^|on|off",	
 		/*08*/		"  ",
 		/*09*/		"Frame rate",
@@ -445,7 +445,7 @@ static int manage_tape(int which)
 		if ((ordenador.mport1 & 0x10)&&(ordenador.mode128k!=4)) //ROM 48k 
 		model128k =0;
 	
-		if ((ordenador.mode128k==0)&&(ordenador.se_basic))
+		if (ordenador.se_basic)
 		model128k =4;
 		
 		switch (model128k)
@@ -624,7 +624,7 @@ static int emulation_settings(void)
 	
 	ordenador.se_basic = !submenus[2];
 	
-	if ((submenus[2]!=submenus_old[2])&&(ordenador.mode128k==0)) {ResetComputer ();retorno=-2;}
+	if ((submenus[2]!=submenus_old[2])) {ResetComputer ();retorno=-2;}
 	
 	jump_frames = submenus[3];
 	
@@ -735,7 +735,7 @@ static int audio_settings(void)
 	ordenador.volume = submenus[0]*2; 
 	ordenador.ay_emul = !submenus[1];
 	ordenador.fuller_box_sound = !submenus[2];
-	if ((submenus[3]==0)&&(ordenador.mode128k))  {ordenador.currah_active=0; msgInfo("Currah only in 48k mode", 3000, NULL);}
+	if ((submenus[3]==0)&&(ordenador.mode128k))  {ordenador.currah_active=0; msgInfo("Currah only with 48k model", 3000, NULL);}
 	else if (ordenador.currah_rom_unavailable) {ordenador.currah_active=0; msgInfo("currah.rom not present", 3000, NULL);}
 	else ordenador.currah_active = !submenus[3];
 	ordenador.audio_mode = submenus[4];
@@ -1005,7 +1005,7 @@ void load_mdr_file(void)
 	if ((ordenador.mport1 & 0x10)&&(ordenador.mode128k!=4)) //ROM 48k 
 	model128k =0;
 	
-	if ((ordenador.mode128k==0)&&(ordenador.se_basic))
+	if (ordenador.se_basic)
 	model128k =4;
 	
 	//Emulate load *"m";1;"run"

@@ -1356,7 +1356,7 @@ inline void read_keyboard () {
 			if ((ordenador.mport1 & 0x10)&&(ordenador.mode128k!=4)) //ROM 48k 
 			model128k =0;
 	
-			if ((ordenador.mode128k==0)&&(ordenador.se_basic))
+			if (ordenador.se_basic)
 			model128k =4;
 			
 			switch (model128k)

@@ -408,7 +408,7 @@ void load_rom(char type) {
 		if (rom_cartridge[0]) load_rom_cartridge();
 	break;
 	case 1:
-		filenames[0]="spectrum-roms/128-0.rom";
+		if (ordenador.se_basic) filenames[0]="spectrum-roms/opense.rom"; else filenames[0]="spectrum-roms/128-0.rom";
 		filenames[1]="spectrum-roms/128-1.rom";
 		filenames[2]=NULL;
 		retval=load_a_rom(filenames);
@@ -418,7 +418,7 @@ void load_rom(char type) {
 		}
 	break;
 	case 2:
-		filenames[0]="spectrum-roms/plus2-0.rom";
+		if (ordenador.se_basic) filenames[0]="spectrum-roms/opense.rom"; else filenames[0]="spectrum-roms/plus2-0.rom";
 		filenames[1]="spectrum-roms/plus2-1.rom";
 		filenames[2]=NULL;
 		retval=load_a_rom(filenames);
@@ -430,7 +430,7 @@ void load_rom(char type) {
 	case 3:
 		// first, try last version of PLUS3 roms
 		
-		filenames[0]="spectrum-roms/plus3-41-0.rom";
+		if (ordenador.se_basic) filenames[0]="spectrum-roms/opense.rom"; else filenames[0]="spectrum-roms/plus3-41-0.rom";
 		filenames[1]="spectrum-roms/plus3-41-1.rom";
 		filenames[2]="spectrum-roms/plus3-41-2.rom";
 		filenames[3]="spectrum-roms/plus3-41-3.rom";
@@ -438,7 +438,7 @@ void load_rom(char type) {
 		retval=load_a_rom(filenames);
 		if (retval) {
 			printf("Can't load the Spectrum +3 ROM version 4.1. Trying with version 4.0\n");
-			filenames[0]="spectrum-roms/plus3-40-0.rom";
+			if (ordenador.se_basic) filenames[0]="spectrum-roms/opense.rom"; else filenames[0]="spectrum-roms/plus3-40-0.rom";
 			filenames[1]="spectrum-roms/plus3-40-1.rom";
 			filenames[2]="spectrum-roms/plus3-40-2.rom";
 			filenames[3]="spectrum-roms/plus3-40-3.rom";
@@ -446,7 +446,7 @@ void load_rom(char type) {
 			retval=load_a_rom(filenames);
 			if (retval) {
 				printf("Can't load the Spectrum +3 ROM version 4.0. Trying with legacy filenames\n");
-				filenames[0]="spectrum-roms/plus3-0.rom";
+				if (ordenador.se_basic) filenames[0]="spectrum-roms/opense.rom"; else filenames[0]="spectrum-roms/plus3-0.rom";
 				filenames[1]="spectrum-roms/plus3-1.rom";
 				filenames[2]="spectrum-roms/plus3-2.rom";
 				filenames[3]="spectrum-roms/plus3-3.rom";
@@ -460,7 +460,7 @@ void load_rom(char type) {
 		}
 	break;
 	case 4:
-		filenames[0]="spectrum-roms/128-spanish-0.rom";
+		if (ordenador.se_basic) filenames[0]="spectrum-roms/opense.rom"; else filenames[0]="spectrum-roms/128-spanish-0.rom";
 		filenames[1]="spectrum-roms/128-spanish-1.rom";
 		filenames[2]=NULL;
 		retval=load_a_rom(filenames);
