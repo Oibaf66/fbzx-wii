@@ -781,6 +781,7 @@ int save_config(struct computer *object, char *filename) {
 	fprintf(fconfig,"text=%c%c",48+object->text_mini,10);
 	fprintf(fconfig,"precision=%c%c",48+object->precision,10);
 	fprintf(fconfig,"volume=%c%c",65+(object->volume),10);
+	fprintf(fconfig,"microspeech_volume=%c%c",65+(object->currah_volume),10);
 	fprintf(fconfig,"bw=%c%c",48+object->bw,10);
 	fprintf(fconfig,"tap_fast=%c%c",48+object->tape_fast_load,10);
 	fprintf(fconfig,"pause_instant_load=%c%c",48+object->pause_instant_load,10);
@@ -962,7 +963,7 @@ int load_config(struct computer *object, char *filename) {
 	unsigned char volume=255,mode128k=255,issue=255,ntsc=255, joystick1=255,joystick2=255,ay_emul=255,mdr_active=255,
 	dblscan=255,framerate =255, screen =255, text=255, precision=255, bw=255, tap_fast=255, audio_mode=255,
 	joypad1=255, joypad2=255, rumble1=255, rumble2=255, joy_n=255, key_n=255, port=255, autoconf=255, turbo=225, vk_auto=255, vk_rumble=255,
-	rewind_on_reset=255, pause_instant_load =255, ignore_z80_joy_conf=255, gui_volume=255, fuller_box_sound=255, currah_active = 255, se_basic =255;
+	rewind_on_reset=255, pause_instant_load =255, ignore_z80_joy_conf=255, gui_volume=255, fuller_box_sound=255, currah_active = 255, se_basic =255, currah_volume = 255;
 	
 	if (filename) strcpy(config_path,filename); 
 	else return -2;
@@ -1066,6 +1067,10 @@ int load_config(struct computer *object, char *filename) {
 		}
 		if (!strncmp(line,"volume=",7)) {
 			volume=(line[7]-'A');
+			continue;
+		}
+		if (!strncmp(line,"microspeech_volume=",19)) {
+			currah_volume=(line[19]-'A');
 			continue;
 		}
 		if (!strncmp(line,"bw=",3)) {
@@ -1190,6 +1195,9 @@ int load_config(struct computer *object, char *filename) {
 	if (volume<17) {
 		object->volume=volume;
 		set_volume(volume);
+	}
+	if (currah_volume<9) {
+		object->currah_volume=currah_volume;
 	}
 	if (tap_fast<2) {
 		object->tape_fast_load=tap_fast;
@@ -1326,7 +1334,7 @@ int main(int argc,char *argv[])
 	printf("Modo: %d\n",ordenador.mode128k);
 	
 	printf("Set volume\n");
-	set_volume(16);
+	set_volume(8);
 	
 	// load current config
 	strcpy(config_path,getenv("HOME"));

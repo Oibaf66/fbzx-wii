@@ -120,12 +120,14 @@ static const char *audio_messages[] = {
 		/*03*/		"^|on|off",	
 		/*04*/		"Fuller Box Audio",
 		/*05*/		"^|on|off",	
-		/*06*/		"Currah microspeech",
-		/*07*/		"^|on|off",	
-		/*08*/		"Audio mode",
-		/*09*/		"^|mono|ABC|ACB|BAC",
-		/*10*/		"Gui Volume",
-		/*11*/		"^|0|1|2|3|4|5",
+		/*06*/		"Currah Microspeech",
+		/*07*/		"^|on|off",
+		/*08*/		"Currah MS volume",
+		/*09*/		"^|0|1|2|3|4|5|6|7|max",
+		/*10*/		"Audio mode",
+		/*12*/		"^|mono|ABC|ACB|BAC",
+		/*12*/		"Gui Volume",
+		/*13*/		"^|0|1|2|3|4|5",
 		NULL
 };
 
@@ -710,7 +712,7 @@ static void tape_settings(void)
 
 static int audio_settings(void)
 {
-	unsigned int submenus[6], old_submenus_3;
+	unsigned int submenus[7], old_submenus_3;
 	int opt, retorno;
 
 	retorno = 0;
@@ -722,8 +724,9 @@ static int audio_settings(void)
 	submenus[1] = !ordenador.ay_emul;
 	submenus[2] = !ordenador.fuller_box_sound;
 	submenus[3] = !ordenador.currah_active;
-	submenus[4] = ordenador.audio_mode;
-	submenus[5] = ordenador.gui_volume;
+	submenus[4] = ordenador.currah_volume;
+	submenus[5] = ordenador.audio_mode;
+	submenus[6] = ordenador.gui_volume;
 	
 	old_submenus_3 = submenus[3];
 	
@@ -738,8 +741,9 @@ static int audio_settings(void)
 	if ((submenus[3]==0)&&(ordenador.mode128k))  {ordenador.currah_active=0; msgInfo("Currah only with 48k model", 3000, NULL);}
 	else if (ordenador.currah_rom_unavailable) {ordenador.currah_active=0; msgInfo("currah.rom not present", 3000, NULL);}
 	else ordenador.currah_active = !submenus[3];
-	ordenador.audio_mode = submenus[4];
-	ordenador.gui_volume = submenus[5];
+	ordenador.currah_volume = submenus[4];
+	ordenador.audio_mode = submenus[5];
+	ordenador.gui_volume = submenus[6];
 	
 	if (old_submenus_3 == ordenador.currah_active) {ResetComputer(); retorno = -2;}
 	

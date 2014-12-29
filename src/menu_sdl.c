@@ -1347,6 +1347,8 @@ static const char *menu_select_file_internal(char *dir_path,
 	char buf[80];
 	unsigned int block_pos;
 	
+	block_pos = 0;
+	
 	if (!strcmp(dir_path,"browser")) file_list =  get_file_list_browser(tape_pos, &block_pos);  
 	else if (!strcmp(dir_path,"select_block")) file_list = get_file_list_select_block();  
     else file_list = get_file_list(dir_path);

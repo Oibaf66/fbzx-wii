@@ -142,6 +142,7 @@ struct computer {
 	unsigned char fuller_box_sound; // 0: no AY emulation; 1: AY emulation
 	unsigned char audio_mode; //mono, ABC, ACB, BAC
 	unsigned int gui_volume;
+	unsigned int currah_volume; // microspeech volume
 	unsigned int vol_a,vol_b,vol_c;
 	unsigned int tst_ay;
 	unsigned int ay_latch;
