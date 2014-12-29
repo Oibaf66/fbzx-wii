@@ -1625,7 +1625,7 @@ void play_click(int sound)
 	if (sound_type == SOUND_ASND)
 	{
 		ASND_SetVoice(2,VOICE_STEREO_16BIT_BE,ordenador.freq,0, click_buffer_pointer[sound],len_click_buffer[sound],
-			ordenador.gui_volume*51, ordenador.gui_volume*51, NULL);
+			ordenador.gui_volume*40, ordenador.gui_volume*40, NULL);
 		return;
 	}
 #endif	
