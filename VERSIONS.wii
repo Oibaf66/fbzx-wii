@@ -1,3 +1,12 @@
+version 13:
+	* New set of microspeech allophones (shorter)
+	* Added GUI volume setting
+	* Added Currah microspeech volume setting
+	* SE Basic extended to all models
+	* Wiimote button 2 as default fire
+
+	-- Fabio Olimpieri <fabio.olimpieri@tin.it> Dec 31 2014
+
 version 12:
 	* Added Currah microspeech emulation
 	* Added Fuller box sound and joystick emulation

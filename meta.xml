@@ -2,11 +2,12 @@
   <app version="1">
     <name>FBZX Wii</name>
     <coder>Oibaf (Fabio Olimpieri)</coder>
-    <version>12.0</version>
-    <release_date>20140608</release_date>
+    <version>13.0</version>
+    <release_date>20141231</release_date>
     <short_description>ZX Spectrum Emulator</short_description>
     <long_description>A ZX Spectrum emulator. 
 The project is based on FBZX originally written by Sergio Costas (http://www.rastersoft.com/fbzx.html). 
+The code of FBZX Wii has been largely improved with many new features.
 
 USAGE
 ------
