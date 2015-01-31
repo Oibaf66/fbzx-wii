@@ -6,7 +6,7 @@ Put .z80 and .sna files in /fbzx-gc/snapshots or .tap and .tzx files in /fbzx-gc
 
 Press the "start" button to access the in-game menu. Press X or A to select an item and Y or B to come back to the previous menu.
 
-Press the "R" button to access the virtual keyboard.
+Press the "R" button to access the virtual keyboard. Use the C-stick to move the cursor.
 
 The in-game menu allows you to insert tapes, load them and configure the display, joysticks etc.
 
