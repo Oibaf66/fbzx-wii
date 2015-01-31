@@ -35,9 +35,12 @@
 #include "Virtualkeyboard.h"
 #include "gui_sdl.h"
 #include "menu_sdl.h"
-#if defined(GEKKO)
-# include <ogc/system.h>
+#if defined(HW_RVL)
 # include <wiiuse/wpad.h> 
+#endif
+
+#if defined(HW_DOL)
+# include <ogc/pad.h> 
 #endif
 
 #ifdef DEBUG
@@ -102,9 +105,9 @@ void computer_init () { //Called only on start-up
 	ordenador.joystick[1] = 0; // Cursor
 	ordenador.joypad_as_joystick[0]= 1;
 	ordenador.joypad_as_joystick[1]= 1;
-#ifdef GEKKO
+#ifdef HW_RVL
 	ordenador.vk_auto = 1; //auto Vk
-#else	
+#else //HW_DOL - WIN
 	ordenador.vk_auto = 0; //Vk called by +
 #endif	
 	ordenador.vk_rumble = 1; //enabled
@@ -112,9 +115,13 @@ void computer_init () { //Called only on start-up
 	ordenador.rumble[1] = 0;
 	ordenador.turbo = 1; //auto turbo 
 	ordenador.turbo_state = 0;
+#ifdef HW_DOL
+	ordenador.precision = 0; //gamecube not enough powerful
+	ordenador.precision_old = 0;
+#else //HW_RVL - WIN	
 	ordenador.precision = 1; //precision
 	ordenador.precision_old = 1;
-
+#endif	
 	ordenador.tape_readed = 0;
 	ordenador.tape_stop = 1;	// tape stop
 	ordenador.tape_stop_fast = 1;	// tape stop
@@ -169,9 +176,14 @@ void computer_init () { //Called only on start-up
 	ordenador.kbd_buffer_pointer = 0;
 	ordenador.vk_is_active=0;
 	ordenador.key = SDL_GetKeyState(NULL);
+	#ifdef HW_RVL
 	ordenador.joybuttonkey[0][3]=SDLK_LALT; //Fire button to wiimote1 button 2
 	ordenador.joybuttonkey[1][3]=SDLK_LALT; //Fire button to wiimote1 button 2
-	ordenador.port=0; //PORT SD
+	#else // HW_DOL - Win
+	ordenador.joybuttonkey[0][0]=SDLK_LALT; //Fire button to gamepad button A
+	ordenador.joybuttonkey[1][0]=SDLK_LALT; //Fire button to gamepad button A
+	#endif
+	ordenador.port=0; //PORT Default
 	ordenador.smb_enable=0;
 	strcpy (ordenador.SmbUser,"User");
 	strcpy (ordenador.SmbPwd, "Password");
@@ -1224,11 +1236,23 @@ inline void read_keyboard () {
 	
 	SDL_JoystickUpdate();
 	
+	#ifdef HW_DOL
+	if (SDL_JoystickGetButton(ordenador.joystick_sdl[0], 7)) //Gamecube button "Start"
+	{if (ordenador.vk_is_active) virtkey_ir_deactivate();main_menu(); }
+	#else //HW_RVL - WIN
 	if (SDL_JoystickGetButton(ordenador.joystick_sdl[0], 6) ||//Wii button "Home"
 	SDL_JoystickGetButton(ordenador.joystick_sdl[0], 19)) 
 	{if (ordenador.vk_is_active) virtkey_ir_deactivate();main_menu(); }
+	#endif
 	
-	 
+	#ifdef HW_DOL
+	int SDL_PrivateMouseMotion(Uint8 buttonstate, int relative, Sint16 x, Sint16 y);
+	if (SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 2) > 16384) SDL_PrivateMouseMotion(0,1,4/RATIO,0); //C-stick Horizontal axix
+	if (SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 2) < -16384) SDL_PrivateMouseMotion(0,1,-4/RATIO,0); //C-stick Horizontal axix
+	if (SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 3) > 16384) SDL_PrivateMouseMotion(0,1,0,4/RATIO); //C-stick vertical axix
+	if (SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 3) < -16384) SDL_PrivateMouseMotion(0,1,0,-4/RATIO); //C-stick vertical axix
+	#endif
+	
 	for(joy_n=0;joy_n<ordenador.joystick_number;joy_n++) 
 	{
 	joy_axis_x[joy_n] = SDL_JoystickGetAxis(ordenador.joystick_sdl[joy_n], 0);
@@ -1250,18 +1274,20 @@ inline void read_keyboard () {
 		SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], joybutton_n);
 		}
 			
+	#ifdef HW_RVL
 	for(joybutton_n=7;joybutton_n<18;joybutton_n++)
 		{
 		joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][joybutton_n])] = 
 		SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], joybutton_n);
 		}
 		
-		if (ordenador.vk_auto) { //Check if it is possible to put in the loop
-		joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][5])] = 
+		if (ordenador.vk_auto) {
+		joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][5])] = //"+" Wiimote button
 		SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 5);
 		joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][18])] = 
 		SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 18);
-		}	
+		}
+	#endif	
 	}	
 		//JOY HAT
 		status_hat[joy_n] = SDL_JoystickGetHat(ordenador.joystick_sdl[joy_n], 0);
@@ -1578,7 +1604,11 @@ inline void read_keyboard () {
 		
 			if (fire_on[joy_n] && !rumble_on[joy_n] && !fire_pressed[joy_n])  
 			{			
+				#ifdef HW_RVL
 				WPAD_Rumble(joy_n, 1);
+				#else //HW_DOL
+				PAD_ControlMotor(joy_n,PAD_MOTOR_RUMBLE);
+				#endif
 				last_ticks[joy_n]= cur_ticks;
 				rumble_on[joy_n]=1;	
 				fire_pressed[joy_n]=1;
@@ -1592,14 +1622,22 @@ inline void read_keyboard () {
 			
 			if (((cur_ticks - last_ticks[joy_n] > 90) && rumble_on[joy_n] && !fire_pressed[joy_n]) ||(!fire_on[joy_n] && !rumble_on[joy_n] && fire_pressed[joy_n]))
 			{
+				#ifdef HW_RVL
 				WPAD_Rumble(joy_n, 0);
+				#else //HW_DOL
+				PAD_ControlMotor(joy_n,PAD_MOTOR_STOP);
+				#endif
 				rumble_on[joy_n]=0;
 				fire_pressed[joy_n]=0;
 			}
 			
 			if ((cur_ticks - last_ticks[joy_n] > 90) && rumble_on[joy_n] && fire_pressed[joy_n])
 			{
+				#ifdef HW_RVL
 				WPAD_Rumble(joy_n, 0);
+				#else //HW_DOL
+				PAD_ControlMotor(joy_n,PAD_MOTOR_STOP);
+				#endif
 				rumble_on[joy_n]=0;
 				fire_pressed[joy_n]=1;	
 			}
@@ -1692,7 +1730,7 @@ inline void read_keyboard () {
 	static char old_plus_button;
 	char plus_button;
 	
-	plus_button= SDL_JoystickGetButton(ordenador.joystick_sdl[0], 5) || //Wii  button "+"
+	plus_button= SDL_JoystickGetButton(ordenador.joystick_sdl[0], 5) || //Wii  button "+" - Gamecube "R"
 	SDL_JoystickGetButton(ordenador.joystick_sdl[0], 18);
 	
 	
@@ -1701,12 +1739,12 @@ inline void read_keyboard () {
 		
 	if (ordenador.vk_auto)
 	{
-	#ifdef GEKKO
+	#ifdef HW_RVL
 	WPADData *wd;
 	wd = WPAD_Data(0); //only wiimote 0
 	if ((wd->ir.valid)&&(!ordenador.vk_is_active)) virtkey_ir_activate();	
 	if ((!wd->ir.valid)&&(ordenador.vk_is_active)) virtkey_ir_deactivate();	
-	#else
+	#else //WH_DOL - Win
 	int x=0,y=0 ;
 	SDL_GetMouseState(&x,&y);
 	if ((x>64/RATIO)&&(x<576/RATIO)&&(y>90/RATIO)&&(y<390/RATIO)) 
@@ -1852,11 +1890,19 @@ void ResetComputer () {
 	
 	switch(ordenador.turbo)
 	{
-	case 2:	//fast	
+	case 2:	//fast
+		#ifdef HW_DOL
+		update_frequency(5000000);
+		#else //HW_RVL - Win
 		update_frequency(10000000);
+		#endif
 		break;
 	case 3:	//ultra fast
+		#ifdef HW_DOL
+		update_frequency(7000000);
+		#else //HW_RVL - Win
 		update_frequency(14000000);
+		#endif
 		break;	
 	}
 	

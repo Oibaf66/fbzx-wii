@@ -3,7 +3,7 @@ WHAT EMULATES RIGHT IN FBZX WII?
 -Screen timmings in 48K and 128K mode.
 -Screen generation, so border efects and even attribute changing efects
     should work fine.
--48K sound (included the low-pass filter efect of Tape out).
+-48K sound
 -128K sound (fully emulation of the AY-3-8912).
 -Trash in the bus when reading from a non-existing port. This is right generated
     (from the data being displayed in that moment) so games works right (like
@@ -11,7 +11,8 @@ WHAT EMULATES RIGHT IN FBZX WII?
 -Spectrum 48K Issue 2 and 3 efects in the EAR bit are correctly emulated.
 -Priority of joystick over keyboard.
 -Snow efect when I register points between 64 and 127.
--Emulation of Interface I and Microdrive (only one drive).
+-Emulation of Interface I, Interface II and Microdrive (only one drive).
+-Emulation of Currah microspeech and Fuller Box
 -Memory contention
 -Emulates Spanish 128K from Investronica/Sinclair, the Amstrad Plus 2, the Amstrad Plus 2A and NTSC 48k
 -Allows to insert POKE values an files in memory (inmunity, infinite lives...)
@@ -23,4 +24,5 @@ WHAT EMULATES RIGHT IN FBZX WII?
 -ZIP archive files 
 -Tape browser
 -FTP client for loading games from internet repositories (e.g. WOS). 
+-SE Basic support
 

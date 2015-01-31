@@ -46,8 +46,13 @@
 #include "sound.h"
 
 
-#if defined(GEKKO)
+#if defined(HW_RVL)
 #include <wiiuse/wpad.h> 
+#include <asndlib.h>
+#endif
+
+#if defined(HW_DOL)
+#include <ogc/pad.h> 
 #include <asndlib.h>
 #endif
 
@@ -931,6 +936,14 @@ uint32_t menu_wait_key_press()
 		static int joy_bottons_last[2][8];
 		SDL_JoystickUpdate();
 		
+		#ifdef HW_DOL
+		int SDL_PrivateMouseMotion(Uint8 buttonstate, int relative, Sint16 x, Sint16 y);
+		if (SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 2) > 16384) SDL_PrivateMouseMotion(0,1,4/RATIO,0); //C-stick Horizontal axix
+		if (SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 2) < -16384) SDL_PrivateMouseMotion(0,1,-4/RATIO,0); //C-stick Horizontal axix
+		if (SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 3) > 16384) SDL_PrivateMouseMotion(0,1,0,4/RATIO); //C-stick vertical axix
+		if (SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 3) < -16384) SDL_PrivateMouseMotion(0,1,0,-4/RATIO); //C-stick vertical axix
+		#endif
+		
 		/* Wii-specific, sorry */
 		for (nr = 0; nr < ordenador.joystick_number; nr++) {
 			joy = ordenador.joystick_sdl[nr];
@@ -1052,7 +1065,7 @@ uint32_t menu_wait_key_press()
 
 		if (keys != 0)
 			break;
-		SDL_Delay(50);
+		SDL_Delay(20);
 	}
 	return keys;
 }

@@ -66,8 +66,13 @@ static const char *main_menu_messages[] = {
 		/*02*/		"Snapshot",
 		/*03*/		"^|Load|Save|Delete",
 		/*04*/		"#1---------------------",
+#ifdef HW_RVL
 		/*05*/		"Wiimote configuration",
 		/*06*/		"^|Wiimote1|Wiimote2",
+#else //HW_DOL - WIN
+		/*05*/		"Controller configuration",
+		/*06*/		"^|Controller1|Controller2",
+#endif		
 		/*07*/		"Tape settings",
 		/*08*/		"Emulation settings",
 		/*09*/		"Screen settings",
@@ -149,15 +154,24 @@ static const char *screen_messages[] = {
 static const  char *input_messages[] = {
 		/*00*/		"Joystick type",
 		/*01*/		"^|Curs|Kemps|Sincl1|Sincl2|Fuller|QAOP",
+#ifdef HW_RVL		
 		/*02*/		"Bind key to Wiimote",
 		/*03*/		"^|A|B|1|2|-|+",
 		/*04*/		"Bind key to Nunchuk",
 		/*05*/		"^|Z|C",
 		/*06*/		"Bind key to Classic",
 		/*07*/		"^|a|b|x|y|L|R|Zl|Zr|-|+",
-		/*08*/		"Bind key to Pad",
+#else //HW_DOL - WIN
+		/*02*/		"Bind key to Controller",
+		/*03*/		"^|A|B|X|Y|Z",
+		/*04*/		"Unused",
+		/*05*/		"^|----",
+		/*06*/		"Unused",
+		/*07*/		"^|----",
+#endif
+		/*08*/		"Bind key to D-pad",
 		/*09*/		"^|Up|Down|Left|Right",
-		/*10*/		"Use Joypad as Joystick",
+		/*10*/		"Use D-pad as Joystick",
 		/*11*/		"^|On|Off",
 		/*12*/		"Rumble",
 		/*13*/		"^|On|Off",
@@ -180,11 +194,20 @@ static const char *tools_messages[] = {
 		/*00*/		"Screen shot",
 		/*01*/		"^|Save1|Save2|Load|Delete",
 		/*02*/		"Files source",
+#ifdef HW_RVL		
 		/*03*/		"^|default|sd|usb|smb|wos",
+#else //HW_DOL - Wii
+		/*03*/		"^|default",
+#endif		
 		/*04*/		"Manage files",
 		/*05*/		"^|Paste|Copy|Delete",
+#ifdef HW_DOL		
+		/*06*/		"Unused",
+		/*07*/		"^|----",
+#else //HW_RVL - Wii
 		/*06*/		"Auto virtual keyboard",
 		/*07*/		"^|on|off",
+#endif		
 		/*08*/		"Keyboard rumble",
 		/*09*/		"^|on|off",
 		/*10*/		"  ",
@@ -196,6 +219,7 @@ static const char *tools_messages[] = {
 		NULL
 };
 
+#ifdef HW_RVL
 static const char *help_messages[] = {
 		/*00*/		"#2HOME enters the menu system where pad",
 		/*01*/		"#2and nunchuck are used to navigate.",
@@ -214,6 +238,26 @@ static const char *help_messages[] = {
 		/*14*/		"OK",
 		NULL
 };
+#else //HW_DOL - WIN
+static const char *help_messages[] = {
+		/*00*/		"#2Start enters the menu system where pad",
+		/*01*/		"#2and joysicks are used to navigate.",
+		/*02*/		"#2You can bind keyboard keys to the ",
+		/*03*/		"#2controller buttons and change the",
+		/*04*/		"#2emulation options.",
+		/*05*/		"#2 ",
+		/*06*/		"#2The easiest way to play a game is to ",
+		/*07*/		"#2load a snapshot (.z80 and .sna files).",
+		/*08*/		"#2You can also insert a tape file",
+		/*09*/		"#2and load it in the tape menu.",
+		/*10*/		"#2 ",
+		/*11*/		"#2More information is available in",
+		/*12*/		"#2   http://wiibrew.org/wiki/FBZX_Wii",
+		/*13*/		"#2 ",
+		/*14*/		"OK",
+		NULL
+};
+#endif
 
 static const char *confs_messages[] = {
 		/*00*/		"General configurations",
@@ -688,15 +732,23 @@ static void tape_settings(void)
 		ordenador.turbo_state=0;
 		ordenador.precision = ordenador.precision_old;
 		break;
-	case 2:	//fast	
+	case 2:	//fast
+		#ifdef HW_DOL
+		update_frequency(5000000);
+		#else //HW_RVL - Win
 		update_frequency(10000000);
+		#endif
 		jump_frames=4;
 		ordenador.precision =0;
 		ordenador.precision_old =0;
 		ordenador.turbo_state=2;
 		break;
 	case 3:	//ultra fast
+		#ifdef HW_DOL
+		update_frequency(7000000);
+		#else //HW_RVL - Win
 		update_frequency(14000000);
+		#endif
 		jump_frames=24;
 		ordenador.precision =0;
 		ordenador.precision_old =0;
@@ -834,8 +886,12 @@ static void input_options(int joy)
 	submenus[0] = ordenador.joystick[joy];
 	submenus[5] = !ordenador.joypad_as_joystick[joy];
 	submenus[6] = !ordenador.rumble[joy];
-	
+
+#ifdef HW_RVL	
 	opt = menu_select_title("Wiimote configuration",
+#else //HW_DOL - Win
+	opt = menu_select_title("Controller configuration",
+#endif	
 			input_messages, submenus);
 	if (opt < 0)
 		return;
@@ -1331,7 +1387,7 @@ static void set_port(int which)
 		strcat(load_path_poke,"poke");
 		ordenador.port = which;
 		break;
-	#ifdef GEKKO	
+	#ifdef HW_RVL	
 	case 1: //PORT_SD
 		if (sdismount) {
 			strcpy(load_path_snaps,"sd:/");
@@ -1679,7 +1735,11 @@ static int load_poke_file()
 
 static void help(void)
 {
+	#ifdef HW_DOL
+	menu_select_title("FBZX-GC help",
+	#else //HW_RVL - Win
 	menu_select_title("FBZX-WII help",
+	#endif
 			help_messages, NULL);
 }
 
@@ -1832,7 +1892,9 @@ static int tools()
 		return 0;
 		
 	if (old_port!= submenus[1]) {set_port(submenus[1]);retorno=0;}
+	#ifndef HW_DOL
 	ordenador.vk_auto = !submenus[3];
+	#endif
 	ordenador.vk_rumble = !submenus[4];
 	
 	switch(opt)

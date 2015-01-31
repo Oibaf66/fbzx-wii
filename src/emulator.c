@@ -44,13 +44,18 @@
 #include <dirent.h>
 
 
-#ifdef GEKKO
+#ifdef HW_RVL
 #include <gccore.h>
 #include <fat.h>
 #include <ogc/usbstorage.h>
 #include <network.h>
 #include <smb.h>
 #include "tinyFTP/ftp_devoptab.h"
+#endif
+
+#ifdef HW_DOL
+#include <gccore.h>
+#include <fat.h>
 #endif
 
 #ifdef DEBUG
@@ -107,7 +112,7 @@ extern int RATIO;
 #define mkdir(name, mode) mkdir(name)
 #endif
 
-#if defined(GEKKO)
+#if defined(HW_RVL)
 
 
 /****************************************************************************
@@ -658,10 +663,13 @@ void end_system() {
 	
 	if (!chdir(path_tmp)) {chdir("/"); remove_dir(path_tmp);} //remove the tmp directory if it exists
 	
-	#ifdef GEKKO
+	#ifdef HW_RVL
 	if (smbismount) CloseShare();
 	if (ftpismount) CloseFTP();
 	DeInitUSB();
+	#endif
+	
+	#ifdef GEKKO
 	fatUnmount(0);
 	#endif
 	
@@ -1281,7 +1289,11 @@ int main(int argc,char *argv[])
 		#ifdef GEKKO
 		fatInitDefault();
 		#endif
-	fdebug = fopen("/fbzx-wii/logfile.txt","w");
+	#ifdef HW_DOL
+		fdebug = fopen("/fbzx-gc/logfile.txt","w");
+		#else //HW_RVL - Win
+		fdebug = fopen("/fbzx-wii/logfile.txt","w");
+		#endif
 	#endif
 	
 	#ifdef MINGW
@@ -1301,7 +1313,12 @@ int main(int argc,char *argv[])
 	dblbuffer=1;
 	hwsurface=1;
 	sound_type=SOUND_ASND; //play_click does not work with ASND double buffer
-	setenv("HOME", "/fbzx-wii", 1);
+	
+		#ifdef HW_RVL
+		setenv("HOME", "/fbzx-wii", 1);
+		#else //HW_DOL
+		setenv("HOME", "/fbzx-gc", 1);
+		#endif
 	
 	//initialize libfat library
 	if (fatInitDefault())
@@ -1323,7 +1340,9 @@ int main(int argc,char *argv[])
 		printf("Couldn't initialize SD fat subsytem\n");
  	
 	if (sdismount) closedir (dp);
-		
+	#endif	
+	
+	#ifdef HW_RVL
 	usbismount = InitUSB();
 	#endif
 
@@ -1496,7 +1515,7 @@ int main(int argc,char *argv[])
 	//Load the splash screen
 	if (ordenador.zaurus_mini==0) if (load_zxspectrum_picture()) SDL_FreeSurface (image);
 	
-	#ifdef GEKKO
+	#ifdef HW_RVL
 	
 	load_config_network(&ordenador);
 	
@@ -1562,7 +1581,7 @@ int main(int argc,char *argv[])
 	if ((!write_protection)&&(!mkdir(path_tmp,0777))){printf("Making tmp directory\n"); tmpismade=1;} 
 	else {printf("Can't make tmp directory\n"); tmpismade=0;}
 	
-	#ifdef GEKKO
+	#ifdef HW_RVL
 	switch (ordenador.port)
 	{
 	case 1: //SD
@@ -1655,7 +1674,9 @@ int main(int argc,char *argv[])
 
 	ResetComputer();
 
+	#ifndef HW_DOL
 	SDL_Delay(1000);
+	#endif
 
 	printf("Reset screen\n");
 	clean_screen();

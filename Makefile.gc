@@ -1,27 +1,13 @@
-#
-# Make file for windows version of FBZX Wii
-# 
 #---------------------------------------------------------------------------------
 # Clear the implicit built in rules
 #---------------------------------------------------------------------------------
 .SUFFIXES:
 #---------------------------------------------------------------------------------
+ifeq ($(strip $(DEVKITPPC)),)
+$(error "Please set DEVKITPPC in your environment. export DEVKITPPC=<path to>devkitPPC")
+endif
 
-export PATH	:= /c/devkitPro/MinGW/bin:$(PATH)
-export CC	:= gcc
-export SHELL=/bin/bash
-	
-#---------------------------------------------------------------------------------
-%.o: %.c
-	@echo $(notdir $<)
-	@$(CC) $(CFLAGS) -c $< -o $@
-
-#---------------------------------------------------------------------------------
-%.exe:
-	@echo linking ... $(notdir $@)
-	@$(LD)  $^ $(LDFLAGS) $(LIBPATHS) $(LIBS) -o $@
-
-
+include $(DEVKITPPC)/gamecube_rules
 
 #---------------------------------------------------------------------------------
 # TARGET is the name of the output
@@ -29,31 +15,32 @@ export SHELL=/bin/bash
 # SOURCES is a list of directories containing source code
 # INCLUDES is a list of directories containing extra header files
 #---------------------------------------------------------------------------------
-TARGET		:=	fbzx-wii
+TARGET		:=	fbzx_gc
 BUILD		:=	build
 SOURCES		:=	src src/z80free src/minizip
 DATA		:=	 
-INCLUDES	:=
+INCLUDES	:=	
 
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
 
-CFLAGS	= -g -O2 -Wall $(INCLUDE) -Wno-pointer-sign -Wno-unused-but-set-variable -DBYTE_ORDER=LITTLE_ENDIAN -DMINGW
+CFLAGS	= -g -O3 -Wall -Wno-unused-but-set-variable $(MACHDEP) $(INCLUDE) -Wno-pointer-sign
 CXXFLAGS	=	$(CFLAGS)
 
-LDFLAGS	=	-g -Wl,-Map,$(notdir $@).map 
+LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
 
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
-LIBS	:=	 -lmingw32 -lSDLmain -lSDL -lSDL_image -lSDL_ttf -lz 
+LIBS	:=	  -lSDL_mixer -lsmpeg -lvorbisidec -lSDL_image -lpng -ljpeg -lz -lSDL_ttf -lSDL -lSDL_gfx -lasnd -laesnd -lfreetype -lfat -logc -lm
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
-LIBDIRS	:= 
+LIBDIRS	:= $(PORTLIBS)
+
 
 #---------------------------------------------------------------------------------
 # no real need to edit anything past this point unless you need to add additional
@@ -97,12 +84,14 @@ export OFILES	:=	$(addsuffix .o,$(BINFILES)) \
 #---------------------------------------------------------------------------------
 export INCLUDE	:=	$(foreach dir,$(INCLUDES), -iquote $(CURDIR)/$(dir)) \
 					$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
-					-I$(CURDIR)/$(BUILD)
+					-I$(CURDIR)/$(BUILD) \
+					-I$(LIBOGC_INC)
 
 #---------------------------------------------------------------------------------
 # build a list of library paths
 #---------------------------------------------------------------------------------
-export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib) -L
+export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib) \
+					-L$(LIBOGC_LIB)
 
 export OUTPUT	:=	$(CURDIR)/$(TARGET)
 .PHONY: $(BUILD) clean
@@ -110,67 +99,71 @@ export OUTPUT	:=	$(CURDIR)/$(TARGET)
 #---------------------------------------------------------------------------------
 $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
-	@make --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile.win
+	@make --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile.gc
 
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(OUTPUT).exe dist
+	@rm -fr $(BUILD) $(OUTPUT).elf $(OUTPUT).dol dist
 
 #---------------------------------------------------------------------------------
 
 
 dist: $(BUILD)
 	rm -fr $@
-	mkdir -p $@/fbzx-wii/fbzx
-	mkdir -p $@/fbzx-wii/spectrum-roms
-	mkdir -p $@/fbzx-wii/tapes
-	mkdir -p $@/fbzx-wii/snapshots
-	mkdir -p $@/fbzx-wii/snapshots/rom-cartridges
-	mkdir -p $@/fbzx-wii/microdrives
-	mkdir -p $@/fbzx-wii/scr
-	mkdir -p $@/fbzx-wii/scr2
-	mkdir -p $@/fbzx-wii/configurations
-	mkdir -p $@/fbzx-wii/poke
-	mkdir -p $@/fbzx-wii/doc
-	mkdir -p $@/fbzx-wii/fbzx/allophones
-	cp fbzx-wii.exe $@/fbzx-wii/fbzx-wii.exe
-	cp meta.xml $@/fbzx-wii/meta.xml
-	cp spectrum-roms/* $@/fbzx-wii/spectrum-roms
-	cp dll/* $@/fbzx-wii
-	cp images/keymap.bmp $@/fbzx-wii/fbzx
-	cp images/Spectrum_keyboard.png $@/fbzx-wii/fbzx
-	cp images/symbol_shift.png $@/fbzx-wii/fbzx
-	cp images/caps_shift.png $@/fbzx-wii/fbzx
-	cp images/Spectrum_keyboard_small.png $@/fbzx-wii/fbzx
-	cp images/symbol_shift_small.png $@/fbzx-wii/fbzx
-	cp images/caps_shift_small.png $@/fbzx-wii/fbzx
-	cp images/ZXSpectrum48k.png $@/fbzx-wii/fbzx
-	cp images/stripes.png $@/fbzx-wii/fbzx
-	cp images/stripes_small.png $@/fbzx-wii/fbzx
-	cp images/ZX_Spectrum.ttf $@/fbzx-wii/fbzx
-	cp images/FreeMono.ttf $@/fbzx-wii/fbzx
-	cp sound/menu_navigation_LE.raw $@/fbzx-wii/fbzx
-	cp sound/select_LE.raw $@/fbzx-wii/fbzx
-	cp sound/unselect_LE.raw $@/fbzx-wii/fbzx	
-	cp fbzx.net $@/fbzx-wii
-	cp AMSTRAD CAPABILITIES COPYING FAQ README README.TZX VERSIONS VERSIONS.wii README_WIN.txt $@/fbzx-wii/doc
-	cp allophones/*.* $@/fbzx-wii/fbzx/allophones
-	touch $@/fbzx-wii/tapes/dummy
-	touch $@/fbzx-wii/snapshots/dummy
-	touch $@/fbzx-wii/snapshots/rom-cartridges/dummy
-	touch $@/fbzx-wii/microdrives/dummy
-	touch $@/fbzx-wii/scr/dummy
-	touch $@/fbzx-wii/scr2/dummy
-	touch $@/fbzx-wii/configurations/dummy
-	touch $@/fbzx-wii/poke/dummy
-	cd $@ && tar -czf ../fbzx-wii-windows-v-bin.tar.gz *
+	mkdir -p $@/fbzx-gc
+	mkdir -p $@/fbzx-gc/fbzx
+	mkdir -p $@/fbzx-gc/spectrum-roms
+	mkdir -p $@/fbzx-gc/tapes
+	mkdir -p $@/fbzx-gc/snapshots
+	mkdir -p $@/fbzx-gc/snapshots/rom-cartridges
+	mkdir -p $@/fbzx-gc/microdrives
+	mkdir -p $@/fbzx-gc/scr
+	mkdir -p $@/fbzx-gc/scr2
+	mkdir -p $@/fbzx-gc/configurations
+	mkdir -p $@/fbzx-gc/poke
+	mkdir -p $@/fbzx-gc/doc
+	mkdir -p $@/fbzx-gc/fbzx/allophones
+	cp fbzx_gc.dol $@/fbzx-gc/fbzx_gc.dol
+	cp spectrum-roms/* $@/fbzx-gc/spectrum-roms
+	cp images/keymap.bmp $@/fbzx-gc/fbzx
+	cp images/Spectrum_keyboard.png $@/fbzx-gc/fbzx
+	cp images/symbol_shift.png $@/fbzx-gc/fbzx
+	cp images/caps_shift.png $@/fbzx-gc/fbzx
+	cp images/Spectrum_keyboard_small.png $@/fbzx-gc/fbzx
+	cp images/symbol_shift_small.png $@/fbzx-gc/fbzx
+	cp images/caps_shift_small.png $@/fbzx-gc/fbzx
+	cp images/ZXSpectrum48k.png $@/fbzx-gc/fbzx
+	cp images/stripes.png $@/fbzx-gc/fbzx
+	cp images/stripes_small.png $@/fbzx-gc/fbzx
+	cp images/ZX_Spectrum.ttf $@/fbzx-gc/fbzx
+	cp images/FreeMono.ttf $@/fbzx-gc/fbzx
+	cp sound/menu_navigation_BE.raw $@/fbzx-gc/fbzx
+	cp sound/select_BE.raw $@/fbzx-gc/fbzx
+	cp sound/unselect_BE.raw $@/fbzx-gc/fbzx
+	cp AMSTRAD CAPABILITIES COPYING FAQ README README.TZX README_GC.txt VERSIONS VERSIONS.wii $@/fbzx-gc/doc
+	cp allophones/*.* $@/fbzx-gc/fbzx/allophones
+	touch $@/fbzx-gc/tapes/dummy
+	touch $@/fbzx-gc/snapshots/dummy
+	touch $@/fbzx-gc/snapshots/rom-cartridges/dummy
+	touch $@/fbzx-gc/microdrives/dummy
+	touch $@/fbzx-gc/scr/dummy
+	touch $@/fbzx-gc/scr2/dummy
+	touch $@/fbzx-gc/configurations/dummy
+	touch $@/fbzx-gc/poke/dummy
+	cd $@ && tar -czf ../fbzx-gc-vx-bin.tar.gz *
 
 distsource:
-	cd .. && cp -r fbzx-wii fbzx-wii-v
-	cd ../fbzx-wii-v && find . -name ".svn" | xargs rm -rf
-	cd .. && tar -czf fbzx-wii-v.tar.gz fbzx-wii-v
-	cd .. && rm -fr fbzx-wii-v
+	cd .. && cp -r fbzx-gc fbzx-gc-v
+	cd ../fbzx-gc-v && find . -name ".svn" | xargs rm -rf
+	cd .. && tar -czf fbzx-gc-v.tar.gz fbzx-gc-v
+	cd .. && rm -fr fbzx-gc-v
+	
+	
+
+#---------------------------------------------------------------------------------
+run:
+	wiiload $(TARGET).dol
 
 
 #---------------------------------------------------------------------------------
@@ -181,7 +174,8 @@ DEPENDS	:=	$(OFILES:.o=.d)
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
-$(OUTPUT).exe: $(OFILES)
+$(OUTPUT).dol: $(OUTPUT).elf
+$(OUTPUT).elf: $(OFILES)
 
 #---------------------------------------------------------------------------------
 # This rule links in binary data with the .jpg extension

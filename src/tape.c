@@ -57,8 +57,13 @@ inline void tape_read(FILE *fichero, int tstados) {
 	//Auto ultra fast mode
 	if ((ordenador.turbo_state != 1)&&(ordenador.turbo==1))
 	{
+		#ifdef HW_DOL
+		if (ordenador.tape_file_type==TAP_TAP) update_frequency(7000000);
+		else update_frequency(6000000);
+		#else //HW_RVL - Win
 		if (ordenador.tape_file_type==TAP_TAP) update_frequency(13000000);
 		else update_frequency(11000000);
+		#endif
 		jump_frames=7;
 		ordenador.precision_old=ordenador.precision;
 		ordenador.precision =0;
@@ -1307,7 +1312,11 @@ end_fast_load_routine:
 			//Anticipate auto ultra fast mode
 			if ((ordenador.turbo_state!= 1)&&(ordenador.turbo==1))
 			{
+			#ifdef HW_DOL
+			update_frequency(5000000);  //precision could be on
+			#else //HW_RVL - Win
 			update_frequency(10000000);  //precision could be on
+			#endif
 			jump_frames=3;
 			//ordenador.turbo_state=4;
 			}
