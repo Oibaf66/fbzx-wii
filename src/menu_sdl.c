@@ -444,12 +444,7 @@ void menu_print_font(SDL_Surface *screen, int r, int g, int b,
 		&& buf[0] != '-' && buf[0] != ' ' && !strstr(buf, "  \""))
 	{
 		length = strlen(buf); 
-		if (length>max_string)
-		{
-			if (buf[length-8]== '.') strcpy (buf + max_string-8, buf + length-8);
-				else if (buf[length-4] == '.') strcpy (buf + max_string-4, buf + length-4);
-				else buf[length]=0;
-		}
+		if (length>max_string) buf[max_string]=0;
 	}
 	/* Fixup multi-menu option look */
 	for (i = 0; i < strlen(buf) ; i++)
@@ -573,8 +568,54 @@ void draw_scr_file(int x,int y, char *filename)
 		}
 }
 
+int quit_thread;
+
+struct  
+{ 
+	SDL_Surface *screen; 
+	int x; 
+	int y; 
+	SDL_Rect r;
+	const char *msg;  
+	int font_type;
+	int max_string;
+} thread_struct;
+
+
+int menu_thread(void * data) 
+{ 
+
+	int i , a;
+	
+	while( quit_thread == 0 )
+	{
+		for (i=0; i<=(strlen(thread_struct.msg)-thread_struct.max_string);i++)
+		{
+			SDL_FillRect(screen, &thread_struct.r, SDL_MapRGB(screen->format, 0, 255, 255));
+			menu_print_font(thread_struct.screen, 0, 0, 0, thread_struct.x, thread_struct.y, 
+				thread_struct.msg+i, thread_struct.font_type, thread_struct.max_string);
+			SDL_UpdateRect(thread_struct.screen, thread_struct.r.x, 
+				thread_struct.r.y, thread_struct.r.w, thread_struct.r.h);
+				for (a=0; a<10;a++)
+					{
+					if (i==0) SDL_Delay(80); else SDL_Delay(30);
+					if (quit_thread) return 0;
+					}
+		}
+		for (a=0; a<10;a++)
+		{
+			SDL_Delay(60);
+			if (quit_thread) return 0;
+		}
+	} 
+return 0;
+}
+
 static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_type, int draw_scr)
 {
+	static SDL_Thread *thread = NULL;  
+	quit_thread = 1;
+	
 	//int font_height = TTF_FontHeight(p_menu->p_font);
 	//int line_height = (font_height + font_height / 2);
 	int line_height = 22/ RATIO;
@@ -591,7 +632,7 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_typ
 	if (font_type==FONT_ALT) y_start = p_menu->y1 + line_height+2/RATIO;
 	else y_start = p_menu->y1 + line_height+4/RATIO;
 	
-	if ((draw_scr)&&(RATIO==1)) max_string = 30; else max_string = 46;
+	if ((draw_scr)&&(RATIO==1)) max_string = 30; else max_string = 52;
 
 	//if ( p_menu->n_entries * line_height > p_menu->y2 )
 		//y_start = p_menu->y1 + line_height;
@@ -652,9 +693,23 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_typ
 					menu_print_font(screen, 255,0,0, //Selected menu entry begining with ']' (tape browser)
 						x_start, y_start + y, msg+1, font_type,max_string ); //do not show ']'
 					else
-					menu_print_font(screen, 0,0,0, //Selected menu entry
-						x_start, y_start + y, msg, font_type,max_string );
-						
+					{
+					if (strlen(msg)<=max_string) menu_print_font(screen, 0,0,0, //Selected menu entry
+						x_start, y_start + y, msg, font_type,max_string);
+						else
+						{
+							if (thread) SDL_WaitThread(thread, NULL);
+							thread_struct.screen=screen;
+							thread_struct.x=x_start;
+							thread_struct.y=y_start + y;
+							thread_struct.msg=msg;
+							thread_struct.font_type=font_type;
+							thread_struct.max_string=max_string;
+							thread_struct.r=r;
+							quit_thread=0;
+							thread = SDL_CreateThread(menu_thread, NULL );
+						}
+					}	
 					selected_file = msg;	
 					}	
 			else if (IS_SUBMENU(msg))
@@ -1108,6 +1163,8 @@ static int menu_select_internal(SDL_Surface *screen,
 		SDL_Flip(screen);
 
 		keys = menu_wait_key_press();
+		
+		quit_thread = 1;
 
 		if (keys & KEY_UP)
 			{select_next(p_menu, 0, -1, 1);play_click(0);}
