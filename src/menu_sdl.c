@@ -579,6 +579,7 @@ struct
 	const char *msg;  
 	int font_type;
 	int max_string;
+	int browser;
 } thread_struct;
 
 
@@ -587,11 +588,17 @@ int menu_thread(void * data)
 
 	int i , a;
 	
+	SDL_Delay(30);
+	
 	while( quit_thread == 0 )
 	{
 		for (i=0; i<=(strlen(thread_struct.msg)-thread_struct.max_string);i++)
 		{
 			SDL_FillRect(screen, &thread_struct.r, SDL_MapRGB(screen->format, 0, 255, 255));
+			if (thread_struct.browser)
+			menu_print_font(thread_struct.screen, 255, 0, 0, thread_struct.x, thread_struct.y, //Selected menu entry begining with ']' (tape browser)
+				thread_struct.msg+i, thread_struct.font_type, thread_struct.max_string);
+			else
 			menu_print_font(thread_struct.screen, 0, 0, 0, thread_struct.x, thread_struct.y, 
 				thread_struct.msg+i, thread_struct.font_type, thread_struct.max_string);
 			SDL_UpdateRect(thread_struct.screen, thread_struct.r.x, 
@@ -687,16 +694,34 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_typ
 				menu_print_font(screen, 0x40,0x40,0x40, //Not used
 						x_start, y_start + y, msg, font_type, max_string);
 			else if (p_menu->cur_sel == i) /* Selected - color */
-					{
+				{
 					SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 0, 255, 255));
-					if (msg[0] == ']') 
-					menu_print_font(screen, 255,0,0, //Selected menu entry begining with ']' (tape browser)
+					if (msg[0] == ']') //Tape browser
+					{
+					 menu_print_font(screen, 255,0,0, //Selected menu entry begining with ']' (tape browser)
 						x_start, y_start + y, msg+1, font_type,max_string ); //do not show ']'
+						
+						if (strlen(msg)-1>max_string)
+						{
+							if (thread) SDL_WaitThread(thread, NULL);
+							thread_struct.screen=screen;
+							thread_struct.x=x_start;
+							thread_struct.y=y_start + y;
+							thread_struct.msg=msg+1; //do not show ']'
+							thread_struct.font_type=font_type;
+							thread_struct.max_string=max_string;
+							thread_struct.r=r;
+							thread_struct.browser=1;
+							quit_thread=0;
+							thread = SDL_CreateThread(menu_thread, NULL );
+						}
+					}
 					else
 					{
-					if (strlen(msg)<=max_string) menu_print_font(screen, 0,0,0, //Selected menu entry
+					 menu_print_font(screen, 0,0,0, //Selected menu entry
 						x_start, y_start + y, msg, font_type,max_string);
-						else
+						
+						if (strlen(msg)>max_string)
 						{
 							if (thread) SDL_WaitThread(thread, NULL);
 							thread_struct.screen=screen;
@@ -706,12 +731,13 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_typ
 							thread_struct.font_type=font_type;
 							thread_struct.max_string=max_string;
 							thread_struct.r=r;
+							thread_struct.browser=0;
 							quit_thread=0;
 							thread = SDL_CreateThread(menu_thread, NULL );
 						}
 					}	
 					selected_file = msg;	
-					}	
+				}	
 			else if (IS_SUBMENU(msg))
 			{
 				if (p_menu->cur_sel == i-1)

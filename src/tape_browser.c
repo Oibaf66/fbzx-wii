@@ -73,7 +73,7 @@ void create_browser_tzx (FILE * fichero) {
 		if (retval!=1) {retorno=1;break;}
 		browser_list[block_number]=(struct browser *)malloc(sizeof(struct browser));
 		browser_list[block_number]->position=byte_position;
-		strcpy(browser_list[block_number]->info, "                                   ");
+		strcpy(browser_list[block_number]->info, "                         ");
 		
 		printf("TZX browser: %X en %d\n",blockid, byte_position+1);
 		
@@ -91,7 +91,7 @@ void create_browser_tzx (FILE * fichero) {
 					case 0x00: //header
 						if (longitud!=19) 
 						{
-							sprintf(browser_list[block_number]->info,"Custom Data: %d bytes", longitud);
+							sprintf(browser_list[block_number]->info,"Custom Data %d bytes", longitud);
 							if (longitud>1)
 							{
 								retval=fread (value, 1, longitud-1, fichero);
@@ -125,7 +125,7 @@ void create_browser_tzx (FILE * fichero) {
 						}	
 					break;
 					case 0xFF: //data
-						sprintf(browser_list[block_number]->info,"Standard Data: %d bytes", longitud);
+						sprintf(browser_list[block_number]->info,"Standard Data %d bytes", longitud);
 						if (longitud>1)
 						{
 							retval=fread (value, 1, longitud-1, fichero);
@@ -133,7 +133,7 @@ void create_browser_tzx (FILE * fichero) {
 						}
 					break;
 					default: //Custom data
-						sprintf(browser_list[block_number]->info,"Custom Data: %d bytes", longitud);
+						sprintf(browser_list[block_number]->info,"Custom Data %d bytes", longitud);
 						if (longitud>1)
 						{
 							retval=fread (value, 1, longitud-1, fichero);
@@ -348,7 +348,7 @@ void create_browser_tap (FILE * fichero) {
 		if (retval!=1) {retorno=1;break;}
 		browser_list[block_number]=(struct browser *)malloc(sizeof(struct browser));
 		browser_list[block_number]->position=byte_position;
-		strcpy(browser_list[block_number]->info, "                                   ");
+		strcpy(browser_list[block_number]->info, "                         ");
 		strcpy(browser_list[block_number]->block_type,"Standard Speed Data");
 		printf("TAP browser: flag byte %X en %ld\n",flag_byte, ftell(fichero));
 			switch(flag_byte)
@@ -356,7 +356,7 @@ void create_browser_tap (FILE * fichero) {
 				case 0x00: //header
 				if (longitud!=19) 
 						{
-							sprintf(browser_list[block_number]->info,"Custom Data: %d bytes", longitud);
+							sprintf(browser_list[block_number]->info,"Custom Data %d bytes", longitud);
 							if (longitud>1)
 							{
 								retval=fread (value, 1, longitud-1, fichero);
@@ -390,7 +390,7 @@ void create_browser_tap (FILE * fichero) {
 						}	
 					break;
 					case 0xFF: //data
-						sprintf(browser_list[block_number]->info,"Standard Data: %d bytes", longitud);
+						sprintf(browser_list[block_number]->info,"Standard Data %d bytes", longitud);
 						if (longitud>1)
 						{
 							retval=fread (value, 1, longitud-1, fichero);
@@ -398,7 +398,7 @@ void create_browser_tap (FILE * fichero) {
 						}
 					break;
 					default: //Custom data
-						sprintf(browser_list[block_number]->info,"Custom Data: %d bytes", longitud);
+						sprintf(browser_list[block_number]->info,"Custom Data %d bytes", longitud);
 						if (longitud>1)
 						{
 							retval=fread (value, 1, longitud-1, fichero);
