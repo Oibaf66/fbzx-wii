@@ -270,6 +270,7 @@ struct computer {
 	unsigned char vk_is_active;
 	unsigned char autoconf;
 	unsigned char ignore_z80_joy_conf;
+	unsigned char show_preview;
 	
 	//Port variables
 	unsigned char port; //SD, USB, SMB or FTP

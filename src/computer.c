@@ -175,6 +175,7 @@ void computer_init () { //Called only on start-up
 	ordenador.tape_loop_counter = 0;
 	ordenador.kbd_buffer_pointer = 0;
 	ordenador.vk_is_active=0;
+	ordenador.show_preview=1;
 	ordenador.key = SDL_GetKeyState(NULL);
 	#ifdef HW_RVL
 	ordenador.joybuttonkey[0][3]=SDLK_LALT; //Fire button to wiimote1 button 2

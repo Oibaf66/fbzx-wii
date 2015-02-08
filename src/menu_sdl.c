@@ -734,7 +734,7 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_typ
 	if (font_type==FONT_ALT) y_start = p_menu->y1 + line_height+2/RATIO;
 	else y_start = p_menu->y1 + line_height+4/RATIO;
 	
-	if ((draw_scr)&&(RATIO==1)) max_string = 30; else max_string = 52;
+	if ((draw_scr)&&(RATIO==1)&&ordenador.show_preview) max_string = 30; else max_string = 52;
 
 	//if ( p_menu->n_entries * line_height > p_menu->y2 )
 		//y_start = p_menu->y1 + line_height;
@@ -781,7 +781,7 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_typ
 			y = (i - p_menu->start_entry_visible) * line_height;
 			r.x = p_menu->x1+2/RATIO;
 			r.y = p_menu->y1 + line_height +y;
-			if ((draw_scr)&&(RATIO==1)) r.w = 365; //Only in 640 mode
+			if ((draw_scr)&&(RATIO==1)&&ordenador.show_preview) r.w = 365; //Only in 640 mode
 			else r.w = p_menu->x2 - p_menu->x1-4/RATIO;
 			r.h = line_height;
 			
@@ -912,7 +912,7 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_typ
 		}
 	}
 	
-	if ((draw_scr)&&(RATIO==1)) //Only in 640 mode
+	if ((draw_scr)&&(RATIO==1)&&ordenador.show_preview) //Only in 640 mode
 	{
 	r.x = 367;
 	r.y = 39;
@@ -1264,9 +1264,19 @@ static int menu_select_internal(SDL_Surface *screen,
 		else if (keys & KEY_PAGEDOWN)
 			{select_next(p_menu, 0, 19, 0);play_click(0);}
 		else if (keys & KEY_LEFT)
-			{select_next(p_menu, -1, 0 ,1);play_click(0);}
+			{
+			if (draw_scr) 
+				ordenador.show_preview = 1;
+			else
+				{select_next(p_menu, -1, 0 ,1);play_click(0);}
+			}
 		else if (keys & KEY_RIGHT)
-			{select_next(p_menu, 1, 0 ,1);play_click(0);}
+			{
+			if (draw_scr) 
+				ordenador.show_preview = 0;
+			else
+				{select_next(p_menu, 1, 0 ,1);play_click(0);}
+			}
 		else if (keys & KEY_ESCAPE)
 			{play_click(2);break;}
 		else if (keys & KEY_SELECT)
