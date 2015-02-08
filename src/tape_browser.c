@@ -130,6 +130,7 @@ void create_browser_tzx (FILE * fichero) {
 						{
 							retval=fread (value, 1, longitud-1, fichero);
 							if (retval!=(longitud-1)) {retorno=1;break;}
+							//if (longitud==6914) save_scr_browser(value+1);
 						}
 					break;
 					default: //Custom data
@@ -395,6 +396,7 @@ void create_browser_tap (FILE * fichero) {
 						{
 							retval=fread (value, 1, longitud-1, fichero);
 							if (retval!=(longitud-1)) {retorno=1;break;}
+							//if (longitud==6914) save_scr_browser(value+1);
 						}
 					break;
 					default: //Custom data
@@ -546,4 +548,347 @@ void free_browser()
 		block_select_list[bucle]=NULL;
 	}
 	
+}
+
+/*
+void save_scr_browser(unsigned char* zx_screen)
+{ 
+	//const char *tape = ordenador.last_selected_file;
+	const char *tape =ordenador.current_tap;
+	char *ptr;
+	FILE *fichero;
+	char db[MAX_PATH_LENGTH];
+	char fb[81];
+	int retorno,retval;
+	
+	 
+	// Name (for saves) - TO CHECK
+	if (tape && strrchr(tape, '/'))
+		strncpy(fb, strrchr(tape, '/') + 1, 80);
+	else
+		strcpy(fb, "unknown");
+		
+	//remove the extension
+	ptr = strrchr (fb, '.');
+		if (ptr) *ptr = 0;
+					
+	
+	// Save SCR 1 file		
+	snprintf(db, MAX_PATH_LENGTH-1, "%s/%s.scr", path_scr1, fb);
+	
+		
+	fichero=fopen(db,"rb");
+	
+	if(fichero!=NULL)
+	{	
+		fclose(fichero);
+		return; // file already exists
+	}
+	
+	fichero=fopen(db,"wb"); // create for write
+		
+	if(fichero==NULL)
+		retorno=-1;
+	else {
+		retval=fwrite(zx_screen,6912,1,fichero); // save screen
+		//if (ordenador.ulaplus!=0) {
+			//retval=fwrite(ordenador.ulaplus_palete,64,1,fichero); // save ULAPlus palete
+			//}
+		fclose(fichero);
+		retorno=0;
+		}
+
+	switch(retorno) {
+	case 0:
+		msgInfo("Screen saved",3000,NULL);
+		break;
+	case -1:
+		msgInfo("Can't create screen file",3000,NULL);
+	break;
+	default:
+	break;
+	}
+	return;
+}
+*/
+
+int extract_screen_tap (char *screen, FILE * fichero) {
+   
+	unsigned int longitud;
+	unsigned char value[65536], empty, flag_byte;	
+	int retval, retorno;
+	
+	if (fichero == NULL) return -1;
+	
+	empty=file_empty(fichero);
+	
+	if (empty) return -1;
+	
+	flag_byte=0;
+	retorno=0;
+	do	{
+		retval=fread (value, 1, 2, fichero);	// read length of current block
+		if (retval!=2) {retorno=1;break;}
+		longitud = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1]);
+		retval=fread (&flag_byte, 1, 1, fichero);
+		if (retval!=1) {retorno=1;break;}
+		//printf("TAP browser: flag byte %X en %ld\n",flag_byte, ftell(fichero));
+			switch(flag_byte)
+			{
+					case 0x00: //header
+					if (longitud!=19) 
+						{
+							if (longitud>1)
+							{
+								retval=fread (value, 1, longitud-1, fichero);
+								if (retval!=(longitud-1)) {retorno=1;break;}
+							}
+						}
+						else
+						{
+						retval=fread (value, 1, 18, fichero);
+						if (retval!=18) {retorno=1;break;}
+						}	
+					break;
+					case 0xFF: //data
+						if (longitud>1)
+						{
+							retval=fread (value, 1, longitud-1, fichero);
+							if (retval!=(longitud-1)) {retorno=1;break;}
+							if (longitud==6914) {memcpy(screen, value+1, 6912);rewind_tape (fichero,1);return 0;}
+						}
+					break;
+					default: //Custom data
+						if (longitud>1)
+						{
+							retval=fread (value, 1, longitud-1, fichero);
+							if (retval!=(longitud-1)) {retorno=1;break;}
+							if (longitud==6914) {memcpy(screen, value+1, 6912);rewind_tape (fichero,1);return 0;}
+						}
+					break;
+					}
+		} while ((!feof(fichero))&&(retorno==0));
+
+rewind_tape (fichero,1);
+return -1;
+}
+
+int extract_screen_tzx (char *screen, FILE * fichero) 
+{
+
+	unsigned int longitud, bucle, byte_position, retorno;
+	unsigned char value[65536], empty, blockid, pause[2], flag_byte;
+	char block_jump[2];
+	int retval, retval2; 
+	//int found_screen;
+	
+	longitud =0;
+	pause[0]=pause[1]=0;
+	
+	blockid=0;
+	flag_byte=0;
+	//found_screen=0;
+	
+	if (fichero == NULL) return -1;
+	
+	empty=file_empty(fichero);
+	
+	if (empty) return -1;
+
+	retorno=0;
+	do	{
+		byte_position=ftell(fichero);
+		retval=fread (&blockid, 1, 1, fichero); //Read id block
+		if (retval!=1) {retorno=1;break;}
+		
+		//printf("TZX browser: %X en %d\n",blockid, byte_position+1);
+		
+		switch(blockid) {
+				case 0x10: // classic tape block
+					retval=fread (pause, 1, 2, fichero); //pause lenght
+					retval2=fread (value, 1, 2, fichero);	// read length of current block
+					if ((retval!=2)||(retval2!=2)) {retorno=1;break;}
+					longitud = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1]);
+					retval=fread (&flag_byte, 1, 1, fichero);
+					if (retval!=1) {retorno=1;break;}
+					switch(flag_byte)
+					{
+						case 0x00: //header
+						if (longitud!=19) 
+						{
+							if (longitud>1)
+							{
+								retval=fread (value, 1, longitud-1, fichero);
+								if (retval!=(longitud-1)) {retorno=1;break;}
+							}
+						}
+						else
+						{
+						retval=fread (value, 1, 18, fichero);
+						if (retval!=18) {retorno=1;break;}
+						}	
+						break;
+						case 0xFF: //data
+						if (longitud>1)
+						{
+							retval=fread (value, 1, longitud-1, fichero);
+							if (retval!=(longitud-1)) {retorno=1;break;}
+							if (longitud==6914) {memcpy(screen, value+1, 6912);rewind_tape (fichero,1);return 0;}
+						}
+						break;
+						default: //Custom data
+						if (longitud>1)
+						{
+							retval=fread (value, 1, longitud-1, fichero);
+							if (retval!=(longitud-1)) {retorno=1;break;}
+							if (longitud==6914) {memcpy(screen, value+1, 6912);rewind_tape (fichero,1);return 0;}
+						}
+						break;
+					}	
+				break;
+	
+				case 0x11: // turbo
+					fread(value,1,0x0F, fichero);
+					retval=fread (value, 1,3 ,fichero);	// read length of current block
+					if (retval!=3) {retorno=1;break;}
+					longitud = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1])+ 65536 * ((unsigned int) value[2]);
+					if (longitud< 65536) 
+						{retval=fread (value, 1, longitud, fichero); if (retval!=longitud) {retorno=1;break;}}
+					else
+					for(bucle=0;bucle<longitud;bucle++)
+						fread(value,1,1, fichero);
+				//if (longitud==6144) {printf("Possible screen (6144) in turbo data\n");}
+				//if (longitud==6912) {printf("Possible screen (6912) in turbo data\n");}
+				break;
+					
+				case 0x12: // pure tone
+					retval=fread(value,1,4,fichero);
+					if (retval!=4) {retorno=1;break;}
+				break;
+
+				case 0x13: // multiple pulses
+					retval=fread(value,1,1,fichero); // number of pulses
+					if (retval!=1) {retorno=1;break;} 
+					if(value[0] != 0)
+						{
+						fread(&value,1,2*value[0],fichero); // length of pulse in T-states
+						}
+				break;
+				
+				case 0x14: // Pure data
+					fread(value,1,0x07, fichero);
+					retval=fread (value, 1, 3, fichero);	// read length of current block
+					if (retval!=3) {retorno=1;break;}
+					longitud = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1])+ 65536 * ((unsigned int) value[2]);
+					if (longitud< 65536) 
+						{retval=fread (value, 1, longitud, fichero); if (retval!=longitud) {retorno=1;break;}}
+					else
+					for(bucle=0;bucle<longitud;bucle++)
+						fread(value,1,1, fichero);
+					//if (longitud==6144) {memcpy(screen, value, 6144);found_screen=1;}
+					//if ((longitud==768) && (found_screen)) {memcpy(screen+6144, value, 768);rewind_tape (fichero,1);return 0;}
+					//if (longitud==6912) {memcpy(screen, value, 6912);rewind_tape (fichero,1);return 0;}
+				break;
+
+				case 0x20: // pause
+					retval=fread(value,1,2,fichero);
+					if (retval!=2) {retorno=1;break;}
+				break;
+					
+				case 0x21: // group start
+					retval=fread(value,1,1,fichero);
+					if (retval!=1) {retorno=1;break;} 
+					longitud = (unsigned int) value[0];
+					retval=fread(value,1,longitud,fichero);
+					if (retval!=longitud) {retorno=1;break;}
+				break;
+					
+				case 0x22: // group end
+				break;
+				
+				case 0x23: // jump to block
+					retval=fread(block_jump,1,2,fichero);
+					if (retval!=2) {retorno=1;break;}
+				break;
+
+				case 0x24: // loop start
+					retval=fread(value,1,2, fichero);
+					if (retval!=2) {retorno=1;break;}
+				break;
+				
+				case 0x25: // loop end
+				break;
+				
+				case 0x28: // select block
+					retval=fread(value,1,2,fichero);
+					if (retval!=2) {retorno=1;break;}
+					longitud = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1]);
+					retval=fread(value,1,longitud,fichero);
+					if (retval!=longitud) {retorno=1;break;}
+				break;
+				
+				case 0x2A: // pause if 48K
+					retval=fread(value,1,4,fichero);
+					if (retval!=4) {retorno=1;break;}
+				break;
+					
+				case 0x30: // text description
+					retval=fread(value,1,1,fichero); // length
+					if (retval!=1) {retorno=1;break;} 
+					longitud = (unsigned int) value[0] ;
+					retval=fread(value,1,longitud,fichero);
+					if (retval!=longitud) {retorno=1;break;}
+				break;
+					
+				case 0x31: // show text
+					retval=fread(value,1,1,fichero); //Time lengt
+					if (retval!=1) {retorno=1;break;}	
+					retval=fread(value,1,1,fichero); // length
+					if (retval!=1) {retorno=1;break;} 
+					longitud = (unsigned int) value[0];
+					retval=fread(value,1,longitud,fichero);
+					if (retval!=longitud) {retorno=1;break;}
+				break;
+					
+				case 0x32: // archive info
+					retval=fread(value,1,2,fichero); // length
+					if (retval!=2) {retorno=1;break;} 
+					longitud = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1]);
+					retval=fread(value,1,longitud,fichero);
+					if (retval!=longitud) {retorno=1;break;}
+				break;
+				
+				case 0x33: // hardware info
+					retval=fread(value,1,1,fichero);
+					if (retval!=1) {retorno=1;break;}
+					longitud = (unsigned int) value[0] *3;
+					retval=fread(value,1,longitud,fichero);
+					if (retval!=longitud) {retorno=1;break;}
+				break;
+					
+				case 0x34: // emulation info
+					retval=fread(value,1,8,fichero);
+					if (retval!=8) {retorno=1;break;}
+				break;
+					
+				case 0x35: // custom info
+					fread(value,1,16,fichero);
+					retval=fread(value,1,4,fichero);
+					if (retval!=4) {retorno=1;break;} 
+					longitud = ((unsigned int) value[0]) + 256 * ((unsigned int) value[1]) + 65536*((unsigned int) value[2]) + 16777216*((unsigned int) value[3]);
+					if (longitud< 65536) 
+						{retval=fread (value, 1, longitud, fichero); if (retval!=longitud) {retorno=1;break;}}
+					else
+					for(bucle=0;bucle<longitud;bucle++)
+						fread(value,1,1, fichero);
+				break;
+					
+				default: // not supported
+					retorno=1; //Error				
+				break;
+			}
+		} while ((!feof(fichero))&&(retorno==0));
+
+rewind_tape (fichero,1);
+return -1;
 }

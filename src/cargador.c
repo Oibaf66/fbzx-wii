@@ -371,17 +371,27 @@ int load_z80(char *filename) {
 					page=7;
 					break;
 				default:
-					page=11;
+					page=255;
 					break;
 				}
-				printf("Loading page %d of length %d\n",page,longitud);
-				if(longitud2==0xFFFF) // uncompressed raw data
-					retval=fread(snap->page[page],16384,1,fichero);
+				printf("128k: Loading page %d of length %d\n",page,longitud);
+				if (page==255) //Discard the page
+					{
+					if(longitud2==0xFFFF) // uncompressed raw data
+						retval=fread(memo,16384,1,fichero);
+					else
+						uncompress_z80(fichero,16384,memo);
+					}	
 				else
-					uncompress_z80(fichero,16384,snap->page[page]);
+					{
+					if(longitud2==0xFFFF) // uncompressed raw data
+						retval=fread(snap->page[page],16384,1,fichero);
+					else
+						uncompress_z80(fichero,16384,snap->page[page]);
+					}
 			}
 
-		} else {
+		} else { //48k snapshot
 			while(!feof(fichero)) {
 				retval=fread(byte_read,3,1,fichero);
 				if(feof(fichero))
@@ -398,17 +408,29 @@ int load_z80(char *filename) {
 					page=2;
 					break;
 				default:
-					page=11;
+					page=255;
 					break;
 				}
-				if(longitud2==0xFFFF) // uncompressed raw data
-					retval=fread(snap->page[page],16384,1,fichero);
+				printf("48k: Loading page %d of length %d\n",page,longitud2);
+				if (page==255) //Discard the page. It should never happen
+					{
+					if(longitud2==0xFFFF) // uncompressed raw data
+						retval=fread(memo,16384,1,fichero);
+					else
+						uncompress_z80(fichero,16384,memo);
+					}	
 				else
-					uncompress_z80(fichero,16384,snap->page[page]);
+					{
+					if(longitud2==0xFFFF) // uncompressed raw data
+						retval=fread(snap->page[page],16384,1,fichero);
+					else
+						uncompress_z80(fichero,16384,snap->page[page]);
+					}
 			}
 		}
 	} else {
 
+		printf("48k model: Loading page of old type z80\n");
 		if(compressed) {
 			// 48k compressed z80 loader
      
@@ -449,7 +471,7 @@ int load_sna(char *filename) {
 	int addr,loop;
 
 	tempo=(unsigned char *)malloc(49179);
-	tempo2=(unsigned char *)malloc(98308);
+	tempo2=(unsigned char *)malloc(16384*5+4);
 	snap=(struct z80snapshot *)malloc(sizeof(struct z80snapshot));
 	
 	//Some inits
@@ -476,7 +498,7 @@ int load_sna(char *filename) {
 		return -1;
 	}
 	
-	if (0==fread(tempo2,1,98308,fichero)) {
+	if (0==fread(tempo2,1,16384*5+4,fichero)) {
 		printf("48K SNA\n");
 		type=0;
 	} else {
@@ -674,4 +696,199 @@ void load_snap(struct z80snapshot *snap) {
   default:
     break;
   }
+}
+
+int extract_screen_sna (char *screen, FILE * fichero)  {
+
+	unsigned char *tempo;
+	unsigned char *tempo2;
+	unsigned char type=0;
+	unsigned char v1;
+	
+	if(fichero==NULL) return -1; // error
+	
+	tempo=(unsigned char *)malloc(49179);
+	tempo2=(unsigned char *)malloc(16384*5+4);
+	
+	if (1!=fread(tempo,49179,1,fichero)) {
+		free(tempo);
+		free(tempo2);
+		return -1;
+	}
+	
+	if (0==fread(tempo2,1,16384*5+4,fichero)) {
+		printf("48K SNA\n");
+		type=0;
+	} else {
+		printf("128K SNA\n");
+		type=1;
+	}
+	
+	if (type==0) {	//48k
+	
+		memcpy(screen,tempo+27,6912);
+
+	} else { 	//128k
+
+		v1=tempo2[2];
+		//printf("v1= %d\n",(int) v1);
+		if ((v1&8)==0) memcpy(screen,tempo+27,6912); //screen in bank 5
+		else //Screen in bank 7
+		{
+			v1&=0x07;
+				if (v1==7) memcpy(screen,tempo+27+49152,6912); //screen in bank 7 paged-in
+			else 
+				memcpy(screen,tempo2+4+16384*4,6912); //Screen in bank 7 not paged-in
+		}
+	}
+	
+	free(tempo);
+	free(tempo2);
+	return 0;
+}
+
+int extract_screen_z80 (char *screen, FILE * fichero)  {
+
+	unsigned char tempo[30],tempo2[56],type,compressed,pager, byte_read[3];
+	unsigned char *memo;
+	int longitud=0,longitud2,model_type;
+
+	if(fichero==NULL) return -1; // error
+	
+	memo=(unsigned char *)malloc(49152);
+
+	printf("Read Z80 file\n");
+
+	printf("Read header (first 30 bytes)\n");
+	fread(tempo,1,30,fichero);
+
+	if((tempo[6]==0)&&(tempo[7]==0)) { // extended Z80
+		printf("It's an extended Z80 file\n");
+		type=1; // new type
+		
+		fread(tempo2,1,2,fichero); // read the length of the extension
+ 
+		longitud=((int)tempo2[0])+256*((int)tempo2[1]);
+		if(longitud>54) {
+			printf("Not suported Z80 file\n");
+			free(memo);
+			return -3; // not a supported Z80 file
+		}
+		printf("Length: %d\n",longitud);
+		fread(tempo2+2,1,longitud,fichero);
+
+		if(longitud==23) // z80 ver 2.01
+			switch(tempo2[4]) {
+			case 0:
+			case 1:
+				model_type=0; // 48K
+				break;
+			case 3:
+			case 4:
+				model_type=1; // 128K
+			break;
+			default:
+				printf("Again not suported Z80 file\n");
+				free(memo);
+				return -3; // not a supported Z80 file
+			break;
+			}
+		else // z80 ver 3.0x
+			switch(tempo2[4]) {
+			case 0:
+			case 1:
+			case 3:
+				model_type=0; // 48K
+				break;
+			case 4:
+			case 5:
+			case 6:
+				model_type=1; // 128K
+				break;
+			default:
+				free(memo);
+				return -3; // not a supported Z80 file
+				break;
+			}      
+	} else {
+		printf("Old type z80\n");
+		type=0; // old type
+		model_type=0; // 48k
+	}
+
+	if(tempo[12]&32)
+		compressed=1;
+	else
+		compressed=0;
+		
+	if (type) pager=tempo2[5];	
+		
+
+	if(type) { // extended z80
+		if(model_type==1) { // 128K snapshot
+
+			while(!feof(fichero)) {
+				fread(byte_read,3,1,fichero);
+				if(feof(fichero))
+					break;
+				longitud2=((int)byte_read[0])+256*((int)byte_read[1]);
+				
+				printf("128k model: Loading page %d of length %d\n",byte_read[2]-3,longitud);
+				
+				if (((byte_read[2] == 8) && ((pager&8)==0))|| //Page 5 and no shadow screen
+					((byte_read[2] == 10) && (pager&8))) //Page 7 and shadow screen
+				{
+					if(longitud2==0xFFFF) // uncompressed raw data
+						fread(memo,6912,1,fichero);
+					else
+						uncompress_z80(fichero,6912,memo);
+					memcpy(screen, memo,6912);
+					break;
+				}
+				if(longitud2==0xFFFF) longitud2 =16384; // uncompressed raw data					
+				fread(memo,longitud2,1,fichero);
+			}
+
+		} else { //48k snapshot
+			while(!feof(fichero)) {
+				fread(byte_read,3,1,fichero);
+				if(feof(fichero))
+					break;
+				longitud2=((int)byte_read[0])+256*((int)byte_read[1]);		
+				printf("48k model: Loading page of length %d\n",longitud2);
+				
+				if (byte_read[2] == 8) //Page 0
+				{
+					if(longitud2==0xFFFF) // uncompressed raw data
+						fread(memo,6912,1,fichero);
+					else
+						uncompress_z80(fichero,6912,memo);
+					memcpy(screen, memo,6912);
+					break;
+				}
+				if(longitud2==0xFFFF) longitud2 =16384; // uncompressed raw data					
+				fread(memo,longitud2,1,fichero);	
+			}
+		}
+	} else { //Old type z80
+	
+		printf("48k model: Loading page of old type z80\n");
+		if(compressed) {
+			// 48k compressed z80 loader
+     
+			// we uncompress first the data
+			uncompress_z80(fichero,6912,memo); //uncompress only the screen
+      
+			memcpy(screen,memo,6912);
+     
+		} else {
+			// 48k uncompressed z80 loader
+      
+			fread(screen,6912,1,fichero);
+		}
+		
+	}
+
+	free(memo);
+	return 0; // all right
 }

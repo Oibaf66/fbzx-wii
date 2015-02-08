@@ -42,5 +42,7 @@ void create_browser_tzx (FILE *);
 int select_block(FILE * fichero);
 int jump_to_block(FILE * fichero, int blocks_to_jump);
 void free_browser();
-
+//void save_scr_browser(unsigned char* zx_screen);
+int extract_screen_tap (char *screen, FILE * fichero);
+int extract_screen_tzx (char *screen, FILE * fichero);
 #endif

@@ -43,6 +43,7 @@
 
 #include "minizip/unzip.h"
 #include "tape_browser.h"
+#include "cargador.h"
 #include "sound.h"
 
 
@@ -514,27 +515,124 @@ void print_font(SDL_Surface *screen, int r, int g, int b,
 	SDL_FreeSurface(font_surf);
 }
 
-void draw_scr_file(int x,int y, char *filename)
+int extract_screen(char* screen, const char* name)
+{
+	FILE *fichero;
+	char filename[MAX_PATH_LENGTH];
+	char char_id[10];
+	int retorno;
+	
+	if ((ext_matches(name, ".tap")||ext_matches(name, ".TAP")))
+	{
+		sprintf(filename,"%s/%s",load_path_taps, name);
+		fichero=fopen(filename,"rb");
+		if (!fichero) //Try in the tmp zip directory
+		{
+			sprintf(filename,"%s/%s",path_tmp, name);
+			fichero=fopen(filename,"rb");
+			if (!fichero) return -1;
+		}
+		retorno = extract_screen_tap(screen, fichero);
+		fclose(fichero);
+		return retorno;
+	}
+	
+	if ((ext_matches(name, ".tzx")||ext_matches(name, ".TZX")))
+	{
+		sprintf(filename,"%s/%s",load_path_taps, name);
+		fichero=fopen(filename,"rb");
+		if (!fichero) //Try in the tmp zip directory
+		{
+			sprintf(filename,"%s/%s",path_tmp, name);
+			fichero=fopen(filename,"rb");
+			if (!fichero) return -1;
+		}
+		fread(char_id,10,1,fichero); // read the (maybe) TZX header
+		if((strncmp(char_id,"ZXTape!",7)) || (char_id[7]!=0x1A) || (char_id[8]!=1)) 
+		{fclose(fichero);retorno = -1;};
+		retorno = extract_screen_tzx(screen, fichero);
+		fclose(fichero);
+		return retorno;
+	}
+
+	if (ext_matches(name, ".z80")||ext_matches(name, ".Z80")||ext_matches(name, ".sna")||ext_matches(name, ".SNA"))
+	{
+		sprintf(filename,"%s/%s",load_path_snaps, name);
+		fichero=fopen(filename,"rb");
+		if (!fichero) //Try in the tmp zip directory
+		{
+			sprintf(filename,"%s/%s",path_tmp, name);
+			fichero=fopen(filename,"rb");
+			if (!fichero) return -1;
+		}
+		if (ext_matches(name, ".z80")||ext_matches(name, ".Z80")) retorno = extract_screen_z80(screen, fichero);
+		else retorno = extract_screen_sna(screen, fichero);
+		fclose(fichero);
+		return retorno;
+	}
+	
+	return -1;
+}
+
+void draw_scr_file(int x,int y, const char *selected_file, int which)
 {
 	FILE *fichero;
 	char screen [6912];
 	unsigned int *p_translt, *p_translt2;
 	unsigned char attribute, ink, paper, mask, octect;
-	int loop_x, loop_y,bucle,valor,*p ;
+	int loop_x, loop_y,bucle,valor,*p, length;
 	unsigned char *address;
-
+	char name[MAX_PATH_LENGTH];
+	char filename[MAX_PATH_LENGTH];
+	char *ptr;
 	
-	if (filename==NULL) // Aborted
+	if (selected_file==NULL) // Aborted
 		return; 
+	 
+	strcpy(name,selected_file);	
 	
-	if (!(ext_matches(filename, ".scr")||ext_matches(filename, ".SCR"))) return;
+	if ((ext_matches(name, ".zip")||ext_matches(name, ".ZIP"))) 
+	{
+		//remove the zip extension
+		ptr = strrchr (name, '.');	
+		if (ptr) *ptr = 0;	
+	}
 	
-	fichero=fopen(filename,"rb");
+	//remove the other extensions
+	ptr = strrchr (name, '.');	
+	if (ptr) *ptr = 0;		
+	
+	//Always load from Default device
+	strcpy(filename,getenv("HOME"));
+	length=strlen(filename);
+	if ((length>0)&&(filename[length-1]!='/'))
+		strcat(filename,"/");
+	if (which==0) strcat(filename, "scr/"); else strcat(filename, "scr2/");
+	strcat(filename, name);
+	strcat(filename, ".scr");	
+		
+	if (which) //second SCR
+	{
+		fichero=fopen(filename,"rb");
 
-	if (!fichero) return;
+		if (!fichero) return;
 	
-    if (fread(screen,1,6912,fichero)!=6912) {fclose(fichero);return;}
-	fclose(fichero);
+		if (fread(screen,1,6912,fichero)!=6912) {fclose(fichero);return;}
+		fclose(fichero);
+	}
+	else //first SCR
+	{
+		fichero=fopen(filename,"rb");
+		
+		if (!fichero) 
+			{if (extract_screen(screen, selected_file)) return;}
+		else
+		{
+			if (fread(screen,1,6912,fichero)!=6912) {fclose(fichero);return;}
+			fclose(fichero);
+		}
+	}
+	
 	
 	p_translt = ordenador.translate;
 	p_translt2 = ordenador.translate2;
@@ -631,10 +729,7 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_typ
 	SDL_Rect r;
 	int entries_visible = (p_menu->y2 - p_menu->y1-10/RATIO) / line_height - 1;
 	const char *selected_file = NULL;
-	char filename[MAX_PATH_LENGTH];
-	char name[MAX_PATH_LENGTH];
-	char *ptr;
-	int i, y, length, max_string;
+	int i, y, max_string;
 	
 	if (font_type==FONT_ALT) y_start = p_menu->y1 + line_height+2/RATIO;
 	else y_start = p_menu->y1 + line_height+4/RATIO;
@@ -835,40 +930,8 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_typ
 	if ((!selected_file)||(selected_file[0] == '[')) return; //No dir
 	
 
-	// Select after "/"
-	if (strrchr(selected_file, '/'))
-		strcpy(name, strrchr(selected_file, '/') + 1);
-	else strcpy(name,selected_file);	
-	
-	if ((ext_matches(name, ".zip")||ext_matches(name, ".ZIP"))) 
-	{
-		//remove the zip extension
-		ptr = strrchr (name, '.');	
-		if (ptr) *ptr = 0;	
-	}
-	
-	//remove the other extensions
-	ptr = strrchr (name, '.');	
-	if (ptr) *ptr = 0;		
-	
-	//Always load from Default device
-	strcpy(filename,getenv("HOME"));
-	length=strlen(filename);
-	if ((length>0)&&(filename[length-1]!='/'))
-		strcat(filename,"/");
-	strcat(filename, "scr/");
-	strcat(filename, name);
-	strcat(filename, ".scr");
-	draw_scr_file(375,48, filename);
-	
-	strcpy(filename,getenv("HOME"));
-	length=strlen(filename);
-	if ((length>0)&&(filename[length-1]!='/'))
-		strcat(filename,"/");
-	strcat(filename, "scr2/");
-	strcat(filename, name);
-	strcat(filename, ".scr");
-	draw_scr_file(375,260, filename);
+	draw_scr_file(375,48, selected_file,0);
+	draw_scr_file(375,260, selected_file,1);
 	}	
 }
 

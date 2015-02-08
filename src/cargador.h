@@ -29,7 +29,7 @@ struct z80snapshot {
   byte type; // bit 0/1: 48K/128K/+3
   byte border; // border color
   byte pager; // content of pagination register in 128K mode
-  unsigned char page[12][16384];
+  unsigned char page[8][16384];
   //unsigned int found_pages; // bit=1: page exists. bit=0: page don't exists.
   unsigned char ay_regs[16];
   unsigned char ay_latch;
@@ -42,3 +42,5 @@ int load_z80(char *);
 int load_sna(char *);
 void load_snap(struct z80snapshot *);
 void uncompress_z80(FILE *,int,unsigned char *);
+int extract_screen_sna (char *screen, FILE * fichero);
+int extract_screen_z80 (char *screen, FILE * fichero);
