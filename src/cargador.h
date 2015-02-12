@@ -34,6 +34,7 @@ struct z80snapshot {
   unsigned char ay_regs[16];
   unsigned char ay_latch;
   unsigned char joystick;
+  unsigned char emulation;
 
 };
 

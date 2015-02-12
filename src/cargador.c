@@ -77,11 +77,79 @@ void uncompress_z80(FILE *fichero,int length,unsigned char *memo) {
 
 }
 
+
+int count_repetition(unsigned int read_position, unsigned char byte_read, unsigned char *memo_in)
+{
+	int count = 1;
+
+    while (read_position < 16384 && count < 255 && byte_read == memo_in[read_position++])
+	{
+		count++;
+	}
+
+ return count;
+ }
+
+
+
+//Compress block of 16384 bytes
+int compress_z80 (unsigned char *memo_in, unsigned char *memo_out)
+{
+ unsigned int read_position, write_position, loop;
+ unsigned char byte_read, nrepeats;
+ 
+ write_position = 0;
+ read_position =0; 
+ 
+ 
+ while (read_position < 16384) {
+            byte_read = memo_in[read_position];
+            nrepeats = count_repetition(read_position+1, byte_read, memo_in);
+            
+			if (byte_read == 0xED) 
+			{
+                if (nrepeats == 1) {
+                    //The byte which follows ED is never compressed
+                    memo_out[write_position++] = 0xED;
+					read_position++;
+                    if (read_position < 16384) memo_out[write_position++] = memo_in[read_position++];
+					else printf("Last ED in block found\n");
+                } else {
+                    //Consecutive ED are always compressed even if less than 5
+                    memo_out[write_position++] =  0xED;
+                    memo_out[write_position++] =  0xED;
+                    memo_out[write_position++] =  nrepeats;
+                    memo_out[write_position++] =  0xED;
+                    read_position += nrepeats;
+                }
+            } 
+			else 
+			{
+                if (nrepeats < 5) {
+                    //Less than 5 equal values are not compressed
+					for(loop=0; loop < nrepeats; loop++)
+						memo_out[write_position++] =  byte_read;
+					
+                } else {
+                    memo_out[write_position++] =  0xED;
+                    memo_out[write_position++] =  0xED;
+                    memo_out[write_position++] =  nrepeats;
+                    memo_out[write_position++] =  byte_read; 
+                }
+				read_position += nrepeats;
+            }
+        }
+		
+	return write_position;
+}
+
 int save_z80(char *filename, int overwrite) {
 
   FILE *fichero;
   unsigned char value,bucle;
   int retval;
+  unsigned int length_compress;
+  unsigned char memo_out[16384];
 
   fichero=fopen(filename,"rb");
   if((fichero!=NULL)&&(!overwrite)) {
@@ -96,13 +164,10 @@ int save_z80(char *filename, int overwrite) {
 
   fprintf(fichero,"%c%c%c%c%c%c",procesador.Rm.br.A,procesador.Rm.br.F,procesador.Rm.br.C,procesador.Rm.br.B,procesador.Rm.br.L,procesador.Rm.br.H); // AF, BC and HL
 
-  if(ordenador.mode128k==0) // 48K
-	fprintf(fichero,"%c%c",(byte)(procesador.PC&0x0FF),(byte)((procesador.PC>>8)&0xFF)); // PC
-  else
-    fprintf(fichero,"%c%c",0,0); // 128K
+  fprintf(fichero,"%c%c",0,0); // V 2.0
 
   fprintf(fichero,"%c%c",procesador.Rm.br.P,procesador.Rm.br.S); // SP
-  fprintf(fichero,"%c%c%c",procesador.I,procesador.R,(((procesador.R2>>7)&0x01)|((ordenador.border<<1)&0x0E))); // I, R and border color
+  fprintf(fichero,"%c%c%c",procesador.I,procesador.R,(((procesador.R2>>7)&0x01)|((ordenador.border<<1)&0x0E)|0x20)); // I, R and border color , compressed
 
   fprintf(fichero,"%c%c%c%c%c%c%c%c%c%c%c%c%c%c",procesador.Rm.br.E,procesador.Rm.br.D,procesador.Ra.br.C,procesador.Ra.br.B,procesador.Ra.br.E,procesador.Ra.br.D,procesador.Ra.br.L,procesador.Ra.br.H,procesador.Ra.br.A,procesador.Ra.br.F,procesador.Rm.br.IYl,procesador.Rm.br.IYh,procesador.Rm.br.IXl,procesador.Rm.br.IXh);
 
@@ -131,28 +196,51 @@ int save_z80(char *filename, int overwrite) {
   	break;
   }
   fprintf(fichero,"%c",value);
-
-  if(ordenador.mode128k==0) { // 48K
-    retval=fwrite((ordenador.memoria+147456),16384,1,fichero); // video memory
-    retval=fwrite((ordenador.memoria+98304),32768,1,fichero); // memory pages 2 & 3
-    fclose(fichero);
-    return 0;
-  }
-
-  // 128K
-
+  
+  //Additional header values of v2.01
   fprintf(fichero,"%c%c",23,0); // Z80 file v2.01
   fprintf(fichero,"%c%c",(byte)(procesador.PC&0x0FF),(byte)((procesador.PC>>8)&0x0FF)); // PC
-  fprintf(fichero,"%c",3); // hardware mode=3
+  if (ordenador.mode128k==0) fprintf(fichero,"%c",0); //48k
+	else fprintf(fichero,"%c",3); // 128k
   fprintf(fichero,"%c",ordenador.mport1); // content of 0x7FFD latch
-  fprintf(fichero,"%c%c",0,0); // no If1, no emulation of any kind
+  fprintf(fichero,"%c",0); // no If1
+  fprintf(fichero,"%c",ordenador.ay_emul<<2); // Ay emulation
   fprintf(fichero,"%c",ordenador.ay_latch); // last selected AY register
   for(bucle=0;bucle<16;bucle++)
     fprintf(fichero,"%c",ordenador.ay_registers[bucle]); // AY registers
-  for(bucle=0;bucle<8;bucle++) {
-    fprintf(fichero,"%c%c",0xFF,0xFF); // length=0xFFFF (uncompressed)
-    fprintf(fichero,"%c",bucle+3); // page number
-    retval=fwrite(ordenador.memoria+(16384*bucle)+65536,16384,1,fichero); // store page
+  
+  printf("Compressing and saving z80 file ...\n");
+  
+  if (ordenador.mode128k==0)
+  {
+	length_compress = compress_z80(ordenador.memoria+(16384*5)+65536, memo_out);
+	printf("Length %d page %d\n", length_compress, 8);
+    fprintf(fichero,"%c%c",(byte) (length_compress), (byte) (length_compress>>8)); 
+	fprintf(fichero,"%c",8); // page number
+    retval=fwrite(memo_out,length_compress,1,fichero); // store page
+	
+	length_compress = compress_z80(ordenador.memoria+(16384*2)+65536, memo_out);
+	printf("Length %d page %d\n", length_compress, 4);
+    fprintf(fichero,"%c%c",(byte) (length_compress), (byte) (length_compress>>8)); 
+	fprintf(fichero,"%c",4); // page number
+    retval=fwrite(memo_out,length_compress,1,fichero); // store page
+	
+	length_compress = compress_z80(ordenador.memoria+(16384*3)+65536, memo_out);
+	printf("Length %d page %d\n", length_compress, 5);
+    fprintf(fichero,"%c%c",(byte) (length_compress), (byte) (length_compress>>8)); 
+	fprintf(fichero,"%c",5); // page number
+    retval=fwrite(memo_out,length_compress,1,fichero); // store page
+  }
+  else
+  {
+	for(bucle=0;bucle<8;bucle++) 
+	{
+		length_compress = compress_z80(ordenador.memoria+(16384*bucle)+65536, memo_out);
+		printf("Length %d page %d\n", length_compress, bucle+3);
+		fprintf(fichero,"%c%c",(byte) (length_compress), (byte) (length_compress>>8)); 
+		fprintf(fichero,"%c",bucle+3); // page number
+		retval=fwrite(memo_out,length_compress,1,fichero); // store page
+	}
   }
   fclose(fichero);
   return 0;
@@ -332,8 +420,11 @@ int load_z80(char *filename) {
 	snap->joystick=((tempo[29]>>6)&0x03);
 
 	if(type)
+	{
 		snap->pager=tempo2[5];
-
+		snap->emulation=tempo2[7];
+	}	
+		
 	if(type) { // extended z80
 		if(snap->type==1) { // 128K snapshot
 
@@ -673,7 +764,7 @@ void load_snap(struct z80snapshot *snap) {
       ordenador.memoria[bucle+114688]=snap->page[2][bucle];
     }
     
-    ordenador.ay_emul=0;
+    ordenador.ay_emul=((snap->emulation)&0x04)>>2;
     break;
   case 1: // 128K
 
