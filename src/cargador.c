@@ -56,20 +56,17 @@ void uncompress_z80(FILE *fichero,int length,unsigned char *memo) {
     
 		if(EDfound==2) { // we have two EDs
 			counter=byte_loaded;
-			retval=fread(&byte_loaded,1,1,fichero);
+			retval=fread(&byte_loaded,1,1,fichero); //ED byte 
 			EDfound=0;
 			continue;
 		}
     
 		if(byte_loaded==0xED) {
-			EDfound++;	
+			if (position+1<length) EDfound++; else memo[position++]=0xED;	//If ED is the last byte of the block
 		} else {
 			if(EDfound==1) { // we found ED xx. We write ED and xx
 				memo[position++]=0xED;
 				EDfound=0;
-			}
-			if (position>=length) {
-				break;
 			}
 			memo[position++]=byte_loaded;
 		}
