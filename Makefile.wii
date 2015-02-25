@@ -17,7 +17,7 @@ include $(DEVKITPPC)/wii_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	fbzx
 BUILD		:=	build
-SOURCES		:=	src src/z80free src/minizip src/tinyFTP
+SOURCES		:=	src src/z80free src/minizip src/tinyFTP src/rzx_lib
 DATA		:=	 
 INCLUDES	:=	
 

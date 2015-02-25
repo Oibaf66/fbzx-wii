@@ -41,6 +41,7 @@
 #include "menu_sdl.h"
 #include "tape_browser.h"
 #include "VirtualKeyboard.h"
+#include "rzx_lib/rzx.h"
 #include <dirent.h>
 
 
@@ -84,10 +85,12 @@ char path_paste[MAX_PATH_LENGTH];
 char path_copy[MAX_PATH_LENGTH];
 char path_delete[MAX_PATH_LENGTH];
 char path_tmp[MAX_PATH_LENGTH];
+char path_rzx[MAX_PATH_LENGTH];
 char load_path_snaps[MAX_PATH_LENGTH];
 char load_path_taps[MAX_PATH_LENGTH];
 char load_path_scr1[MAX_PATH_LENGTH];
 char load_path_poke[MAX_PATH_LENGTH];
+char load_path_rzx[MAX_PATH_LENGTH];
 char rom_cartridge[MAX_PATH_LENGTH];
 char pasted_file[MAX_PATH_LENGTH];
 
@@ -107,6 +110,8 @@ unsigned char tmpismade = 0;
 extern int FULL_DISPLAY_X; //640
 extern int FULL_DISPLAY_Y; //480
 extern int RATIO; 
+
+void init_rzx(void);
 
 #ifdef MINGW
 #define mkdir(name, mode) mkdir(name)
@@ -660,6 +665,7 @@ void end_system() {
 	menu_deinit();
 	font_fini();
 	SDL_Quit();
+	rzx_close();
 	
 	if (!chdir(path_tmp)) {chdir("/"); remove_dir(path_tmp);} //remove the tmp directory if it exists
 	
@@ -1543,6 +1549,7 @@ int main(int argc,char *argv[])
 	strcpy(path_delete,path_snaps);
 	strcpy(path_copy,path_snaps);
 	strcpy(path_tmp,path_snaps);
+	strcpy(path_rzx,path_snaps);
 	strcat(path_snaps,"snapshots");
 	strcat(path_taps,"tapes");
 	strcat(path_mdrs,"microdrives");
@@ -1551,9 +1558,11 @@ int main(int argc,char *argv[])
 	strcat(path_confs,"configurations");
 	strcat(load_path_poke,"poke");
 	strcat(path_tmp,"tmp");
+	strcat(path_rzx,"rzx_files");
 	strcpy(load_path_snaps,path_snaps);
 	strcpy(load_path_taps,path_taps);
 	strcpy(load_path_scr1,path_scr1);
+	strcpy(load_path_rzx,path_rzx);
 	
 	pasted_file[0]=0;
 
@@ -1591,6 +1600,7 @@ int main(int argc,char *argv[])
 		strcpy(load_path_taps,"sd:/");
 		strcpy(load_path_scr1,"sd:/");
 		strcpy(load_path_poke,"sd:/");
+		strcpy(load_path_rzx,"sd:/");
 		strcpy(path_paste,"sd:/");
 	}
 	else ordenador.port =0;
@@ -1602,6 +1612,7 @@ int main(int argc,char *argv[])
 		strcpy(load_path_taps,"usb:/");
 		strcpy(load_path_scr1,"usb:/");
 		strcpy(load_path_poke,"usb:/");
+		strcpy(load_path_rzx,"usb:/");
 		strcpy(path_paste,"usb:/");
 	}
 	else ordenador.port =0;
@@ -1613,6 +1624,7 @@ int main(int argc,char *argv[])
 		strcpy(load_path_taps,"smb:/");
 		strcpy(load_path_scr1,"smb:/");
 		strcpy(load_path_poke,"smb:/");
+		strcpy(load_path_rzx,"smb:/");
 		strcpy(path_paste,"smb:/");
 	}
 	else ordenador.port =0;
@@ -1624,12 +1636,15 @@ int main(int argc,char *argv[])
 		strcpy(load_path_taps,"ftp:/");
 		strcpy(load_path_scr1,"ftp:/");
 		strcpy(load_path_poke,"ftp:/");
+		strcpy(load_path_rzx,"ftp:/");
 		strcpy(path_paste,"ftp:/");
 	}
 	else ordenador.port =0;
 	break;
 	}
 	#endif
+	
+	init_rzx();
 	
 	ordenador.current_tap[0]=0;
 
@@ -1719,11 +1734,11 @@ int main(int argc,char *argv[])
 			emulate(tstados+ordenador.contention);
 			ordenador.contention=0;
 			}
-		
+			
 		} while(procesador.Status!=Z80XX);
 			
 		PC=procesador.PC;
-				
+		
 		/* if PC is 0x056c, a call to LD_BYTES has been made, so if
 		FAST_LOAD is 1, we must load the block in memory and return */
 
@@ -1778,11 +1793,44 @@ int main(int argc,char *argv[])
 			read_keyboard ();	// read the physical keyboard
 			ordenador.readkeyboard = 0;
 		}
-		
+		if (ordenador.playing_rzx)
+		{
+			if (ordenador.icount>=ordenador.maxicount) 
+			{
+				int error;
+				
+				if (ordenador.icount!=ordenador.maxicount) 
+				{
+					printf("Icount in excess= %d\n",ordenador.icount-ordenador.maxicount);
+					msgInfo("RZX sync lost" , 4000, NULL);
+					ordenador.playing_rzx=0;
+					rzx_close();
+				}
+				
+				ordenador.icount = 0;
+				error = rzx_update(&ordenador.maxicount);
+				if (error == RZX_FINISHED) 
+				{
+					printf("RZX playing finished\n"); 
+					msgInfo("RZX playing finished",4000,NULL);
+					ordenador.playing_rzx = 0; 
+				}
+				if (error == RZX_SYNCLOST)
+				{
+					msgInfo("RZX sync lost", 4000, NULL);
+					ordenador.playing_rzx=0;
+					rzx_close();
+				}
+				
+				Z80free_INT(&procesador,255); //Bus always 255
+			}
+		}	
+		else	
 		if(ordenador.interr==1) {
 			Z80free_INT(&procesador,bus_empty());
 			if ((ordenador.precision==0)||(jump_frames>0)) ordenador.interr=0;
-		} //else if (ordenador.precision==1) Z80free_INT_reset(&procesador);
+			if (ordenador.recording_rzx) {rzx_update(&ordenador.icount);ordenador.icount=0;}
+		}
 	}
 	
 	return 0;

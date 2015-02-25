@@ -17,7 +17,7 @@ include $(DEVKITPPC)/gamecube_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	fbzx_gc
 BUILD		:=	build
-SOURCES		:=	src src/z80free src/minizip
+SOURCES		:=	src src/z80free src/minizip src/rzx_lib
 DATA		:=	 
 INCLUDES	:=	
 

@@ -206,6 +206,12 @@ struct computer {
 	long tape_loop_pos;
 
 	unsigned char tape_write; // 0 can't write; 1 can write
+	
+	//Recording Variable
+	unsigned char recording_rzx;
+	unsigned char playing_rzx;
+	unsigned short int maxicount;
+	unsigned short int icount;
 
 	// Microdrive global variables
 	FILE *mdr_file;                  // Current microdrive file

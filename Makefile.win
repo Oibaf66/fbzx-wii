@@ -31,7 +31,7 @@ export SHELL=/bin/bash
 #---------------------------------------------------------------------------------
 TARGET		:=	fbzx-wii
 BUILD		:=	build
-SOURCES		:=	src src/z80free src/minizip
+SOURCES		:=	src src/z80free src/minizip src/rzx_lib
 DATA		:=	 
 INCLUDES	:=
 

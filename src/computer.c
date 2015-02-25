@@ -35,6 +35,7 @@
 #include "Virtualkeyboard.h"
 #include "gui_sdl.h"
 #include "menu_sdl.h"
+#include "rzx_lib/rzx.h"
 #if defined(HW_RVL)
 # include <wiiuse/wpad.h> 
 #endif
@@ -770,6 +771,8 @@ inline void show_screen (int tstados) {
 						print_string (ordenador.screenbuffer,"                            ",-1, 450, 12, 0,ordenador.screen_width);
 				}
 			}
+			else if (ordenador.recording_rzx) print_string (ordenador.screenbuffer,"RZX Recording",-1, 450, 12, 0,ordenador.screen_width);	
+			else if (ordenador.playing_rzx) print_string (ordenador.screenbuffer,"RZX Playing",-1, 450, 12, 0,ordenador.screen_width);
 			
 			if (ordenador.tape_start_countdwn==1) ordenador.tape_stop=0; //Autoplay
 			
@@ -1017,6 +1020,8 @@ inline void show_screen_precision (int tstados) {
 						print_string (ordenador.screenbuffer,"                            ",-1, 450, 12, 0,ordenador.screen_width);
 				}
 			}
+			else if (ordenador.recording_rzx) print_string (ordenador.screenbuffer,"RZX Recording",-1, 450, 12, 0,ordenador.screen_width);	
+			else if (ordenador.playing_rzx) print_string (ordenador.screenbuffer,"RZX Playing",-1, 450, 12, 0,ordenador.screen_width);
 			
 			if (ordenador.tape_start_countdwn==1) ordenador.tape_stop=0; //Autoplay
 			
@@ -1917,6 +1922,10 @@ void ResetComputer () {
 	ordenador.currpix=0;
 	ordenador.interr = 0;
 	
+	ordenador.recording_rzx=0;
+	ordenador.playing_rzx=0;
+	ordenador.icount=0;
+	
 	currah_microspeech_reset();
 }
 
@@ -2060,6 +2069,8 @@ void Z80free_Wr_fake (register word Addr, register byte Value) {
 
 byte Z80free_Rd_fetch (register word Addr) {
 
+	ordenador.icount++;
+	
 	if((ordenador.mdr_active)&&(ordenador.mdr_paged)&&(Addr<8192)) // Interface I
 		return((byte)ordenador.shadowrom[Addr]);
 	
@@ -2370,11 +2381,23 @@ void Z80free_Out_fake (register word Port, register byte Value) {
 	}
 }
 
-byte Z80free_In (register word Port) {
+
+inline byte Z80free_In_internal (register word Port) {
 
 	static unsigned int temporal_io;
-	static byte pines;
+	static byte pines, pines_rzx;
 	
+	if (ordenador.playing_rzx) 
+	{
+		pines_rzx = rzx_get_input();
+		if (pines_rzx == RZX_SYNCLOST) 
+		{
+			msgInfo("RZX sync lost", 4000, NULL);
+			pines_rzx =0; 
+			ordenador.playing_rzx=0;
+			rzx_close();
+		 }
+	}
 	
 	if (ordenador.precision)
 	{
@@ -2423,6 +2446,7 @@ byte Z80free_In (register word Port) {
 	}
 
 	if (!(temporal_io & 0x0001)) {
+		if (ordenador.playing_rzx) return (pines_rzx);
 		pines = 0xBF;	// by default, sound bit is 0
 		if (!(temporal_io & 0x0100))
 			pines &= ordenador.s8;
@@ -2460,6 +2484,7 @@ byte Z80free_In (register word Port) {
 
 	// Joystick - Kempston
 	if (!(temporal_io & 0x0020)) {
+		if (ordenador.playing_rzx) return (pines_rzx);
 		if ((ordenador.joystick[0] == 1)||(ordenador.joystick[1] == 1)) {
 			return (ordenador.js);
 		} else {
@@ -2469,6 +2494,7 @@ byte Z80free_In (register word Port) {
 	
 	// Joystick - Fuller
 	if ((temporal_io & 0x00FF)==0x7F) {
+		if (ordenador.playing_rzx) return (pines_rzx);
 		if ((ordenador.joystick[0] == 4)||(ordenador.joystick[1] == 4)) {
 			return (~ordenador.js);
 		} else {
@@ -2492,7 +2518,7 @@ byte Z80free_In (register word Port) {
 	
 	if ((ordenador.currah_active)&&(temporal_io ==0x0038)) ordenador.currah_paged =  !ordenador.currah_paged;
 	
-	pines=bus_empty();
+	if (ordenador.playing_rzx) pines = pines_rzx; else pines=bus_empty(); //RZX floating bus emulation
 	
 	if (ordenador.precision && (ordenador.mode128k==1||ordenador.mode128k==2||(ordenador.mode128k==4)))
 	 {	if (temporal_io == 0x7FFD) Z80free_Out_fake (0x7FFD,pines); //writeback 0X7ffd 
@@ -2500,6 +2526,14 @@ byte Z80free_In (register word Port) {
 	 }
 	
 	return (pines);
+}
+
+byte Z80free_In (register word Port) {
+
+	byte input;
+	input = Z80free_In_internal (Port);
+	if (ordenador.recording_rzx) rzx_store_input(input);
+	return input;
 }
 
 void set_volume (unsigned char volume) {

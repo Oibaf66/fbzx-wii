@@ -37,6 +37,7 @@
 #include "characters.h"
 #include "spk_ay.h"
 #include "sound.h"
+#include "rzx_lib/rzx.h"
 
 
 #define ID_BUTTON_OFFSET 0
@@ -210,12 +211,11 @@ static const char *tools_messages[] = {
 #endif		
 		/*08*/		"Keyboard rumble",
 		/*09*/		"^|on|off",
-		/*10*/		"  ",
-		/*11*/		"Load poke file",
-		/*12*/		"  ",
+		/*10*/		"Recording (RZX)",
+		/*11*/		"^|Record|Play|Stop",
+		/*12*/		"Load poke file",
 		/*13*/		"Insert poke",
-		/*14*/		"  ",
-		/*15*/		"Help",
+		/*14*/		"Help",
 		NULL
 };
 
@@ -1380,11 +1380,13 @@ static void set_port(int which)
 		strcpy(load_path_taps,load_path_snaps);
 		strcpy(load_path_scr1,load_path_snaps);
 		strcpy(load_path_poke,load_path_snaps);
+		strcpy(load_path_rzx,load_path_snaps);
 		strcpy(path_paste,load_path_snaps);
 		strcat(load_path_snaps,"snapshots");
 		strcat(load_path_taps,"tapes");
 		strcat(load_path_scr1,"scr");
 		strcat(load_path_poke,"poke");
+		strcat(load_path_rzx,"rzx_files");
 		ordenador.port = which;
 		break;
 	#ifdef HW_RVL	
@@ -1394,6 +1396,7 @@ static void set_port(int which)
 			strcpy(load_path_taps,"sd:/");
 			strcpy(load_path_scr1,"sd:/");
 			strcpy(load_path_poke,"sd:/");
+			strcpy(load_path_rzx,"sd:/");
 			strcpy(path_paste,"sd:/");
 			ordenador.port = which;}
 		else
@@ -1405,6 +1408,7 @@ static void set_port(int which)
 			strcpy(load_path_taps,"usb:/");
 			strcpy(load_path_scr1,"usb:/");
 			strcpy(load_path_poke,"usb:/");
+			strcpy(load_path_rzx,"usb:/");
 			strcpy(path_paste,"usb:/");
 			ordenador.port = which;}
 		else
@@ -1423,6 +1427,7 @@ static void set_port(int which)
 			strcpy(load_path_taps,"smb:/");
 			strcpy(load_path_scr1,"smb:/");
 			strcpy(load_path_poke,"smb:/");
+			strcpy(load_path_rzx,"smb:/");
 			strcpy(path_paste,"smb:/");
 			ordenador.port = which;}
 		else
@@ -1442,6 +1447,7 @@ static void set_port(int which)
 			strcpy(load_path_taps,"ftp:/");
 			strcpy(load_path_scr1,"ftp:/");
 			strcpy(load_path_poke,"ftp:/");
+			strcpy(load_path_rzx,"ftp:/");
 			strcpy(path_paste,"ftp:/");
 			ordenador.port = which;}
 		else
@@ -1870,10 +1876,103 @@ static int manage_file(int which)
 	return retorno;
 }
 
+static int load_rzx()
+{
+	int retorno;
+
+	const char *filename = menu_select_file(load_path_rzx, NULL, 1); // Load from rzx_files
+	
+	if (filename==NULL) // Aborted
+		return -1; 
+	
+	if (!(ext_matches(filename, ".rzx")|ext_matches(filename, ".RZX"))) {free((void *)filename); return -1;}
+	
+	
+	retorno=rzx_playback(filename);
+	
+	if (retorno!=RZX_OK) //RZX_OK = 0
+	{
+		printf("Error starting playback %d\n", retorno);
+		msgInfo("Error starting playback",3000,NULL);
+		free((void *)filename);
+		return -1;
+	}
+
+	free((void *)filename);
+	
+	return 0; //OK
+	
+}
+
+static int save_rzx()
+{
+	int retorno;
+	unsigned char filename[MAX_PATH_LENGTH], fb[81];
+
+	clean_screen();
+
+	if (ordenador.last_selected_file && strrchr(ordenador.last_selected_file, '/'))
+		strncpy(fb, strrchr(ordenador.last_selected_file, '/') + 1, 80);
+	else
+		strcpy(fb, "");
+ 
+	retorno=ask_filename_sdl(filename,82,"rzx",path_rzx,fb);
+ 
+	if(retorno==2) // abort
+		return -1;
+ 
+	if(rzx_record(filename)!=RZX_OK) {printf("RZX: Impossible to create snapshot\n"); return -1;}
+
+ return 0;
+}
+
+static int do_rzx(int which)
+{
+	int retorno = 0; //Stay in the menu as default
+	int retorno2;
+	
+	switch (which) 
+		{
+		case 0: // Record
+			ordenador.playing_rzx=0;
+			ordenador.icount = 0;
+			retorno2=save_rzx();
+			if (retorno2) break; //Error
+			save_z80("temp.z80",1);
+			if (rzx_add_snapshot("temp.z80", RZX_COMPRESSED)==RZX_OK) printf("RZX: Added snapshot\n");
+			else {printf("RZX: Impossible to create snapshot\n"); break;}
+			unlink("temp.z80");
+			ordenador.recording_rzx=1;
+			retorno = -2;
+			break;
+		case 1: // Play
+			ordenador.recording_rzx=0;
+			ordenador.icount = 0;
+			retorno2 = load_rzx();
+			if (retorno2) break; //Error or no file
+			retorno2 = rzx_update(&ordenador.maxicount);
+			if (retorno2 == RZX_FINISHED) {printf("RZX: Playing finished at fisrt frame\n"); break;}
+			ordenador.playing_rzx = 1;
+			retorno = -2; //Come back to the menu
+			break;	
+		case 2: // stop 
+			ordenador.recording_rzx=0;
+			ordenador.playing_rzx=0;
+			rzx_close();
+			printf("RZX: Stop\n");
+			retorno = -2;
+			break;
+		default:
+			break;
+		}			
+
+	return retorno;
+}
+
 static int tools()
 {
 	int opt , retorno;
-	int submenus[5], old_port;
+	int submenus[6], old_port;
 
 	memset(submenus, 0, sizeof(submenus));
 
@@ -1904,14 +2003,17 @@ static int tools()
 			break;
 		case 4: 
 			retorno = manage_file(submenus[2]);
-			break;	
-		case 11: // Load poke file
+			break;
+		case 10: 
+			retorno = do_rzx(submenus[5]);
+			break;
+		case 12: // Load poke file
 			retorno = load_poke_file();
 			break;
 		case 13: // Insert poke
 			retorno = do_poke_sdl();
 			break;	
-		case 15:
+		case 14:
 			help();
 			retorno = -1;
 			break;
