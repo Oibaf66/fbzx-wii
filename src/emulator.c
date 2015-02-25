@@ -1822,7 +1822,9 @@ int main(int argc,char *argv[])
 					rzx_close();
 				}
 				
-				Z80free_INT(&procesador,255); //Bus always 255
+				Z80free_INT(&procesador,bus_empty());
+				if (!ordenador.precision) ordenador.currpix=64;
+				end_of_frame();
 			}
 		}	
 		else	

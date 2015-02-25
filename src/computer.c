@@ -651,6 +651,57 @@ void set_memory_pointers () {
 	ordenador.block3 = ordenador.memoria + (16384 * ram);	// page n minus 49152
 }
 
+
+void end_of_frame()
+{ 
+			if (ordenador.osd_time) {
+				ordenador.osd_time--;
+				if (ordenador.osd_time==0) {
+					//ordenador.tab_extended=0;
+					ordenador.esc_again=0;
+				}
+					
+				if (ordenador.osd_time>1)
+					print_string (ordenador.screenbuffer,ordenador.osd_text, -1,450, 12, 0,ordenador.screen_width);
+				else if (ordenador.osd_time==1){
+					if (ordenador.zaurus_mini==0)
+						print_string (ordenador.screenbuffer,"                                      ",-1, 450, 12, 0,ordenador.screen_width);
+					else
+						print_string (ordenador.screenbuffer,"                            ",-1, 450, 12, 0,ordenador.screen_width);
+				}
+			}
+			else if (ordenador.recording_rzx) print_string (ordenador.screenbuffer,"RZX Recording",-1, 450, 12, 0,ordenador.screen_width);	
+			else if (ordenador.playing_rzx) print_string (ordenador.screenbuffer,"RZX Playing",-1, 450, 12, 0,ordenador.screen_width);
+			
+			if (ordenador.tape_start_countdwn==1) ordenador.tape_stop=0; //Autoplay
+			
+			if ((ordenador.tape_start_countdwn>0)&&(ordenador.stop_tape_start_countdown ==0)) ordenador.tape_start_countdwn--;
+			if (ordenador.pause_fastload_countdwn>0) ordenador.pause_fastload_countdwn--;
+				
+			if (ordenador.mustlock) {
+				SDL_UnlockSurface (ordenador.screen);
+				SDL_Flip (ordenador.screen);
+				SDL_LockSurface (ordenador.screen);
+			} else {
+				SDL_Flip (ordenador.screen);
+			}
+			
+			curr_frames=0;
+			ordenador.currline = 0;
+			ordenador.interr = 1;
+			ordenador.readkeyboard = 1;
+			ordenador.cicles_counter=0;
+			ordenador.pixel = ((unsigned char *) (ordenador.screen->pixels))+ordenador.init_line;	// +ordenador.init_line;
+			ordenador.p_translt = ordenador.translate;
+			ordenador.p_translt2 = ordenador.translate2;
+			ordenador.contador_flash++;
+			if (ordenador.contador_flash == 16) {
+				ordenador.flash = 1 - ordenador.flash;
+				ordenador.contador_flash = 0;
+			}
+}
+
+
 /* Paints the spectrum screen during the TSTADOS tstates that the Z80 used
 to execute last instruction */
 
@@ -753,56 +804,11 @@ inline void show_screen (int tstados) {
 		
 	
 		//End of frame
-		if ((ordenador.currline > ordenador.pixalto)&&(ordenador.currpix>63)) { 
-			ordenador.currpix=64;
-			if (ordenador.osd_time) {
-				ordenador.osd_time--;
-				if (ordenador.osd_time==0) {
-					//ordenador.tab_extended=0;
-					ordenador.esc_again=0;
-				}
-					
-				if (ordenador.osd_time>1)
-					print_string (ordenador.screenbuffer,ordenador.osd_text, -1,450, 12, 0,ordenador.screen_width);
-				else if (ordenador.osd_time==1){
-					if (ordenador.zaurus_mini==0)
-						print_string (ordenador.screenbuffer,"                                      ",-1, 450, 12, 0,ordenador.screen_width);
-					else
-						print_string (ordenador.screenbuffer,"                            ",-1, 450, 12, 0,ordenador.screen_width);
-				}
-			}
-			else if (ordenador.recording_rzx) print_string (ordenador.screenbuffer,"RZX Recording",-1, 450, 12, 0,ordenador.screen_width);	
-			else if (ordenador.playing_rzx) print_string (ordenador.screenbuffer,"RZX Playing",-1, 450, 12, 0,ordenador.screen_width);
-			
-			if (ordenador.tape_start_countdwn==1) ordenador.tape_stop=0; //Autoplay
-			
-			if ((ordenador.tape_start_countdwn>0)&&(ordenador.stop_tape_start_countdown ==0)) ordenador.tape_start_countdwn--;
-			if (ordenador.pause_fastload_countdwn>0) ordenador.pause_fastload_countdwn--;
-				
-			if (ordenador.mustlock) {
-				SDL_UnlockSurface (ordenador.screen);
-				SDL_Flip (ordenador.screen);
-				SDL_LockSurface (ordenador.screen);
-			} else {
-				SDL_Flip (ordenador.screen);
-			}
-			
-			curr_frames=0;
-			ordenador.currline = 0;
-			ordenador.interr = 1;
-			ordenador.readkeyboard = 1;
-			ordenador.cicles_counter=0;
-			ordenador.pixel = ((unsigned char *) (ordenador.screen->pixels))+ordenador.init_line;	// +ordenador.init_line;
-			ordenador.p_translt = ordenador.translate;
-			ordenador.p_translt2 = ordenador.translate2;
-			ordenador.contador_flash++;
-			if (ordenador.contador_flash == 16) {
-				ordenador.flash = 1 - ordenador.flash;
-				ordenador.contador_flash = 0;
-			}
-		}
+		if ((ordenador.currline > ordenador.pixalto)&&(ordenador.currpix>63)&&!ordenador.playing_rzx) {ordenador.currpix=64; end_of_frame();} 
+
 	}
 }
+
 
 //Write the screen from 14339 state for 48K and from 14365 for 128k
 
@@ -1003,53 +1009,8 @@ inline void show_screen_precision (int tstados) {
 		}
 	
 		//End of frame
-		if ((ordenador.currline > ordenador.pixalto)&&(ordenador.currpix>ordenador.start_screen)){  
-			if (ordenador.osd_time) {
-				ordenador.osd_time--;
-				if (ordenador.osd_time==0) {
-					//ordenador.tab_extended=0;
-					ordenador.esc_again=0;
-				}
-					
-				if (ordenador.osd_time>1)
-					print_string (ordenador.screenbuffer,ordenador.osd_text, -1,450, 12, 0,ordenador.screen_width);
-				else if (ordenador.osd_time==1) {
-					if (ordenador.zaurus_mini==0)
-						print_string (ordenador.screenbuffer,"                                      ",-1, 450, 12, 0,ordenador.screen_width);
-					else
-						print_string (ordenador.screenbuffer,"                            ",-1, 450, 12, 0,ordenador.screen_width);
-				}
-			}
-			else if (ordenador.recording_rzx) print_string (ordenador.screenbuffer,"RZX Recording",-1, 450, 12, 0,ordenador.screen_width);	
-			else if (ordenador.playing_rzx) print_string (ordenador.screenbuffer,"RZX Playing",-1, 450, 12, 0,ordenador.screen_width);
-			
-			if (ordenador.tape_start_countdwn==1) ordenador.tape_stop=0; //Autoplay
-			
-			if ((ordenador.tape_start_countdwn>0)&&(ordenador.stop_tape_start_countdown ==0)) ordenador.tape_start_countdwn--;
-			if (ordenador.pause_fastload_countdwn>0) ordenador.pause_fastload_countdwn--;
-				
-			if (ordenador.mustlock) {
-				SDL_UnlockSurface (ordenador.screen);
-				SDL_Flip (ordenador.screen);
-				SDL_LockSurface (ordenador.screen);
-			} else {
-				SDL_Flip (ordenador.screen);
-			}
-			
-			curr_frames=0;
-			ordenador.currline = 0;
-			ordenador.interr = 1;
-			ordenador.readkeyboard = 1;
-			ordenador.cicles_counter=0;
-			ordenador.pixel = ((unsigned char *) (ordenador.screen->pixels))+ordenador.init_line;	// +ordenador.init_line;
-			ordenador.p_translt = ordenador.translate;
-			ordenador.p_translt2 = ordenador.translate2;
-			ordenador.contador_flash++;
-			if (ordenador.contador_flash == 16) {
-				ordenador.flash = 1 - ordenador.flash;
-				ordenador.contador_flash = 0;
-			}
-		}
+		if ((ordenador.currline > ordenador.pixalto)&&(ordenador.currpix>ordenador.start_screen)&&(!ordenador.playing_rzx)) end_of_frame();
+		
 		
 		//End of interrupt
 		if (ordenador.cicles_counter == 32) ordenador.interr = 0;

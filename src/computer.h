@@ -316,5 +316,6 @@ void computer_set_palete();
 void set_palete_entry(unsigned char entry, byte Value);
 void restart_video();
 void update_npixels();
+void end_of_frame();
 
 #endif
