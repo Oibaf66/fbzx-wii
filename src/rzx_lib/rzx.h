@@ -4,8 +4,13 @@
              Input Recording Library for ZX Spectrum emulators
       =================================================================
             Library version: 0.12 - last updated: 4 August 2002
+				Created by Ramsoft ZX Spectrum demogroup
+			Library version: 0.13 - last updated: 23 February 2015
+				 Upadate by Fabio Olimpieri
 
-      <license goes here>
+       This is free software. Permission to use it in non-commercial and
+      commercial products is hereby granted at the terms of the present
+      licence:
 */
 
 
@@ -16,8 +21,8 @@ extern "C" {
 #endif
 
 
-#define RZX_LIBRARY_VERSION   0x000C
-#define RZX_LIBRARY_BUILD     31
+#define RZX_LIBRARY_VERSION   0x000D
+#define RZX_LIBRARY_BUILD     1
 
 
 /* ******************** Configuration options ******************** */
@@ -58,6 +63,9 @@ typedef unsigned long int rzx_u32;      /* must be unsigned 32-bit */
 #define RZXMSG_CREATOR   1
 #define RZXMSG_LOADSNAP  2
 #define RZXMSG_IRBNOTIFY 3
+#define RZXMSG_SECURITY 4
+#define RZXMSG_SEC_SIG 5
+#define RZXMSG_UNKNOWN 6
 
 
 /* RZX global flags */

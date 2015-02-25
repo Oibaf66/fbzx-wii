@@ -5,6 +5,8 @@
       =================================================================
             Library version: 0.12 - last updated: 04 August 2002
                  Created by Ramsoft ZX Spectrum demogroup
+			Library version: 0.13 - last updated: 23 February 2015
+				 Upadate by Fabio Olimpieri
 
       This is free software. Permission to use it in non-commercial and
       commercial products is hereby granted at the terms of the present
@@ -41,8 +43,10 @@ extern "C" {
 #define RZXBLK_SESSION    0x11
 #define RZXBLK_COMMENT    0x12
 #define RZXBLK_SECURITY   0x20
+#define RZXBLK_SEC_SIG    0x21
 #define RZXBLK_SNAP       0x30
 #define RZXBLK_DATA       0x80
+#define RZXBLK_UNKNOWN    0x00
 
 /* RZX internal status codes */
 #define RZX_INIT   0x0001
@@ -226,10 +230,18 @@ int rzx_scan()
            /* signal that the RZX contains at least one encrypted block */
            rzx.options|=RZX_PROTECTED;
            rzx.options|=RZX_SEALED;
+		   emul_handler(RZXMSG_SECURITY,NULL);
            break;
       case RZXBLK_DATA:
            fread(block.buff,13,1,rzxfile);
+		   break;
+      case RZXBLK_SEC_SIG: 
+           emul_handler(RZXMSG_SEC_SIG,NULL);
+           break;
+      case RZXBLK_SNAP:   
+           break;   
       default:
+           emul_handler(RZXMSG_UNKNOWN,NULL);
            break;
      }
      fpos+=block.length;
@@ -318,7 +330,7 @@ int rzx_seek_irb()
             /* if you can't, skip to next block */
             if(snapfile==NULL) break;
             /* ok */
-            rzx_snap.options|=RZX_EXTERNAL|RZX_REMOVE;
+            rzx_snap.options|=RZX_REMOVE;
             fpos=rzx_snap.length;
             while(fpos>0)
             {
@@ -346,7 +358,7 @@ int rzx_seek_irb()
             rzx_snap.options|=RZX_EXTERNAL;
           }
           /* tell the host emulator to load the snapshot */
-          emul_handler(RZXMSG_LOADSNAP,&rzx_snap);
+          if (emul_handler(RZXMSG_LOADSNAP,&rzx_snap)) return RZX_INVALID;
           if(rzx_snap.options&RZX_REMOVE) remove(rzx_snap.filename);
           break;
      case RZXBLK_DATA:
@@ -384,6 +396,10 @@ int rzx_seek_irb()
      case RZXBLK_SECURITY:
           /* set the new security parameters */
           break;
+     case RZXBLK_SEC_SIG:
+          break;		  
+     case RZXBLK_CREATOR:
+          break;     		  
      default:
           break;
     }
@@ -458,6 +474,7 @@ int rzx_playback(const char *filename)
      return RZX_FINISHED;
   }
   INcount=0;
+  INmax=0;
   INold=0xFFFF;
   return RZX_OK;
 }
@@ -574,7 +591,7 @@ int rzx_update(rzx_u16 *icount)
                return RZX_FINISHED;
             }
          }
-
+		 if (INmax!=INcount) {printf("Too few inputs read %d\n", INmax -INcount); return RZX_SYNCLOST;} 
          /* fetch the instruction and IN counters */
          INold=INmax;
          #ifdef RZX_USE_COMPRESSION
@@ -593,14 +610,14 @@ int rzx_update(rzx_u16 *icount)
 
          /* update the input array */
          #ifdef RZX_USE_COMPRESSION
-         if(INmax&&(INmax!=0xFFFF))
+         if(INmax!=0xFFFF)
          {
           if(rzx_status&RZX_PACK) rzx_pread(inputbuffer,INmax);
           else fread(inputbuffer,INmax,1,rzxfile);
          }
          else INmax=INold;
          #else
-         if(INmax&&(INmax!=0xFFFF)) fread(inputbuffer,INmax,1,rzxfile);
+         if(INmax!=0xFFFF) fread(inputbuffer,INmax,1,rzxfile);
          else INmax=INold;
          #endif
          INcount=0;
@@ -667,7 +684,7 @@ int rzx_update(rzx_u16 *icount)
          #ifdef RZX_USE_COMPRESSION
          if(rzx_status&RZX_PACK) rzx_pwrite(block.buff,4);
          else fwrite(block.buff,4,1,rzxfile);
-         if(INcount&&(INcount!=0xFFFF))
+         if(INcount!=0xFFFF)
          {
           if(rzx_status&RZX_PACK) rzx_pwrite(inputbuffer,INcount);
           else fwrite(inputbuffer,INcount,1,rzxfile);
@@ -678,7 +695,7 @@ int rzx_update(rzx_u16 *icount)
          }
          #else
          fwrite(block.buff,4,1,rzxfile);
-         if(INcount&&(INcount!=0xFFFF))
+         if(INcount!=0xFFFF)
          {
           fwrite(inputbuffer,INcount,1,rzxfile);
           xchgp=inputbuffer;
@@ -705,7 +722,7 @@ void rzx_store_input(rzx_u8 value)
 
 rzx_u8 rzx_get_input(void)
 {
- if(INcount>=INmax) return RZX_SYNCLOST;
+ if(INcount>=INmax) {printf("Too many inputs read\n"); return RZX_SYNCLOST;};
  return inputbuffer[INcount++];
 }
 
