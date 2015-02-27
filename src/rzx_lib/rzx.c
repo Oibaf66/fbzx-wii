@@ -291,7 +291,7 @@ void rzx_close_irb()
 
 int rzx_seek_irb()
 {
-  int done=0;
+  int done=0, error;
   long fpos;
   FILE *snapfile;
   while(!done)
@@ -358,8 +358,9 @@ int rzx_seek_irb()
             rzx_snap.options|=RZX_EXTERNAL;
           }
           /* tell the host emulator to load the snapshot */
-          if (emul_handler(RZXMSG_LOADSNAP,&rzx_snap)) return RZX_INVALID;
+          error=emul_handler(RZXMSG_LOADSNAP,&rzx_snap);
           if(rzx_snap.options&RZX_REMOVE) remove(rzx_snap.filename);
+		  if (error) return RZX_INVALID;
           break;
      case RZXBLK_DATA:
           /* recording block found, initialize the values */

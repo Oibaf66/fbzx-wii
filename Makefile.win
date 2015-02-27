@@ -132,6 +132,7 @@ dist: $(BUILD)
 	mkdir -p $@/fbzx-wii/scr2
 	mkdir -p $@/fbzx-wii/configurations
 	mkdir -p $@/fbzx-wii/poke
+	mkdir -p $@/fbzx-wii/rzx
 	mkdir -p $@/fbzx-wii/doc
 	mkdir -p $@/fbzx-wii/fbzx/allophones
 	cp fbzx-wii.exe $@/fbzx-wii/fbzx-wii.exe
@@ -164,6 +165,7 @@ dist: $(BUILD)
 	touch $@/fbzx-wii/scr2/dummy
 	touch $@/fbzx-wii/configurations/dummy
 	touch $@/fbzx-wii/poke/dummy
+	touch $@/fbzx-wii/rzx/dummy
 	cd $@ && tar -czf ../fbzx-wii-windows-v-bin.tar.gz *
 
 distsource:

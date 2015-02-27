@@ -1558,7 +1558,7 @@ int main(int argc,char *argv[])
 	strcat(path_confs,"configurations");
 	strcat(load_path_poke,"poke");
 	strcat(path_tmp,"tmp");
-	strcat(path_rzx,"rzx_files");
+	strcat(path_rzx,"rzx");
 	strcpy(load_path_snaps,path_snaps);
 	strcpy(load_path_taps,path_taps);
 	strcpy(load_path_scr1,path_scr1);
@@ -1794,7 +1794,7 @@ int main(int argc,char *argv[])
 			ordenador.readkeyboard = 0;
 		}
 		if (ordenador.playing_rzx)
-		{
+		{	
 			if (ordenador.icount>=ordenador.maxicount) 
 			{
 				int error;
@@ -1824,8 +1824,9 @@ int main(int argc,char *argv[])
 				
 				Z80free_INT(&procesador,bus_empty());
 				if (!ordenador.precision) ordenador.currpix=64;
-				end_of_frame();
+				if (curr_frames==jump_frames) end_of_frame(); else ordenador.cicles_counter=0;
 			}
+		if (ordenador.cicles_counter<32) Z80free_INT(&procesador,bus_empty());	
 		}	
 		else	
 		if(ordenador.interr==1) {

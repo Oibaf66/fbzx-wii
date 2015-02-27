@@ -122,6 +122,7 @@ dist: $(BUILD)
 	mkdir -p $@/fbzx-gc/scr2
 	mkdir -p $@/fbzx-gc/configurations
 	mkdir -p $@/fbzx-gc/poke
+	mkdir -p $@/fbzx-wii/rzx
 	mkdir -p $@/fbzx-gc/doc
 	mkdir -p $@/fbzx-gc/fbzx/allophones
 	cp fbzx_gc.dol $@/fbzx-gc/fbzx_gc.dol
@@ -151,6 +152,7 @@ dist: $(BUILD)
 	touch $@/fbzx-gc/scr2/dummy
 	touch $@/fbzx-gc/configurations/dummy
 	touch $@/fbzx-gc/poke/dummy
+	touch $@/fbzx-wii/rzx/dummy
 	cd $@ && tar -czf ../fbzx-gc-vx-bin.tar.gz *
 
 distsource:

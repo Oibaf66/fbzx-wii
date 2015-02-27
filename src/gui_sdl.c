@@ -1386,7 +1386,7 @@ static void set_port(int which)
 		strcat(load_path_taps,"tapes");
 		strcat(load_path_scr1,"scr");
 		strcat(load_path_poke,"poke");
-		strcat(load_path_rzx,"rzx_files");
+		strcat(load_path_rzx,"rzx");
 		ordenador.port = which;
 		break;
 	#ifdef HW_RVL	
@@ -1880,7 +1880,7 @@ static int load_rzx()
 {
 	int retorno;
 
-	const char *filename = menu_select_file(load_path_rzx, NULL, 1); // Load from rzx_files
+	const char *filename = menu_select_file(load_path_rzx, NULL, 1); // Load from rzx dir
 	
 	if (filename==NULL) // Aborted
 		return -1; 
@@ -1952,6 +1952,7 @@ static int do_rzx(int which)
 			if (retorno2) break; //Error or no file
 			retorno2 = rzx_update(&ordenador.maxicount);
 			if (retorno2 == RZX_FINISHED) {printf("RZX: Playing finished at fisrt frame\n"); break;}
+			ordenador.cicles_counter=32; //to avoid the interrupt at first frame
 			ordenador.playing_rzx = 1;
 			retorno = -2; //Come back to the menu
 			break;	
