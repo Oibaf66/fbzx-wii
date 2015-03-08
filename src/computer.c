@@ -654,6 +654,8 @@ void set_memory_pointers () {
 
 void end_of_frame()
 { 
+static char rzx_message[24];
+ 
 			if (ordenador.osd_time) {
 				ordenador.osd_time--;
 				if (ordenador.osd_time==0) {
@@ -671,8 +673,12 @@ void end_of_frame()
 				}
 			}
 			else if (ordenador.recording_rzx) print_string (ordenador.screenbuffer,"RZX Recording",-1, 450, 12, 0,ordenador.screen_width);	
-			else if (ordenador.playing_rzx) print_string (ordenador.screenbuffer,"RZX Playing",-1, 450, 12, 0,ordenador.screen_width);
-			
+			else if (ordenador.playing_rzx) 
+				{
+					if (ordenador.total_frames_rzx) sprintf(rzx_message, "RZX Playing %d%%",  100*ordenador.frames_count_rzx/ordenador.total_frames_rzx);
+					else strcpy (rzx_message, "RZX Playing");
+					print_string (ordenador.screenbuffer,rzx_message,-1, 450, 12, 0,ordenador.screen_width);
+				}
 			if (ordenador.tape_start_countdwn==1) ordenador.tape_stop=0; //Autoplay
 			
 			if ((ordenador.tape_start_countdwn>0)&&(ordenador.stop_tape_start_countdown ==0)) ordenador.tape_start_countdwn--;
@@ -1881,10 +1887,10 @@ void ResetComputer () {
 	ordenador.cicles_counter=0;
 	ordenador.currline=0;
 	ordenador.currpix=0;
-	ordenador.interr = 0;
+	ordenador.interr = 1;
 	
 	ordenador.recording_rzx=0;
-	ordenador.playing_rzx=0;
+	//ordenador.playing_rzx=0;
 	ordenador.icount=0;
 	
 	currah_microspeech_reset();
@@ -2347,11 +2353,12 @@ inline byte Z80free_In_internal (register word Port) {
 
 	static unsigned int temporal_io;
 	static byte pines, pines_rzx;
+	static int error;
 	
 	if (ordenador.playing_rzx) 
 	{
-		pines_rzx = rzx_get_input();
-		if (pines_rzx == RZX_SYNCLOST) 
+		error = rzx_get_input(&pines_rzx);
+		if (error == RZX_SYNCLOST) 
 		{
 			msgInfo("RZX sync lost", 4000, NULL);
 			pines_rzx =0; 

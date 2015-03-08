@@ -212,7 +212,7 @@ static const char *tools_messages[] = {
 		/*08*/		"Keyboard rumble",
 		/*09*/		"^|on|off",
 		/*10*/		"Recording (RZX)",
-		/*11*/		"^|Record|Play|Stop",
+		/*11*/		"^|Record|Play|Stop|Bookmark",
 		/*12*/		"Load poke file",
 		/*13*/		"Insert poke",
 		/*14*/		"Help",
@@ -1948,11 +1948,13 @@ static int do_rzx(int which)
 		case 1: // Play
 			ordenador.recording_rzx=0;
 			ordenador.icount = 0;
+			ordenador.total_frames_rzx=0;
+			ordenador.frames_count_rzx=1;
 			retorno2 = load_rzx();
 			if (retorno2) break; //Error or no file
 			retorno2 = rzx_update(&ordenador.maxicount);
 			if (retorno2 == RZX_FINISHED) {printf("RZX: Playing finished at fisrt frame\n"); break;}
-			ordenador.cicles_counter=32; //to avoid the interrupt at first frame
+			//ordenador.cicles_counter=32; //to avoid the interrupt at first frame
 			ordenador.playing_rzx = 1;
 			retorno = -2; //Come back to the menu
 			break;	
@@ -1961,6 +1963,16 @@ static int do_rzx(int which)
 			ordenador.playing_rzx=0;
 			rzx_close();
 			printf("RZX: Stop\n");
+			retorno = -2;
+			break;
+		case 3: //Add Bookmark
+			if (!ordenador.recording_rzx) break; 
+			rzx_update(&ordenador.icount);
+			ordenador.icount=0xFFFF; //to avoid a new rzx_update
+			save_z80("temp.z80",1);
+			if (rzx_add_snapshot("temp.z80", RZX_COMPRESSED)==RZX_OK) {printf("RZX: Added snapshot\n");msgInfo("Added Bookmark", 3000, NULL);}
+			else {printf("RZX: Impossible to add snapshot\n"); break;}
+			unlink("temp.z80");
 			retorno = -2;
 			break;
 		default:

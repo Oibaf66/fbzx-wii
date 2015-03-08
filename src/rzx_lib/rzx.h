@@ -32,8 +32,14 @@ typedef unsigned char rzx_u8;           /* must be unsigned 8-bit  */
 typedef unsigned short int rzx_u16;     /* must be unsigned 16-bit */
 typedef unsigned long int rzx_u32;      /* must be unsigned 32-bit */
 
+#ifdef GEKKO
+#include <machine/endian.h>
+#endif
+
 /* Uncomment the next line for Motorola-byte-order CPUs            */
+#if BYTE_ORDER == BIG_ENDIAN
 #define RZX_BIG_ENDIAN
+#endif
 
 /* Uncomment the next line to enable compression support           */
 #define RZX_USE_COMPRESSION
@@ -57,6 +63,7 @@ typedef unsigned long int rzx_u32;      /* must be unsigned 32-bit */
 #define RZX_IDLE     0
 #define RZX_PLAYBACK 1
 #define RZX_RECORD   2
+#define RZX_SCAN   3
 
 
 /* RZX callback messages */
@@ -124,7 +131,7 @@ int rzx_playback(const char *filename);
 void rzx_close(void);
 int rzx_update(rzx_u16 *icount);
 void rzx_store_input(rzx_u8 value);
-rzx_u8 rzx_get_input(void);
+int rzx_get_input(rzx_u8 *input);
 
 int rzx_add_snapshot(const char *filename, const rzx_u32 flags);
 int rzx_add_comment(const char *text, const rzx_u32 flags);

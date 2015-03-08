@@ -97,6 +97,7 @@ rzx_u32 rzx_callback(int msg, void *par)
        {
          /* fetch the IRB info if needed */
          tstates=((RZX_IRBINFO*)par)->tstates;
+		 ordenador.cicles_counter=tstates;
          printf("> IRB notify: tstates=%i, %s, %s\n",(int)tstates,
                    ((RZX_IRBINFO*)par)->options&RZX_COMPRESSED?"compressed":"uncompressed",
 				   ((RZX_IRBINFO*)par)->options&RZX_PROTECTED?"protected":"not protected");
@@ -112,6 +113,11 @@ rzx_u32 rzx_callback(int msg, void *par)
          printf("> IRB notify: tstates=%i, %s\n",(int)ordenador.cicles_counter,
                    ((RZX_IRBINFO*)par)->options&RZX_COMPRESSED?"compressed":"uncompressed");
        }
+	   else if(rzx.mode==RZX_SCAN)
+	   {
+	     ordenador.total_frames_rzx += ((RZX_IRBINFO*)par)->framecount;
+		 printf("> IRB notify: Total frames to play %d\n", ordenador.total_frames_rzx);
+	   }
        break;
   case RZXMSG_SECURITY:
 		printf("> Security Information Block\n");
@@ -139,7 +145,7 @@ void init_rzx()
 
  printf("Init RZX library\n");
  printf("Using RZX Library v%i.%02i build %i\n",(RZX_LIBRARY_VERSION&0xFF00)>>8,RZX_LIBRARY_VERSION&0xFF,RZX_LIBRARY_BUILD);
- strcpy(emul_info.name,"RZX FBZX Wii");
+ strcpy(emul_info.name,"RZX FBZX Wii ");
  emul_info.ver_major=FBZXVMAJ;
  emul_info.ver_minor=FBZXVMIN;
  emul_info.data=0; emul_info.length=0;

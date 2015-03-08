@@ -234,11 +234,18 @@ int rzx_scan()
            break;
       case RZXBLK_DATA:
            fread(block.buff,13,1,rzxfile);
+		   #ifndef RZX_BIG_ENDIAN
+			rzx_irb.framecount=*((rzx_u32*)&block.buff[0]);
+			#else
+			rzx_irb.framecount=block.buff[0]+256*block.buff[1]+65536*block.buff[2]+16777216*block.buff[3];
+			#endif
+          /* notify the emulator the frame count */
+			emul_handler(RZXMSG_IRBNOTIFY,&rzx_irb);
 		   break;
       case RZXBLK_SEC_SIG: 
            emul_handler(RZXMSG_SEC_SIG,NULL);
            break;
-      case RZXBLK_SNAP:   
+      case RZXBLK_SNAP:
            break;   
       default:
            emul_handler(RZXMSG_UNKNOWN,NULL);
@@ -296,6 +303,7 @@ int rzx_seek_irb()
   FILE *snapfile;
   while(!done)
   {
+	fseek(rzxfile,block.start,SEEK_SET);
     if(fread(block.buff,5,1,rzxfile)<1) return RZX_FINISHED;
     block.type=block.buff[0];
     #ifndef RZX_BIG_ENDIAN
@@ -392,6 +400,7 @@ int rzx_seek_irb()
           }
           #endif
           /* all done */
+		  block.start+=block.length;
           return RZX_OK;
           break;
      case RZXBLK_SECURITY:
@@ -406,7 +415,6 @@ int rzx_seek_irb()
     }
     /* seek the next block in the file */
     block.start+=block.length;
-    fseek(rzxfile,block.start,SEEK_SET);
   }
   return RZX_OK;
 }
@@ -462,6 +470,7 @@ int rzx_playback(const char *filename)
   rzx.ver_major=block.buff[4];
   rzx.ver_minor=block.buff[5];
   /* pre-scan the file to collect useful information and stats */
+  rzx.mode=RZX_SCAN;
   if(rzx_scan()!=RZX_OK)
   {
      rzx_close();
@@ -539,7 +548,9 @@ void rzx_close(void)
    switch(rzx.mode)
    {
       case RZX_PLAYBACK:
+#ifdef RZX_USE_COMPRESSION	  
            rzx_pclose();
+#endif		   
            break;
       case RZX_RECORD:
            /* is there an IRB to close? */
@@ -628,7 +639,7 @@ int rzx_update(rzx_u16 *icount)
          /* close if parameters are not valid */
          if((!icount)&&(rzx_status&RZX_IRB))
          {
-            rzx_close_irb();
+			rzx_close_irb();
             break;
          }
          /* need to start a new IRB? */
@@ -667,6 +678,8 @@ int rzx_update(rzx_u16 *icount)
              rzx_popen(fpos,"wb");
             }
             #endif
+			INcount=0;
+			INold=0xFFFF;
          }
 
          /* prepare the frame data */
@@ -721,10 +734,11 @@ void rzx_store_input(rzx_u8 value)
 }
 
 
-rzx_u8 rzx_get_input(void)
+int rzx_get_input(rzx_u8 *input)
 {
- if(INcount>=INmax) {printf("Too many inputs read\n"); return RZX_SYNCLOST;};
- return inputbuffer[INcount++];
+ if(INcount>=INmax) {printf("Too many inputs read\n"); *input=0; return RZX_SYNCLOST;};
+ *input = inputbuffer[INcount++];
+ return RZX_OK;
 }
 
 int rzx_add_snapshot(const char *filename, const rzx_u32 flags)

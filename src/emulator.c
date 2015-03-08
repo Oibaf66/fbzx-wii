@@ -1808,6 +1808,7 @@ int main(int argc,char *argv[])
 				}
 				
 				ordenador.icount = 0;
+				ordenador.frames_count_rzx++;
 				error = rzx_update(&ordenador.maxicount);
 				if (error == RZX_FINISHED) 
 				{
@@ -1826,13 +1827,13 @@ int main(int argc,char *argv[])
 				if (!ordenador.precision) ordenador.currpix=64;
 				if (curr_frames==jump_frames) end_of_frame(); else ordenador.cicles_counter=0;
 			}
-		if (ordenador.cicles_counter<32) Z80free_INT(&procesador,bus_empty());	
+		//if (ordenador.cicles_counter<32) Z80free_INT(&procesador,bus_empty());	
 		}	
 		else	
 		if(ordenador.interr==1) {
 			Z80free_INT(&procesador,bus_empty());
 			if ((ordenador.precision==0)||(jump_frames>0)) ordenador.interr=0;
-			if (ordenador.recording_rzx) {rzx_update(&ordenador.icount);ordenador.icount=0;}
+			if (ordenador.recording_rzx) {if (ordenador.icount != 0xFFFF) rzx_update(&ordenador.icount);ordenador.icount=0;}
 		}
 	}
 	
