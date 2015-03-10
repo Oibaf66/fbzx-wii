@@ -147,6 +147,7 @@ void Z80free_Wr_fake (register word Addr, register byte Value);
 byte Z80free_In (register word Port);
 void Z80free_Out (register word Port, register byte Value);
 void Z80free_Out_fake (register word Port, register byte Value);
+byte test_IFF1 (Z80FREE *);
 
 /* Opcode functions */
 

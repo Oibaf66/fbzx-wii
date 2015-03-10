@@ -67,6 +67,11 @@ int Z80free_step(Z80FREE *processor) {
 	return (retval);
 }
 
+byte test_IFF1 (Z80FREE *processor)
+{
+	return processor->IFF1;
+}
+
 int Z80free_ustep(Z80FREE *processor) {
 	
 	static byte opcode,d1;

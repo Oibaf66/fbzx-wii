@@ -293,6 +293,8 @@ void rzx_close_irb()
   block.start=pos;
   /* signal that we have exited the IRB */
   rzx_status&=~RZX_IRB;
+  INcount=0;
+  INold=0xFFFF;
 }
 
 
@@ -678,7 +680,6 @@ int rzx_update(rzx_u16 *icount)
              rzx_popen(fpos,"wb");
             }
             #endif
-			INcount=0;
 			INold=0xFFFF;
          }
 

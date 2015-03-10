@@ -1952,7 +1952,7 @@ static int do_rzx(int which)
 			ordenador.frames_count_rzx=1;
 			retorno2 = load_rzx();
 			if (retorno2) break; //Error or no file
-			retorno2 = rzx_update(&ordenador.maxicount);
+			retorno2 = rzx_update(&ordenador.maxicount); //The first frame does not generate interrupt
 			if (retorno2 == RZX_FINISHED) {printf("RZX: Playing finished at fisrt frame\n"); break;}
 			//ordenador.cicles_counter=32; //to avoid the interrupt at first frame
 			ordenador.playing_rzx = 1;
