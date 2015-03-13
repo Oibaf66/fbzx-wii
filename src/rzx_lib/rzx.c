@@ -86,6 +86,7 @@ static rzx_u8 *zbuf=0;
 static int zmode=0;
 static rzx_u32 packed_bytes=0;
 
+unsigned int last_snapshot_position;
 
 int rzx_pwrite(rzx_u8 *buffer, int len)
 {
@@ -200,6 +201,9 @@ int rzx_scan()
 {
   long fpos=10;
   memset(&file_emul,0,sizeof(RZX_EMULINFO));
+  memset(&rzx_irb,0,sizeof(RZX_IRBINFO));
+  memset(&rzx_snap,0,sizeof(RZX_SNAPINFO));
+  int ret=0;
   do
   {
      fseek(rzxfile,fpos,SEEK_SET);
@@ -225,6 +229,7 @@ int rzx_scan()
             fread(file_emul.data,file_emul.length,1,rzxfile);
            }
            else file_emul.data=0;
+		   ret = emul_handler(RZXMSG_CREATOR,&file_emul);
            break;
       case RZXBLK_SECURITY:
            /* signal that the RZX contains at least one encrypted block */
@@ -246,6 +251,11 @@ int rzx_scan()
            emul_handler(RZXMSG_SEC_SIG,NULL);
            break;
       case RZXBLK_SNAP:
+			rzx_snap.position=fpos;
+			fread(block.buff,1,1,rzxfile);
+			rzx_snap.options=0x00;
+			if((block.buff[0]&0x01)) rzx_snap.options|=RZX_EXTERNAL;
+			emul_handler(RZXMSG_LOADSNAP,&rzx_snap);
            break;   
       default:
            emul_handler(RZXMSG_UNKNOWN,NULL);
@@ -258,9 +268,75 @@ int rzx_scan()
   block.start=10;
   block.length=0;
   block.type=0;
-  return emul_handler(RZXMSG_CREATOR,&file_emul);
+  return ret;
 }
 
+void set_rzxfile_position(unsigned int rzx_position)
+{
+	
+	block.start = rzx_position;
+	rzx_status&=~RZX_IRB;
+	#ifdef RZX_USE_COMPRESSION
+    rzx_pclose();
+    #endif
+}
+
+int extract_snapshot(int position)
+{
+int done=0;
+long old_position, fpos;
+FILE *snapfile;
+
+old_position=ftell(rzxfile);
+
+	fseek(rzxfile,position,SEEK_SET);
+	fread(block.buff,12,1,rzxfile);
+          strcpy(rzx_snap.filename,"");
+          rzx_snap.options=0x00;
+          if(!(block.buff[0]&0x01))
+          {
+            /* embedded snap */
+            #ifdef RZX_USE_COMPRESSION
+            if(block.buff[0]&0x02) rzx_snap.options|=RZX_COMPRESSED;
+            fpos=ftell(rzxfile);
+            rzx_popen(fpos,"rb");
+            #endif
+            strcpy(rzx_snap.filename,"rzxtemp.");
+            strcat(rzx_snap.filename,&block.buff[4]);
+            #ifndef RZX_BIG_ENDIAN
+            rzx_snap.length=*((rzx_u32*)&block.buff[8]);
+            #else
+            rzx_snap.length=block.buff[8]+256*block.buff[9]+65536*block.buff[10]+16777216*block.buff[11];
+            #endif
+            /* extract to tempfile */
+            snapfile=fopen(rzx_snap.filename,"wb");
+            /* if you can't, skip to next block */
+            if(snapfile==NULL) return -1;
+            /* ok */
+            //rzx_snap.options|=RZX_REMOVE;
+            fpos=rzx_snap.length;
+            while(fpos>0)
+            {
+              done=(fpos>RZXBLKBUF)?RZXBLKBUF:fpos;
+              #ifdef RZX_USE_COMPRESSION
+              if(rzx_snap.options&RZX_COMPRESSED) rzx_pread(block.buff,done);
+              else fread(block.buff,done,1,rzxfile);
+              #else
+              fread(block.buff,done,1,rzxfile);
+              #endif
+              fwrite(block.buff,done,1,snapfile);
+              fpos-=done;
+            }
+            #ifdef RZX_USE_COMPRESSION
+            rzx_pclose();
+            #endif
+            fclose(snapfile);
+            done=0;
+          }
+		  
+		  fseek(rzxfile,old_position,SEEK_SET);
+		  return 0;
+}
 
 void rzx_close_irb()
 {
@@ -317,7 +393,8 @@ int rzx_seek_irb()
     switch(block.type)
     {
      case RZXBLK_SNAP:
-          fread(block.buff,12,1,rzxfile);
+          last_snapshot_position = ftell(rzxfile)-5;
+		  fread(block.buff,12,1,rzxfile);
           strcpy(rzx_snap.filename,"");
           rzx_snap.options=0x00;
           if(!(block.buff[0]&0x01))

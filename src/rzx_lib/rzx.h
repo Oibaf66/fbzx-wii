@@ -109,6 +109,7 @@ typedef struct
 {
    char filename[260];
    rzx_u32 length;
+   rzx_u32 position;
    rzx_u32 options;
 } RZX_SNAPINFO;
 
@@ -122,6 +123,7 @@ typedef struct
 
 /* RZX public data structures */
 extern RZX_INFO rzx;
+extern unsigned int last_snapshot_position;
 
 
 /* RZX functions API */
@@ -136,6 +138,7 @@ int rzx_get_input(rzx_u8 *input);
 int rzx_add_snapshot(const char *filename, const rzx_u32 flags);
 int rzx_add_comment(const char *text, const rzx_u32 flags);
 
+void set_rzxfile_position(unsigned int rzx_position);
 
 #ifdef RZX_DEBUG
 extern rzx_u16 INcount;

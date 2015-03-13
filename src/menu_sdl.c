@@ -45,6 +45,8 @@
 #include "tape_browser.h"
 #include "cargador.h"
 #include "sound.h"
+#include "rzx_lib/rzx.h"
+#include "rzx_init.h"
 
 
 #if defined(HW_RVL)
@@ -1240,7 +1242,7 @@ static int menu_select_internal(SDL_Surface *screen,
 		SDL_FillRect(screen, &r, SDL_MapRGB(screen->format, 255, 255, 0));
 		SDL_FillRect(screen, &r_int, SDL_MapRGB(screen->format, 0, 0, 0));
 		
-		if (strcmp(p_menu->title, "Select block")&&strcmp(p_menu->title, "Select program")
+		if (strcmp(p_menu->title, "Select block")&&strcmp(p_menu->title, "Select program")&&strcmp(p_menu->title, "Select snapshot")
 		&&strncmp(p_menu->title, "Selected file:",14)&&strcmp(p_menu->title, "Select file"))
 		{
 			SDL_Rect dst_rect = {410/RATIO, 70/RATIO, 0, 0};
@@ -1485,6 +1487,29 @@ const char **get_file_list_browser(unsigned int tape_pos, unsigned int *block_po
 	return (const char **) browser_list_menu;
 }
 
+const char **get_file_list_browser_rzx()
+{
+	unsigned int loop;
+	char **browser_list_menu;
+	
+	
+	browser_list_menu = (char**)malloc((MAX_RZX_BROWSER_ITEM+1) * sizeof(char*));
+	browser_list_menu[0] = NULL;
+
+	for(loop=0;rzx_browser_list[loop].position!=0;loop++)
+	{
+	browser_list_menu[loop]=malloc(48);
+	if (rzx_browser_list[loop].position==last_snapshot_position)
+		{
+		sprintf(browser_list_menu[loop],"]%04d Frames: %u",loop, rzx_browser_list[loop].frames_count);
+		}
+	else
+		sprintf(browser_list_menu[loop],"%04d Frames: %u",loop, rzx_browser_list[loop].frames_count);
+	}
+	browser_list_menu[loop]=NULL;
+	return (const char **) browser_list_menu;
+}
+
 const char **get_file_list_select_block()
 {
 	unsigned int loop;
@@ -1519,6 +1544,7 @@ static const char *menu_select_file_internal(char *dir_path,
 	block_pos = 0;
 	
 	if (!strcmp(dir_path,"browser")) file_list =  get_file_list_browser(tape_pos, &block_pos);  
+	else if (!strcmp(dir_path,"browser_rzx")) file_list =  get_file_list_browser_rzx();
 	else if (!strcmp(dir_path,"select_block")) file_list = get_file_list_select_block();  
     else file_list = get_file_list(dir_path);
 	
@@ -1526,6 +1552,7 @@ static const char *menu_select_file_internal(char *dir_path,
 		return NULL;
 		
 	if (!strcmp(dir_path,"browser")) opt = menu_select_sized("Select block", file_list, NULL, block_pos, x, y, x2, y2, NULL, NULL ,FONT_ALT, 0);
+	else if (!strcmp(dir_path,"browser_rzx")) opt = menu_select_sized("Select snapshot", file_list, NULL, 0, x, y, x2, y2, NULL, NULL ,FONT_ALT, 1);
 	else if (!strcmp(dir_path,"select_block")) opt = menu_select_sized("Select program", file_list, NULL, 0, x, y, x2, y2, NULL, NULL ,FONT_ALT, 0);
 	else if (selected_file) 
 	{
@@ -1552,7 +1579,7 @@ static const char *menu_select_file_internal(char *dir_path,
 	if (!sel)
 		return NULL;
 		
-	if (!strcmp(dir_path,"browser")||!strcmp(dir_path,"select_block")) return sel;	
+	if (!strcmp(dir_path,"browser")||!strcmp(dir_path,"select_block")||!strcmp(dir_path,"browser_rzx")) return sel;	
 		
 	if (!strcmp(sel,"[..]")) //selected "[..]"
 	{
@@ -1623,6 +1650,12 @@ const char *menu_select_browser(unsigned int tape_pos)
 {
 	return menu_select_file_internal("browser",
 			0, 18/RATIO, FULL_DISPLAY_X, FULL_DISPLAY_Y - 18/RATIO, NULL, 0, tape_pos);
+}
+
+const char *menu_select_browser_rzx()
+{
+	return menu_select_file_internal("browser_rzx",
+			0, 18/RATIO, FULL_DISPLAY_X, FULL_DISPLAY_Y - 18/RATIO, NULL, 1, 0);
 }
 
 const char *menu_select_tape_block()

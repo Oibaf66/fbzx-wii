@@ -24,6 +24,7 @@
 #include "cargador.h"
 #include "menu_sdl.h"
 #include "computer.h"
+#include "rzx_init.h"
 
 #ifdef DEBUG
 extern FILE *fdebug;
@@ -39,6 +40,8 @@ extern FILE *fdebug;
 
 RZX_EMULINFO emul_info;
 rzx_u32 tstates;
+int snapshot_counter;
+RZX_browser rzx_browser_list[MAX_RZX_BROWSER_ITEM+1];
 
 void find_name (char *name, char *filename)
 {
@@ -64,6 +67,14 @@ rzx_u32 rzx_callback(int msg, void *par)
  switch(msg)
  {
   case RZXMSG_LOADSNAP:
+		if(rzx.mode==RZX_SCAN)
+		{
+		  if (snapshot_counter>=MAX_RZX_BROWSER_ITEM) break;
+          if (!(((RZX_SNAPINFO*)par)->options&RZX_EXTERNAL)) rzx_browser_list[snapshot_counter++].position=((RZX_SNAPINFO*)par)->position; //Embedded snapshot - Position at beginning
+		  rzx_browser_list[snapshot_counter].position=0;
+		}
+		else
+		{
 		retorno=0;
 		printf("> LOADSNAP: '%s' (%i bytes), %s, %s\n",
               ((RZX_SNAPINFO*)par)->filename,
@@ -83,6 +94,7 @@ rzx_u32 rzx_callback(int msg, void *par)
 				printf("> Load snapshot error %d\n", retorno);
 				return RZX_INVALID;
 			}
+		}	
        break;
   case RZXMSG_CREATOR:
 		printf("> CREATOR: '%s %d.%d'\n",
@@ -90,7 +102,9 @@ rzx_u32 rzx_callback(int msg, void *par)
 			  (int)((RZX_EMULINFO*)par)->ver_major,
               (int)((RZX_EMULINFO*)par)->ver_minor);
 		if ((int)((RZX_EMULINFO*)par)->length>0) 
-			printf("%s \n", (const char *)((RZX_EMULINFO*)par)->data);      
+			printf("%s \n", (const char *)((RZX_EMULINFO*)par)->data);
+		snapshot_counter=0;
+		rzx_browser_list[0].position=0;      
        break;
   case RZXMSG_IRBNOTIFY:
        if(rzx.mode==RZX_PLAYBACK)
@@ -115,7 +129,8 @@ rzx_u32 rzx_callback(int msg, void *par)
        }
 	   else if(rzx.mode==RZX_SCAN)
 	   {
-	     ordenador.total_frames_rzx += ((RZX_IRBINFO*)par)->framecount;
+	     if ((snapshot_counter>0)&&(snapshot_counter<MAX_RZX_BROWSER_ITEM+1)) rzx_browser_list[snapshot_counter-1].frames_count = ordenador.total_frames_rzx;
+		 ordenador.total_frames_rzx += ((RZX_IRBINFO*)par)->framecount;
 		 printf("> IRB notify: Total frames to play %d\n", ordenador.total_frames_rzx);
 	   }
        break;

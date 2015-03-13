@@ -38,6 +38,7 @@
 #include "spk_ay.h"
 #include "sound.h"
 #include "rzx_lib/rzx.h"
+#include "rzx_init.h"
 
 
 #define ID_BUTTON_OFFSET 0
@@ -192,27 +193,27 @@ static const char *microdrive_messages[] = {
 };
 
 static const char *tools_messages[] = {
-		/*00*/		"Screen shot",
-		/*01*/		"^|Save1|Save2|Load|Delete",
-		/*02*/		"Files source",
+		/*00*/		"Recording (RZX)",
+		/*01*/		"^|Record|Play|Stop|Bookmark|Browser",
+		/*02*/		"Screen shot",
+		/*03*/		"^|Save1|Save2|Load|Delete",
+		/*04*/		"Files source",
 #ifdef HW_RVL		
-		/*03*/		"^|default|sd|usb|smb|wos",
+		/*05*/		"^|default|sd|usb|smb|wos",
 #else //HW_DOL - Wii
-		/*03*/		"^|default",
+		/*05*/		"^|default",
 #endif		
-		/*04*/		"Manage files",
-		/*05*/		"^|Paste|Copy|Delete",
+		/*06*/		"Manage files",
+		/*07*/		"^|Paste|Copy|Delete",
 #ifdef HW_DOL		
-		/*06*/		"Unused",
-		/*07*/		"^|----",
+		/*08*/		"Unused",
+		/*09*/		"^|----",
 #else //HW_RVL - Wii
-		/*06*/		"Auto virtual keyboard",
-		/*07*/		"^|on|off",
-#endif		
-		/*08*/		"Keyboard rumble",
+		/*08*/		"Auto virtual keyboard",
 		/*09*/		"^|on|off",
-		/*10*/		"Recording (RZX)",
-		/*11*/		"^|Record|Play|Stop|Bookmark",
+#endif		
+		/*10*/		"Keyboard rumble",
+		/*11*/		"^|on|off",
 		/*12*/		"Load poke file",
 		/*13*/		"Insert poke",
 		/*14*/		"Help",
@@ -1926,6 +1927,37 @@ static int save_rzx()
  return 0;
 }
 
+static void rzx_browser()
+{
+	unsigned int rzx_position, block_n_int;
+	const char *row_selected; 
+	char block_n[5];
+	
+	if (rzx_browser_list[0].position==0) {msgInfo("No RZX snapshot",3000,NULL);return;}
+	
+	row_selected = menu_select_browser_rzx();
+	
+	if (row_selected==NULL) // Aborted
+		return;
+
+	if (row_selected[0]==']') strncpy(block_n, row_selected+1,4);
+	else strncpy(block_n, row_selected,4);
+	
+	block_n[4]=0;
+	
+	block_n_int=atoi(block_n);
+	
+	if (block_n_int >(MAX_RZX_BROWSER_ITEM-1)) return;
+	
+	rzx_position=rzx_browser_list[block_n_int].position;
+	
+	ordenador.frames_count_rzx=rzx_browser_list[block_n_int].frames_count;
+	
+	set_rzxfile_position(rzx_position);
+	
+	free((void*)row_selected);
+}
+
 static int do_rzx(int which)
 {
 	int retorno = 0; //Stay in the menu as default
@@ -1975,6 +2007,11 @@ static int do_rzx(int which)
 			unlink("temp.z80");
 			retorno = -2;
 			break;
+		case 4: //browser
+			if (!ordenador.playing_rzx) break;
+			rzx_browser();
+			retorno = -2;
+			break;
 		default:
 			break;
 		}			
@@ -1992,9 +2029,9 @@ static int tools()
 	do {
 	retorno=-1; //Exit from menu as default
  
-	submenus[1] = ordenador.port;
-	submenus[3] = !ordenador.vk_auto;
-	submenus[4] = !ordenador.vk_rumble;
+	submenus[2] = ordenador.port;
+	submenus[4] = !ordenador.vk_auto;
+	submenus[5] = !ordenador.vk_rumble;
 	
 	old_port=ordenador.port;
 	
@@ -2003,22 +2040,22 @@ static int tools()
 	if (opt < 0)
 		return 0;
 		
-	if (old_port!= submenus[1]) {set_port(submenus[1]);retorno=0;}
+	if (old_port!= submenus[2]) {set_port(submenus[2]);retorno=0;}
 	#ifndef HW_DOL
-	ordenador.vk_auto = !submenus[3];
+	ordenador.vk_auto = !submenus[4];
 	#endif
-	ordenador.vk_rumble = !submenus[4];
+	ordenador.vk_rumble = !submenus[5];
 	
 	switch(opt)
 		{
 		case 0: 
-			retorno = manage_scr(submenus[0]);
+			retorno = do_rzx(submenus[0]);
 			break;
-		case 4: 
-			retorno = manage_file(submenus[2]);
+		case 2: 
+			retorno = manage_scr(submenus[1]);
 			break;
-		case 10: 
-			retorno = do_rzx(submenus[5]);
+		case 6: 
+			retorno = manage_file(submenus[3]);
 			break;
 		case 12: // Load poke file
 			retorno = load_poke_file();
