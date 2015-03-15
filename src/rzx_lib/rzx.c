@@ -281,15 +281,16 @@ void set_rzxfile_position(unsigned int rzx_position)
     #endif
 }
 
-int extract_snapshot(int position)
+int extract_snapshot(unsigned int position, char *path, char *ext)
 {
-int done=0;
-long old_position, fpos;
+int done=0, ret=0;
+int old_position, fpos;
 FILE *snapfile;
 
 old_position=ftell(rzxfile);
 
 	fseek(rzxfile,position,SEEK_SET);
+	fread(block.buff,5,1,rzxfile);
 	fread(block.buff,12,1,rzxfile);
           strcpy(rzx_snap.filename,"");
           rzx_snap.options=0x00;
@@ -301,8 +302,10 @@ old_position=ftell(rzxfile);
             fpos=ftell(rzxfile);
             rzx_popen(fpos,"rb");
             #endif
-            strcpy(rzx_snap.filename,"rzxtemp.");
+            strcpy(rzx_snap.filename, path);
+			strcat(rzx_snap.filename,"/rzxtemp.");
             strcat(rzx_snap.filename,&block.buff[4]);
+			strcpy(ext, &block.buff[4]);
             #ifndef RZX_BIG_ENDIAN
             rzx_snap.length=*((rzx_u32*)&block.buff[8]);
             #else
@@ -311,7 +314,7 @@ old_position=ftell(rzxfile);
             /* extract to tempfile */
             snapfile=fopen(rzx_snap.filename,"wb");
             /* if you can't, skip to next block */
-            if(snapfile==NULL) return -1;
+            if(snapfile==NULL) {fseek(rzxfile,old_position,SEEK_SET); return -1;}
             /* ok */
             //rzx_snap.options|=RZX_REMOVE;
             fpos=rzx_snap.length;
@@ -332,10 +335,11 @@ old_position=ftell(rzxfile);
             #endif
             fclose(snapfile);
             done=0;
-          }
+          } 
+		  else ret=-1;
 		  
 		  fseek(rzxfile,old_position,SEEK_SET);
-		  return 0;
+		  return ret;
 }
 
 void rzx_close_irb()

@@ -517,6 +517,11 @@ void print_font(SDL_Surface *screen, int r, int g, int b,
 	SDL_FreeSurface(font_surf);
 }
 
+int extract_screen_rzx (char *screen, FILE * fichero)
+{
+	return -1;
+}
+
 int extract_screen(char* screen, const char* name)
 {
 	FILE *fichero;
@@ -573,6 +578,21 @@ int extract_screen(char* screen, const char* name)
 		return retorno;
 	}
 	
+	if ((ext_matches(name, ".rzx")||ext_matches(name, ".RZX")))
+	{
+		sprintf(filename,"%s/%s",load_path_rzx, name);
+		fichero=fopen(filename,"rb");
+		if (!fichero) //Try in the tmp zip directory
+		{
+			sprintf(filename,"%s/%s",path_tmp, name);
+			fichero=fopen(filename,"rb");
+			if (!fichero) return -1;
+		}
+		retorno = extract_screen_rzx(screen, fichero);
+		fclose(fichero);
+		return retorno;
+	}
+	
 	return -1;
 }
 
@@ -587,12 +607,40 @@ void draw_scr_file(int x,int y, const char *selected_file, int which)
 	char name[MAX_PATH_LENGTH];
 	char filename[MAX_PATH_LENGTH];
 	char *ptr;
+	char block_n[5];
+	char ext[4];
+	unsigned int rzx_position, block_n_int;
 	
 	if (selected_file==NULL) // Aborted
 		return; 
 	 
-	strcpy(name,selected_file);	
+	strcpy(name,selected_file);
+
+	if (strstr(name, "Frames:")&&(which==0)) //RZX Browser item
+	{
+		if (name[0]==']') strncpy(block_n, name+1,4);
+		else strncpy(block_n, name,4);
 	
+		block_n[4]=0;
+	
+		block_n_int=atoi(block_n);
+	
+		if (block_n_int >(MAX_RZX_BROWSER_ITEM-1)) return;
+	
+		rzx_position=rzx_browser_list[block_n_int].position;
+	
+		if (extract_snapshot(rzx_position, load_path_snaps, ext)) return; //error
+		
+		strcpy(name, "rzxtemp.");
+		strcat(name, ext);
+		
+		if (extract_screen(screen, name)) return; //error
+		
+		sprintf(filename, "%s/%s", load_path_snaps, name);
+		unlink(filename);
+	}
+	else
+	{
 	if ((ext_matches(name, ".zip")||ext_matches(name, ".ZIP"))) 
 	{
 		//remove the zip extension
@@ -634,7 +682,7 @@ void draw_scr_file(int x,int y, const char *selected_file, int which)
 			fclose(fichero);
 		}
 	}
-	
+	}
 	
 	p_translt = ordenador.translate;
 	p_translt2 = ordenador.translate2;
