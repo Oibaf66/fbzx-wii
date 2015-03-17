@@ -612,7 +612,7 @@ void save_scr_browser(unsigned char* zx_screen)
 }
 */
 
-int extract_screen_tap (char *screen, FILE * fichero) {
+int extract_screen_tap (char *screen_memory, FILE * fichero) {
    
 	unsigned int longitud;
 	unsigned char value[65536], empty, flag_byte;	
@@ -642,7 +642,7 @@ int extract_screen_tap (char *screen, FILE * fichero) {
 							{
 								retval=fread (value, 1, longitud-1, fichero);
 								if (retval!=(longitud-1)) {retorno=1;break;}
-								if ((longitud==6914) || (longitud==49154)) {memcpy(screen, value+1, 6912);rewind_tape (fichero,1);return 0;}
+								if ((longitud==6914) || (longitud==49154)) {memcpy(screen_memory, value+1, 6912);rewind_tape (fichero,1);return 0;}
 							}
 						}
 						else
@@ -656,7 +656,7 @@ int extract_screen_tap (char *screen, FILE * fichero) {
 						{
 							retval=fread (value, 1, longitud-1, fichero);
 							if (retval!=(longitud-1)) {retorno=1;break;}
-							if ((longitud==6914) || (longitud==49154)) {memcpy(screen, value+1, 6912);rewind_tape (fichero,1);return 0;}
+							if ((longitud==6914) || (longitud==49154)) {memcpy(screen_memory, value+1, 6912);rewind_tape (fichero,1);return 0;}
 						}
 					break;
 					default: //Custom data
@@ -664,7 +664,7 @@ int extract_screen_tap (char *screen, FILE * fichero) {
 						{
 							retval=fread (value, 1, longitud-1, fichero);
 							if (retval!=(longitud-1)) {retorno=1;break;}
-							if ((longitud==6914) || (longitud==49154)) {memcpy(screen, value+1, 6912);rewind_tape (fichero,1);return 0;}
+							if ((longitud==6914) || (longitud==49154)) {memcpy(screen_memory, value+1, 6912);rewind_tape (fichero,1);return 0;}
 						}
 					break;
 					}
@@ -674,7 +674,7 @@ rewind_tape (fichero,1);
 return -1;
 }
 
-int extract_screen_tzx (char *screen, FILE * fichero) 
+int extract_screen_tzx (char *screen_memory, FILE * fichero) 
 {
 
 	unsigned int longitud, bucle, byte_position, retorno;
@@ -721,7 +721,7 @@ int extract_screen_tzx (char *screen, FILE * fichero)
 							{
 								retval=fread (value, 1, longitud-1, fichero);
 								if (retval!=(longitud-1)) {retorno=1;break;}
-								if ((longitud==6914) || (longitud==49154)) {memcpy(screen, value+1, 6912);rewind_tape (fichero,1);return 0;}
+								if ((longitud==6914) || (longitud==49154)) {memcpy(screen_memory, value+1, 6912);rewind_tape (fichero,1);return 0;}
 							}
 						}
 						else
@@ -735,7 +735,7 @@ int extract_screen_tzx (char *screen, FILE * fichero)
 						{
 							retval=fread (value, 1, longitud-1, fichero);
 							if (retval!=(longitud-1)) {retorno=1;break;}
-							if ((longitud==6914) || (longitud==49154)) {memcpy(screen, value+1, 6912);rewind_tape (fichero,1);return 0;}
+							if ((longitud==6914) || (longitud==49154)) {memcpy(screen_memory, value+1, 6912);rewind_tape (fichero,1);return 0;}
 						}
 						break;
 						default: //Custom data
@@ -743,7 +743,7 @@ int extract_screen_tzx (char *screen, FILE * fichero)
 						{
 							retval=fread (value, 1, longitud-1, fichero);
 							if (retval!=(longitud-1)) {retorno=1;break;}
-							if ((longitud==6914) || (longitud==49154)) {memcpy(screen, value+1, 6912);rewind_tape (fichero,1);return 0;}
+							if ((longitud==6914) || (longitud==49154)) {memcpy(screen_memory, value+1, 6912);rewind_tape (fichero,1);return 0;}
 						}
 						break;
 					}	
@@ -787,9 +787,9 @@ int extract_screen_tzx (char *screen, FILE * fichero)
 					else
 					for(bucle=0;bucle<longitud;bucle++)
 						fread(value,1,1, fichero);
-					//if (longitud==6144) {memcpy(screen, value, 6144);found_screen=1;}
-					//if ((longitud==768) && (found_screen)) {memcpy(screen+6144, value, 768);rewind_tape (fichero,1);return 0;}
-					//if (longitud==6912) {memcpy(screen, value, 6912);rewind_tape (fichero,1);return 0;}
+					//if (longitud==6144) {memcpy(screen_memory, value, 6144);found_screen=1;}
+					//if ((longitud==768) && (found_screen)) {memcpy(screen_memory+6144, value, 768);rewind_tape (fichero,1);return 0;}
+					//if (longitud==6912) {memcpy(screen_memory, value, 6912);rewind_tape (fichero,1);return 0;}
 				break;
 
 				case 0x20: // pause

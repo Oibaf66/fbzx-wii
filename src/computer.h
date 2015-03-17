@@ -214,6 +214,7 @@ struct computer {
 	unsigned short int icount;
 	unsigned int total_frames_rzx;
 	unsigned int frames_count_rzx;
+	unsigned char extract_screen_rzx;
 
 	// Microdrive global variables
 	FILE *mdr_file;                  // Current microdrive file

@@ -786,7 +786,7 @@ void load_snap(struct z80snapshot *snap) {
   }
 }
 
-int extract_screen_sna (char *screen, FILE * fichero)  {
+int extract_screen_sna (char *screen_memory, FILE * fichero)  {
 
 	unsigned char *tempo;
 	unsigned char *tempo2;
@@ -814,19 +814,19 @@ int extract_screen_sna (char *screen, FILE * fichero)  {
 	
 	if (type==0) {	//48k
 	
-		memcpy(screen,tempo+27,6912);
+		memcpy(screen_memory,tempo+27,6912);
 
 	} else { 	//128k
 
 		v1=tempo2[2];
 		//printf("v1= %d\n",(int) v1);
-		if ((v1&8)==0) memcpy(screen,tempo+27,6912); //screen in bank 5
+		if ((v1&8)==0) memcpy(screen_memory,tempo+27,6912); //screen in bank 5
 		else //Screen in bank 7
 		{
 			v1&=0x07;
-				if (v1==7) memcpy(screen,tempo+27+49152,6912); //screen in bank 7 paged-in
+				if (v1==7) memcpy(screen_memory,tempo+27+49152,6912); //screen in bank 7 paged-in
 			else 
-				memcpy(screen,tempo2+4+16384*4,6912); //Screen in bank 7 not paged-in
+				memcpy(screen_memory,tempo2+4+16384*4,6912); //Screen in bank 7 not paged-in
 		}
 	}
 	
@@ -835,7 +835,7 @@ int extract_screen_sna (char *screen, FILE * fichero)  {
 	return 0;
 }
 
-int extract_screen_z80 (char *screen, FILE * fichero)  {
+int extract_screen_z80 (char *screen_memory, FILE * fichero)  {
 
 	unsigned char tempo[30],tempo2[56],type,compressed,pager, byte_read[3];
 	unsigned char *memo;
@@ -930,7 +930,7 @@ int extract_screen_z80 (char *screen, FILE * fichero)  {
 						fread(memo,6912,1,fichero);
 					else
 						uncompress_z80(fichero,6912,memo);
-					memcpy(screen, memo,6912);
+					memcpy(screen_memory, memo,6912);
 					break;
 				}
 				if(longitud2==0xFFFF) longitud2 =16384; // uncompressed raw data					
@@ -951,7 +951,7 @@ int extract_screen_z80 (char *screen, FILE * fichero)  {
 						fread(memo,6912,1,fichero);
 					else
 						uncompress_z80(fichero,6912,memo);
-					memcpy(screen, memo,6912);
+					memcpy(screen_memory, memo,6912);
 					break;
 				}
 				if(longitud2==0xFFFF) longitud2 =16384; // uncompressed raw data					
@@ -967,12 +967,12 @@ int extract_screen_z80 (char *screen, FILE * fichero)  {
 			// we uncompress first the data
 			uncompress_z80(fichero,6912,memo); //uncompress only the screen
       
-			memcpy(screen,memo,6912);
+			memcpy(screen_memory,memo,6912);
      
 		} else {
 			// 48k uncompressed z80 loader
       
-			fread(screen,6912,1,fichero);
+			fread(screen_memory,6912,1,fichero);
 		}
 		
 	}

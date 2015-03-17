@@ -1892,6 +1892,7 @@ void ResetComputer () {
 	ordenador.recording_rzx=0;
 	//ordenador.playing_rzx=0;
 	ordenador.icount=0;
+	ordenador.extract_screen_rzx = 0;
 	
 	currah_microspeech_reset();
 }

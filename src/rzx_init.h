@@ -28,3 +28,4 @@ typedef struct
 
 
 extern RZX_browser rzx_browser_list[MAX_RZX_BROWSER_ITEM+1];
+extern char extracted_rzx_file[MAX_PATH_LENGTH];

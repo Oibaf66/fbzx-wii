@@ -43,5 +43,5 @@ int load_z80(char *);
 int load_sna(char *);
 void load_snap(struct z80snapshot *);
 void uncompress_z80(FILE *,int,unsigned char *);
-int extract_screen_sna (char *screen, FILE * fichero);
-int extract_screen_z80 (char *screen, FILE * fichero);
+int extract_screen_sna (char *screen_memory, FILE * fichero);
+int extract_screen_z80 (char *screen_memory, FILE * fichero);

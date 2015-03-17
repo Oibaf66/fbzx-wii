@@ -1967,6 +1967,8 @@ static int do_rzx(int which)
 		{
 		case 0: // Record
 			ordenador.playing_rzx=0;
+			ordenador.recording_rzx=0;
+			rzx_close();
 			ordenador.icount = 0;
 			retorno2=save_rzx();
 			if (retorno2) break; //Error
@@ -1978,7 +1980,9 @@ static int do_rzx(int which)
 			retorno = -2;
 			break;
 		case 1: // Play
+			ordenador.playing_rzx=0;
 			ordenador.recording_rzx=0;
+			rzx_close();
 			ordenador.icount = 0;
 			ordenador.total_frames_rzx=0;
 			ordenador.frames_count_rzx=1;

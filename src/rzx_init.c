@@ -42,6 +42,7 @@ RZX_EMULINFO emul_info;
 rzx_u32 tstates;
 int snapshot_counter;
 RZX_browser rzx_browser_list[MAX_RZX_BROWSER_ITEM+1];
+char extracted_rzx_file[MAX_PATH_LENGTH];
 
 void find_name (char *name, char *filename)
 {
@@ -62,7 +63,6 @@ void find_name (char *name, char *filename)
 rzx_u32 rzx_callback(int msg, void *par)
 {
  int retorno;
- char name[MAX_PATH_LENGTH];
  
  switch(msg)
  {
@@ -81,14 +81,22 @@ rzx_u32 rzx_callback(int msg, void *par)
               (int)((RZX_SNAPINFO*)par)->length,
               (((RZX_SNAPINFO*)par)->options&RZX_EXTERNAL)?"external":"embedded",
               (((RZX_SNAPINFO*)par)->options&RZX_COMPRESSED)?"compressed":"uncompressed");
-			  if (((RZX_SNAPINFO*)par)->options&RZX_EXTERNAL) find_name(name,((RZX_SNAPINFO*)par)->filename); 
-			  else strncpy (name, ((RZX_SNAPINFO*)par)->filename,80);
-			  if (ext_matches(name, ".z80")|ext_matches(name, ".Z80"))	  
-				retorno = load_z80(name);
-			  else if (ext_matches(name, ".sna")|ext_matches(name, ".SNA")) 
-				retorno = load_sna(name);
+			  if (((RZX_SNAPINFO*)par)->options&RZX_EXTERNAL) find_name(extracted_rzx_file,((RZX_SNAPINFO*)par)->filename); 
+			  else strncpy (extracted_rzx_file, ((RZX_SNAPINFO*)par)->filename,80);
+			  
+			  if (ordenador.extract_screen_rzx)
+			  {
+				 ((RZX_SNAPINFO*)par)->options&=~RZX_REMOVE; //We do not want the file removed
+			  }
 			  else
-				{printf("> Not supported snap format\n");retorno=-1;}
+			  {
+				if (ext_matches(extracted_rzx_file, ".z80")|ext_matches(extracted_rzx_file, ".Z80"))	  
+					retorno = load_z80(extracted_rzx_file);
+				else if (ext_matches(extracted_rzx_file, ".sna")|ext_matches(extracted_rzx_file, ".SNA")) 
+					retorno = load_sna(extracted_rzx_file);
+				else
+					{printf("> Not supported snap format\n");retorno=-1;}
+			   }	
 		if (retorno)
 			{
 				printf("> Load snapshot error %d\n", retorno);

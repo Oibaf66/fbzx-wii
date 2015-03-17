@@ -517,12 +517,43 @@ void print_font(SDL_Surface *screen, int r, int g, int b,
 	SDL_FreeSurface(font_surf);
 }
 
-int extract_screen_rzx (char *screen, FILE * fichero)
+int extract_screen_rzx (char *screen_memory, char *filename)
 {
-	return -1;
+	int retorno=0;
+	FILE *fichero;
+	
+	ordenador.extract_screen_rzx = 1;
+	
+	if (rzx_playback(filename)) return -1;
+	
+	ordenador.total_frames_rzx = 0;
+	
+	ordenador.extract_screen_rzx = 0;
+	
+	fichero=fopen(extracted_rzx_file,"rb");
+	if (!fichero) retorno=-2; 
+	else
+	{
+		if (ext_matches(extracted_rzx_file, ".z80")|ext_matches(extracted_rzx_file, ".Z80"))	  
+			retorno = extract_screen_z80(screen_memory, fichero);
+		else if (ext_matches(extracted_rzx_file, ".sna")|ext_matches(extracted_rzx_file, ".SNA")) 
+			retorno = extract_screen_sna(screen_memory, fichero);
+		else
+			{printf("Not supported snap format\n");retorno=-1;}
+	}				
+	
+	fclose(fichero);
+	
+	if (retorno) printf("Load snapshot error %d\n", retorno);
+	
+	unlink(extracted_rzx_file);
+	
+	rzx_close();
+	
+	return retorno;
 }
 
-int extract_screen(char* screen, const char* name)
+int extract_screen(char* screen_memory, const char* name)
 {
 	FILE *fichero;
 	char filename[MAX_PATH_LENGTH];
@@ -539,7 +570,7 @@ int extract_screen(char* screen, const char* name)
 			fichero=fopen(filename,"rb");
 			if (!fichero) return -1;
 		}
-		retorno = extract_screen_tap(screen, fichero);
+		retorno = extract_screen_tap(screen_memory, fichero);
 		fclose(fichero);
 		return retorno;
 	}
@@ -557,7 +588,7 @@ int extract_screen(char* screen, const char* name)
 		fread(char_id,10,1,fichero); // read the (maybe) TZX header
 		if((strncmp(char_id,"ZXTape!",7)) || (char_id[7]!=0x1A) || (char_id[8]!=1)) 
 		{fclose(fichero);retorno = -1;};
-		retorno = extract_screen_tzx(screen, fichero);
+		retorno = extract_screen_tzx(screen_memory, fichero);
 		fclose(fichero);
 		return retorno;
 	}
@@ -572,8 +603,8 @@ int extract_screen(char* screen, const char* name)
 			fichero=fopen(filename,"rb");
 			if (!fichero) return -1;
 		}
-		if (ext_matches(name, ".z80")||ext_matches(name, ".Z80")) retorno = extract_screen_z80(screen, fichero);
-		else retorno = extract_screen_sna(screen, fichero);
+		if (ext_matches(name, ".z80")||ext_matches(name, ".Z80")) retorno = extract_screen_z80(screen_memory, fichero);
+		else retorno = extract_screen_sna(screen_memory, fichero);
 		fclose(fichero);
 		return retorno;
 	}
@@ -581,15 +612,9 @@ int extract_screen(char* screen, const char* name)
 	if ((ext_matches(name, ".rzx")||ext_matches(name, ".RZX")))
 	{
 		sprintf(filename,"%s/%s",load_path_rzx, name);
-		fichero=fopen(filename,"rb");
-		if (!fichero) //Try in the tmp zip directory
-		{
-			sprintf(filename,"%s/%s",path_tmp, name);
-			fichero=fopen(filename,"rb");
-			if (!fichero) return -1;
-		}
-		retorno = extract_screen_rzx(screen, fichero);
-		fclose(fichero);
+		
+		retorno = extract_screen_rzx(screen_memory, filename);
+		
 		return retorno;
 	}
 	
@@ -599,7 +624,7 @@ int extract_screen(char* screen, const char* name)
 void draw_scr_file(int x,int y, const char *selected_file, int which)
 {
 	FILE *fichero;
-	char screen [6912];
+	char screen_memory [6912];
 	unsigned int *p_translt, *p_translt2;
 	unsigned char attribute, ink, paper, mask, octect;
 	int loop_x, loop_y,bucle,valor,*p, length;
@@ -634,7 +659,7 @@ void draw_scr_file(int x,int y, const char *selected_file, int which)
 		strcpy(name, "rzxtemp.");
 		strcat(name, ext);
 		
-		if (extract_screen(screen, name)) return; //error
+		if (extract_screen(screen_memory, name)) return; //error
 		
 		sprintf(filename, "%s/%s", load_path_snaps, name);
 		unlink(filename);
@@ -667,7 +692,7 @@ void draw_scr_file(int x,int y, const char *selected_file, int which)
 
 		if (!fichero) return;
 	
-		if (fread(screen,1,6912,fichero)!=6912) {fclose(fichero);return;}
+		if (fread(screen_memory,1,6912,fichero)!=6912) {fclose(fichero);return;}
 		fclose(fichero);
 	}
 	else //first SCR
@@ -675,10 +700,10 @@ void draw_scr_file(int x,int y, const char *selected_file, int which)
 		fichero=fopen(filename,"rb");
 		
 		if (!fichero) 
-			{if (extract_screen(screen, selected_file)) return;}
+			{if (extract_screen(screen_memory, selected_file)) return;}
 		else
 		{
-			if (fread(screen,1,6912,fichero)!=6912) {fclose(fichero);return;}
+			if (fread(screen_memory,1,6912,fichero)!=6912) {fclose(fichero);return;}
 			fclose(fichero);
 		}
 	}
@@ -691,12 +716,12 @@ void draw_scr_file(int x,int y, const char *selected_file, int which)
 		for(loop_x=0; loop_x<32; loop_x++)
 		{
 
-		attribute = screen[(*p_translt2)-147456];	// attribute
+		attribute = screen_memory[(*p_translt2)-147456];	// attribute
 	
 		ink = attribute & 0x07;	// ink colour
 		paper = (attribute >> 3) & 0x07;	// paper colour
 			
-		octect = screen[(*p_translt)-147456];	// bitmap
+		octect = screen_memory[(*p_translt)-147456];	// bitmap
 		mask = 0x80;
 	 
 		for (bucle = 0; bucle < 8; bucle++)
