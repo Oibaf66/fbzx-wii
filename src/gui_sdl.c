@@ -1953,7 +1953,7 @@ static void rzx_browser()
 	
 	ordenador.frames_count_rzx=rzx_browser_list[block_n_int].frames_count;
 	
-	set_rzxfile_position(rzx_position);
+	rzx_set_file_position(rzx_position);
 	
 	free((void*)row_selected);
 }

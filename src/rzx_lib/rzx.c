@@ -86,6 +86,29 @@ static rzx_u8 *zbuf=0;
 static int zmode=0;
 static rzx_u32 packed_bytes=0;
 
+static z_stream zs_temp;
+static rzx_u8 *zbuf_temp=0;
+static int zmode_temp=0;
+static rzx_u32 packed_bytes_temp=0;
+
+void rzx_swap_variables()
+{
+	zs_temp=zs;
+	zbuf_temp=zbuf;
+	zmode_temp=zmode;
+	packed_bytes_temp=packed_bytes;
+
+}
+
+void rzx_swap_variables_revert()
+{
+	zs=zs_temp;
+	zbuf=zbuf_temp;
+	zmode=zmode_temp;
+	packed_bytes=packed_bytes_temp;
+
+}
+
 unsigned int last_snapshot_position;
 
 int rzx_pwrite(rzx_u8 *buffer, int len)
@@ -271,7 +294,7 @@ int rzx_scan()
   return ret;
 }
 
-void set_rzxfile_position(unsigned int rzx_position)
+void rzx_set_file_position(unsigned int rzx_position)
 {
 	
 	block.start = rzx_position;
@@ -281,11 +304,15 @@ void set_rzxfile_position(unsigned int rzx_position)
     #endif
 }
 
-int extract_snapshot(unsigned int position, char *path, char *ext)
+int rzx_extract_snapshot(unsigned int position, char *path, char *ext)
 {
 int done=0, ret=0;
 int old_position, fpos;
 FILE *snapfile;
+
+#ifdef RZX_USE_COMPRESSION
+rzx_swap_variables();
+#endif
 
 old_position=ftell(rzxfile);
 
@@ -338,8 +365,12 @@ old_position=ftell(rzxfile);
           } 
 		  else ret=-1;
 		  
-		  fseek(rzxfile,old_position,SEEK_SET);
-		  return ret;
+	fseek(rzxfile,old_position,SEEK_SET);
+	
+#ifdef RZX_USE_COMPRESSION
+rzx_swap_variables_revert();
+#endif
+return ret;
 }
 
 void rzx_close_irb()

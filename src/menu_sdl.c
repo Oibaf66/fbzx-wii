@@ -654,7 +654,7 @@ void draw_scr_file(int x,int y, const char *selected_file, int which)
 	
 		rzx_position=rzx_browser_list[block_n_int].position;
 	
-		if (extract_snapshot(rzx_position, load_path_snaps, ext)) return; //error
+		if (rzx_extract_snapshot(rzx_position, load_path_snaps, ext)) return; //error
 		
 		strcpy(name, "rzxtemp.");
 		strcat(name, ext);
