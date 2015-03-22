@@ -133,6 +133,9 @@ void computer_init () { //Called only on start-up
 	ordenador.tape_current_mode = TAP_TRASH;
 	ordenador.next_block= NOBLOCK;
 	ordenador.tap_file = NULL;
+	
+	ordenador.recording_rzx=0;
+	ordenador.playing_rzx=0;
 
 	ordenador.osd_text[0] = 0;
 	ordenador.osd_time = 0;
@@ -1889,8 +1892,6 @@ void ResetComputer () {
 	ordenador.currpix=0;
 	ordenador.interr = 1;
 	
-	ordenador.recording_rzx=0;
-	//ordenador.playing_rzx=0;
 	ordenador.icount=0;
 	ordenador.extract_screen_rzx = 0;
 	

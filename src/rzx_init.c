@@ -40,7 +40,7 @@ extern FILE *fdebug;
 
 RZX_EMULINFO emul_info;
 rzx_u32 tstates;
-int snapshot_counter;
+int rzx_snapshot_counter;
 RZX_browser rzx_browser_list[MAX_RZX_BROWSER_ITEM+1];
 char extracted_rzx_file[MAX_PATH_LENGTH];
 
@@ -69,9 +69,9 @@ rzx_u32 rzx_callback(int msg, void *par)
   case RZXMSG_LOADSNAP:
 		if(rzx.mode==RZX_SCAN)
 		{
-		  if (snapshot_counter>=MAX_RZX_BROWSER_ITEM) break;
-          if (!(((RZX_SNAPINFO*)par)->options&RZX_EXTERNAL)) rzx_browser_list[snapshot_counter++].position=((RZX_SNAPINFO*)par)->position; //Embedded snapshot - Position at beginning
-		  rzx_browser_list[snapshot_counter].position=0;
+		  if (rzx_snapshot_counter>=MAX_RZX_BROWSER_ITEM) break;
+          if (!(((RZX_SNAPINFO*)par)->options&RZX_EXTERNAL)) rzx_browser_list[rzx_snapshot_counter++].position=((RZX_SNAPINFO*)par)->position; //Embedded snapshot - Position at beginning
+		  rzx_browser_list[rzx_snapshot_counter].position=0;
 		}
 		else
 		{
@@ -104,6 +104,13 @@ rzx_u32 rzx_callback(int msg, void *par)
 			}
 		}	
        break;
+  case RZXMSG_SAVESNAP:
+		printf("> Save snaphsot\n");
+		if (rzx_snapshot_counter>=MAX_RZX_BROWSER_ITEM) break;
+		rzx_browser_list[rzx_snapshot_counter].position=((RZX_SNAPINFO*)par)->position;
+		rzx_browser_list[rzx_snapshot_counter].frames_count = ordenador.total_frames_rzx;
+		rzx_browser_list[++rzx_snapshot_counter].position=0;
+		break;		   
   case RZXMSG_CREATOR:
 		printf("> CREATOR: '%s %d.%d'\n",
               ((RZX_EMULINFO*)par)->name,
@@ -111,7 +118,8 @@ rzx_u32 rzx_callback(int msg, void *par)
               (int)((RZX_EMULINFO*)par)->ver_minor);
 		if ((int)((RZX_EMULINFO*)par)->length>0) 
 			printf("%s \n", (const char *)((RZX_EMULINFO*)par)->data);
-		snapshot_counter=0;
+		rzx_snapshot_counter=0;
+		rzx_browser_list[0].frames_count=0;
 		rzx_browser_list[0].position=0;      
        break;
   case RZXMSG_IRBNOTIFY:
@@ -137,11 +145,16 @@ rzx_u32 rzx_callback(int msg, void *par)
        }
 	   else if(rzx.mode==RZX_SCAN)
 	   {
-	     if ((snapshot_counter>0)&&(snapshot_counter<MAX_RZX_BROWSER_ITEM+1)) rzx_browser_list[snapshot_counter-1].frames_count = ordenador.total_frames_rzx;
+	     if ((rzx_snapshot_counter>0)&&(rzx_snapshot_counter<MAX_RZX_BROWSER_ITEM+1)) rzx_browser_list[rzx_snapshot_counter-1].frames_count = ordenador.total_frames_rzx;
 		 ordenador.total_frames_rzx += ((RZX_IRBINFO*)par)->framecount;
 		 printf("> IRB notify: Total frames to play %d\n", ordenador.total_frames_rzx);
 	   }
        break;
+  case RZXMSG_IRBCLOSE:
+		printf("> IRB close\n");
+		if ((rzx_snapshot_counter>0)&&(rzx_snapshot_counter<MAX_RZX_BROWSER_ITEM+1)) 
+		ordenador.total_frames_rzx += ((RZX_IRBINFO*)par)->framecount;
+		break;	   
   case RZXMSG_SECURITY:
 		printf("> Security Information Block\n");
 		break;

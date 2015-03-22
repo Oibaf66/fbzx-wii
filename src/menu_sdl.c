@@ -524,9 +524,9 @@ int extract_screen_rzx (char *screen_memory, char *filename)
 	
 	ordenador.extract_screen_rzx = 1;
 	
-	if (rzx_playback(filename)) return -1;
+	if (rzx_playback(filename)) return -1; //Force the snaphot extract
 	
-	ordenador.total_frames_rzx = 0;
+	ordenador.total_frames_rzx = 0; //rzx_playback changes this variable
 	
 	ordenador.extract_screen_rzx = 0;
 	
@@ -654,7 +654,7 @@ void draw_scr_file(int x,int y, const char *selected_file, int which)
 	
 		rzx_position=rzx_browser_list[block_n_int].position;
 	
-		if (rzx_extract_snapshot(rzx_position, load_path_snaps, ext)) return; //error
+		if (rzx_extract_snapshot(rzx_position, load_path_snaps, ext, 1)) return; //error
 		
 		strcpy(name, "rzxtemp.");
 		strcat(name, ext);

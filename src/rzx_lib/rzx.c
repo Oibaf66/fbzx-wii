@@ -302,9 +302,12 @@ void rzx_set_file_position(unsigned int rzx_position)
 	#ifdef RZX_USE_COMPRESSION
     rzx_pclose();
     #endif
+	fseek(rzxfile,rzx_position,SEEK_SET);
+	INcount=0;
+    INold=0xFFFF;
 }
 
-int rzx_extract_snapshot(unsigned int position, char *path, char *ext)
+int rzx_extract_snapshot(unsigned int position, char *path, char *ext, int restore_position)
 {
 int done=0, ret=0;
 int old_position, fpos;
@@ -318,6 +321,11 @@ old_position=ftell(rzxfile);
 
 	fseek(rzxfile,position,SEEK_SET);
 	fread(block.buff,5,1,rzxfile);
+	#ifndef RZX_BIG_ENDIAN
+	block.length=*((rzx_u32*)(&block.buff[1]));
+	#else
+	block.length=block.buff[1]+256*block.buff[2]+65536*block.buff[3]+16777216*block.buff[4];
+	#endif
 	fread(block.buff,12,1,rzxfile);
           strcpy(rzx_snap.filename,"");
           rzx_snap.options=0x00;
@@ -333,7 +341,7 @@ old_position=ftell(rzxfile);
 			strcat(rzx_snap.filename,"/rzxtemp.");
             strcat(rzx_snap.filename,&block.buff[4]);
 			strcpy(ext, &block.buff[4]);
-            #ifndef RZX_BIG_ENDIAN
+			#ifndef RZX_BIG_ENDIAN
             rzx_snap.length=*((rzx_u32*)&block.buff[8]);
             #else
             rzx_snap.length=block.buff[8]+256*block.buff[9]+65536*block.buff[10]+16777216*block.buff[11];
@@ -365,7 +373,8 @@ old_position=ftell(rzxfile);
           } 
 		  else ret=-1;
 		  
-	fseek(rzxfile,old_position,SEEK_SET);
+	if (restore_position) fseek(rzxfile,old_position,SEEK_SET);
+	else rzx_set_file_position(position+block.length); //Used for edit recording
 	
 #ifdef RZX_USE_COMPRESSION
 rzx_swap_variables_revert();
@@ -406,6 +415,8 @@ void rzx_close_irb()
   rzx_status&=~RZX_IRB;
   INcount=0;
   INold=0xFFFF;
+  rzx_irb.framecount = rzx_framecount;
+  emul_handler(RZXMSG_IRBCLOSE,&rzx_irb);
 }
 
 
@@ -621,13 +632,14 @@ int rzx_record(const char *filename)
   }
   memset(block.buff,0,RZXBLKBUF);
   rzx.mode=RZX_IDLE;
-  rzxfile=fopen(filename,"wb");
+  rzxfile=fopen(filename,"w+b");
   if(rzxfile==NULL)
   {
     rzx_close();
     return RZX_NOTFOUND;
   }
   strcpy(rzx.filename,filename);
+  strcpy(file_emul.name,filename);
   /* write the main RZX header */
   memcpy(block.buff,"RZX!",4);
   block.buff[4]=LHI(RZX_LIBRARY_VERSION);
@@ -653,6 +665,11 @@ int rzx_record(const char *filename)
   rzx_status&=~RZX_IRB;
   INcount=0;
   INold=0xFFFF;
+  file_emul.ver_major=host_emul.ver_major;
+  file_emul.ver_minor=host_emul.ver_minor;
+  file_emul.length = host_emul.length;
+  file_emul.data = host_emul.data;
+  emul_handler(RZXMSG_CREATOR,&file_emul);
   return RZX_OK;
 }
 
@@ -864,6 +881,7 @@ int rzx_add_snapshot(const char *filename, const rzx_u32 flags)
  snapfile=fopen(filename,"rb");
  if(snapfile==NULL) return RZX_NOTFOUND;
  if(rzx_status&RZX_IRB) rzx_close_irb();
+ rzx_snap.position = ftell(rzxfile);
  /* find the length of the snapshot file */
  fseek(snapfile,0,SEEK_END);
  snaplen=ftell(snapfile);
@@ -942,6 +960,7 @@ int rzx_add_snapshot(const char *filename, const rzx_u32 flags)
  fclose(snapfile); snapfile=NULL;
  /* remove the snapshot if requested */
  if(flags&RZX_REMOVE) remove(filename);
+ emul_handler(RZXMSG_SAVESNAP,&rzx_snap);
  return RZX_OK;
 }
 

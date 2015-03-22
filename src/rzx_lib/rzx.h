@@ -73,6 +73,8 @@ typedef unsigned long int rzx_u32;      /* must be unsigned 32-bit */
 #define RZXMSG_SECURITY 4
 #define RZXMSG_SEC_SIG 5
 #define RZXMSG_UNKNOWN 6
+#define RZXMSG_SAVESNAP 7
+#define RZXMSG_IRBCLOSE 8
 
 
 /* RZX global flags */
@@ -139,7 +141,7 @@ int rzx_add_snapshot(const char *filename, const rzx_u32 flags);
 int rzx_add_comment(const char *text, const rzx_u32 flags);
 
 void rzx_set_file_position(unsigned int rzx_position);
-int rzx_extract_snapshot(unsigned int position, char *path, char *ext);
+int rzx_extract_snapshot(unsigned int position, char *path, char *ext, int restore_position);
 
 #ifdef RZX_DEBUG
 extern rzx_u16 INcount;

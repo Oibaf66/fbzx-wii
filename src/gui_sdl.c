@@ -315,6 +315,8 @@ static void tape_browser()
 	if (row_selected[0]==']') strncpy(block_n, row_selected+1,4);
 	else strncpy(block_n, row_selected,4);
 	
+	free((void*)row_selected);
+	
 	block_n[4]=0;
 	
 	block_n_int=atoi(block_n);
@@ -329,7 +331,6 @@ static void tape_browser()
 	
 	fseek(ordenador.tap_file, tape_position, SEEK_SET);
 	ordenador.tape_position = tape_position;
-	free((void*)row_selected);
 }
 
 static void insert_tape()
@@ -1932,6 +1933,9 @@ static void rzx_browser()
 	unsigned int rzx_position, block_n_int;
 	const char *row_selected; 
 	char block_n[5];
+	char ext[4];
+	char filename[MAX_PATH_LENGTH];
+	int retorno=0;
 	
 	if (rzx_browser_list[0].position==0) {msgInfo("No RZX snapshot",3000,NULL);return;}
 	
@@ -1943,6 +1947,8 @@ static void rzx_browser()
 	if (row_selected[0]==']') strncpy(block_n, row_selected+1,4);
 	else strncpy(block_n, row_selected,4);
 	
+	free((void*)row_selected);
+	
 	block_n[4]=0;
 	
 	block_n_int=atoi(block_n);
@@ -1953,9 +1959,32 @@ static void rzx_browser()
 	
 	ordenador.frames_count_rzx=rzx_browser_list[block_n_int].frames_count;
 	
-	rzx_set_file_position(rzx_position);
+	if (ordenador.playing_rzx) rzx_set_file_position(rzx_position);
 	
-	free((void*)row_selected);
+	if (ordenador.recording_rzx) 
+	{
+		if (rzx_extract_snapshot(rzx_position, load_path_snaps, ext, 0)) return; //Position at the end of snapshot
+		
+		sprintf(filename, "%s/rzxtemp.%s", load_path_snaps, ext);
+		
+		printf("Loading %s\n",filename);
+		
+		if (ext_matches(filename, ".z80")|ext_matches(filename, ".Z80"))	  
+			retorno = load_z80(filename);
+		else if (ext_matches(filename, ".sna")|ext_matches(filename, ".SNA")) 
+			retorno = load_sna(filename);
+		else
+			{printf("Not supported snap format\n");retorno=-2;}
+		
+		unlink(filename);
+		
+		if (block_n_int <(MAX_RZX_BROWSER_ITEM)) 
+		{
+			rzx_browser_list[block_n_int+1].position =0;
+			ordenador.total_frames_rzx = rzx_browser_list[block_n_int].frames_count;
+			rzx_snapshot_counter = block_n_int+1;
+		}
+	}
 }
 
 static int do_rzx(int which)
@@ -1970,6 +1999,7 @@ static int do_rzx(int which)
 			ordenador.recording_rzx=0;
 			rzx_close();
 			ordenador.icount = 0;
+			ordenador.total_frames_rzx=0;
 			retorno2=save_rzx();
 			if (retorno2) break; //Error
 			save_z80("temp.z80",1);
@@ -2012,7 +2042,7 @@ static int do_rzx(int which)
 			retorno = -2;
 			break;
 		case 4: //browser
-			if (!ordenador.playing_rzx) break;
+			if (!ordenador.playing_rzx&&!ordenador.recording_rzx) break;
 			rzx_browser();
 			retorno = -2;
 			break;
