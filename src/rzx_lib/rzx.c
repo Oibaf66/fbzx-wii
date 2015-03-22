@@ -673,6 +673,49 @@ int rzx_record(const char *filename)
   return RZX_OK;
 }
 
+int rzx_edit(const char *filename)
+{
+  if(filename==0) return RZX_INVALID;
+  if(inputbuffer==NULL)
+  {
+   inputbuffer=(rzx_u8*)malloc(RZXINPUTMAX);
+   if(inputbuffer==NULL) return RZX_NOMEMORY;
+   memset(inputbuffer,0,RZXINPUTMAX);
+  }
+  if(oldbuffer==NULL)
+  {
+   oldbuffer=(rzx_u8*)malloc(RZXINPUTMAX);
+   if(oldbuffer==NULL) return RZX_NOMEMORY;
+   memset(oldbuffer,0,RZXINPUTMAX);
+  }
+  rzx_status&=~RZX_IRB;
+  rzxfile=fopen(filename,"r+b");
+  if(rzxfile==NULL) return RZX_NOTFOUND;
+  memset(&block,0,16);
+  fread(block.buff,6,1,rzxfile);
+  if(memcmp(block.buff,"RZX!",4))
+  {
+     /* not an RZX file */
+     rzx_close();
+     return RZX_INVALID;
+  }
+  /* save info about the RZX */
+  strcpy(rzx.filename, filename);
+  rzx.ver_major=block.buff[4];
+  rzx.ver_minor=block.buff[5];
+  /* pre-scan the file to collect useful information and stats */
+  rzx.mode=RZX_SCAN;
+  if(rzx_scan()!=RZX_OK)
+  {
+     rzx_close();
+     return RZX_INVALID;
+  }
+  rzx.mode=RZX_RECORD;  
+  INcount=0;
+  INmax=0;
+  INold=0xFFFF;
+  return RZX_OK;
+}
 
 void rzx_close(void)
 {

@@ -142,6 +142,7 @@ int rzx_add_comment(const char *text, const rzx_u32 flags);
 
 void rzx_set_file_position(unsigned int rzx_position);
 int rzx_extract_snapshot(unsigned int position, char *path, char *ext, int restore_position);
+int rzx_edit(const char *filename);
 
 #ifdef RZX_DEBUG
 extern rzx_u16 INcount;

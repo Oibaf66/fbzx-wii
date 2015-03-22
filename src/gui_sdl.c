@@ -194,7 +194,7 @@ static const char *microdrive_messages[] = {
 
 static const char *tools_messages[] = {
 		/*00*/		"Recording (RZX)",
-		/*01*/		"^|Record|Play|Stop|Bookmark|Browser",
+		/*01*/		"^|Record|Play|Stop|Bookmark|Brows|Edit",
 		/*02*/		"Screen shot",
 		/*03*/		"^|Save1|Save2|Load|Delete",
 		/*04*/		"Files source",
@@ -1878,7 +1878,7 @@ static int manage_file(int which)
 	return retorno;
 }
 
-static int load_rzx()
+static int load_rzx(int edit)
 {
 	int retorno;
 
@@ -1890,7 +1890,8 @@ static int load_rzx()
 	if (!(ext_matches(filename, ".rzx")|ext_matches(filename, ".RZX"))) {free((void *)filename); return -1;}
 	
 	
-	retorno=rzx_playback(filename);
+	if (edit) retorno=rzx_edit(filename);
+	else retorno=rzx_playback(filename);
 	
 	if (retorno!=RZX_OK) //RZX_OK = 0
 	{
@@ -2016,7 +2017,7 @@ static int do_rzx(int which)
 			ordenador.icount = 0;
 			ordenador.total_frames_rzx=0;
 			ordenador.frames_count_rzx=1;
-			retorno2 = load_rzx();
+			retorno2 = load_rzx(0);
 			if (retorno2) break; //Error or no file
 			retorno2 = rzx_update(&ordenador.maxicount); //The first frame does not generate interrupt
 			if (retorno2 == RZX_FINISHED) {printf("RZX: Playing finished at fisrt frame\n"); break;}
@@ -2046,6 +2047,20 @@ static int do_rzx(int which)
 			rzx_browser();
 			retorno = -2;
 			break;
+		case 5: //edit
+			ordenador.playing_rzx=0;
+			ordenador.recording_rzx=0;
+			rzx_close();
+			ordenador.icount = 0;
+			ordenador.total_frames_rzx=0;
+			ordenador.frames_count_rzx=1;
+			retorno2 = load_rzx(1); //Load and edit
+			if (retorno2) break; //Error or no file
+			ordenador.playing_rzx=0;
+			ordenador.recording_rzx=1;
+			rzx_browser();
+			retorno = -2;
+			break;	
 		default:
 			break;
 		}			
