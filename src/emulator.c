@@ -1835,8 +1835,7 @@ int main(int argc,char *argv[])
 			if ((ordenador.precision==0)||(jump_frames>0)) ordenador.interr=0;
 			if (ordenador.recording_rzx)
 				{
-					if (ordenador.icount == 0xFFFF) ordenador.icount=0;
-					else if (test_IFF1(&procesador)||(ordenador.icount>10)) {rzx_update(&ordenador.icount);ordenador.icount=0;}
+					if (test_IFF1(&procesador)||(ordenador.icount>10)) {rzx_update(&ordenador.icount);ordenador.icount=0;}
 				}
 		}
 	}

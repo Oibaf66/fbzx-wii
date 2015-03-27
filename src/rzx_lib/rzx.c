@@ -719,6 +719,9 @@ int rzx_edit(const char *filename)
 
 void rzx_close(void)
 {
+  long fpos;
+  int fd;
+
    switch(rzx.mode)
    {
       case RZX_PLAYBACK:
@@ -728,7 +731,14 @@ void rzx_close(void)
            break;
       case RZX_RECORD:
            /* is there an IRB to close? */
-           if(rzx_status&RZX_IRB) rzx_close_irb();
+            if(rzx_status&RZX_IRB) rzx_close_irb();
+			if (rzxfile!=NULL)
+			{
+				fflush(rzxfile);
+				fpos=ftell(rzxfile);
+				fd=fileno(rzxfile);
+				ftruncate(fd, fpos);
+			}
            break;
       default:
            break;
@@ -757,6 +767,12 @@ void rzx_close(void)
    }
 }
 
+void rzx_reset()
+{
+	INmax=0;
+	INcount=0;
+	INold=0xFFFF;
+} 
 
 int rzx_update(rzx_u16 *icount)
 {

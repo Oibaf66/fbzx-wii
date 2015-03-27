@@ -2019,9 +2019,7 @@ static int do_rzx(int which)
 			ordenador.frames_count_rzx=1;
 			retorno2 = load_rzx(0);
 			if (retorno2) break; //Error or no file
-			retorno2 = rzx_update(&ordenador.maxicount); //The first frame does not generate interrupt
-			if (retorno2 == RZX_FINISHED) {printf("RZX: Playing finished at fisrt frame\n"); break;}
-			//ordenador.cicles_counter=32; //to avoid the interrupt at first frame
+			ordenador.maxicount = 0; //Force rzx_update and interrupt
 			ordenador.playing_rzx = 1;
 			retorno = -2; //Come back to the menu
 			break;	
@@ -2035,7 +2033,7 @@ static int do_rzx(int which)
 		case 3: //Add Bookmark
 			if (!ordenador.recording_rzx) break; 
 			rzx_update(&ordenador.icount);
-			ordenador.icount=0xFFFF; //to avoid a new rzx_update
+			ordenador.icount=0;
 			save_z80("temp.z80",1);
 			if (rzx_add_snapshot("temp.z80", RZX_COMPRESSED)==RZX_OK) {printf("RZX: Added snapshot\n");msgInfo("Added Bookmark", 3000, NULL);}
 			else {printf("RZX: Impossible to add snapshot\n"); break;}
@@ -2044,7 +2042,11 @@ static int do_rzx(int which)
 			break;
 		case 4: //browser
 			if (!ordenador.playing_rzx&&!ordenador.recording_rzx) break;
+			if (ordenador.recording_rzx) rzx_update(&ordenador.icount); //Discard the records
+			ordenador.icount = 0;
+			rzx_reset(); //Reset internal library variables
 			rzx_browser();
+			if (ordenador.playing_rzx) ordenador.maxicount = 0; //Force rzx_update and interrupt
 			retorno = -2;
 			break;
 		case 5: //edit
