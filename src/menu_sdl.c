@@ -102,7 +102,7 @@ static SDL_Surface *real_screen;
 static int is_inited = 0;
 static TTF_Font *menu_font_alt_large, *menu_font_large, *menu_font_alt_small, *menu_font_small;
 
-int fh, fw;
+int fh, fw, last_sel_menu;
 
 static int *click_buffer_pointer[3];
 static int len_click_buffer[3];
@@ -987,6 +987,8 @@ static void menu_draw(SDL_Surface *screen, menu_t *p_menu, int sel, int font_typ
 		}
 	}
 	
+	last_sel_menu = p_menu->cur_sel;
+	
 	if ((draw_scr)&&(RATIO==1)&&ordenador.show_preview) //Only in 640 mode
 	{
 	r.x = 367;
@@ -1601,7 +1603,7 @@ const char **get_file_list_select_block()
 }
 
 static const char *menu_select_file_internal(char *dir_path,
-		int x, int y, int x2, int y2, const char *selected_file, int draw_scr, unsigned int tape_pos)
+		int x, int y, int x2, int y2, const char *selected_file, int draw_scr, unsigned int tape_pos, int sel_pos)
 {
 	const char **file_list; 
 	char *sel;
@@ -1633,9 +1635,9 @@ static const char *menu_select_file_internal(char *dir_path,
 		if (ptr_selected_file) ptr_selected_file++;
 		else ptr_selected_file = selected_file;
 		snprintf(buf,80,"Selected file:%s",ptr_selected_file);
-		opt = menu_select_sized(buf, file_list, NULL, 0, x, y, x2, y2, NULL, NULL, FONT_ALT, draw_scr);
+		opt = menu_select_sized(buf, file_list, NULL, sel_pos, x, y, x2, y2, NULL, NULL, FONT_ALT, draw_scr);
 	}
-	else opt = menu_select_sized("Select file", file_list, NULL, 0, x, y, x2, y2, NULL, NULL ,FONT_ALT, draw_scr);
+	else opt = menu_select_sized("Select file", file_list, NULL, sel_pos, x, y, x2, y2, NULL, NULL ,FONT_ALT, draw_scr);
 	
 	sel = NULL;	
 	
@@ -1664,7 +1666,7 @@ static const char *menu_select_file_internal(char *dir_path,
 			if (strrchr(dir_path,'/')==NULL) {*updir='/'; *(updir+1)=0;} //check if it was root
 		}
 		
-		return menu_select_file(dir_path, selected_file, draw_scr);
+		return menu_select_file(dir_path, selected_file, draw_scr, 0);
 	}		
         /* If this is a folder, enter it recursively */
         if (sel[0] == '[')
@@ -1687,7 +1689,7 @@ static const char *menu_select_file_internal(char *dir_path,
         	/* We don't need this anymore */
         	free((void*)sel);
         	
-        	return menu_select_file(dir_path, selected_file, draw_scr);
+        	return menu_select_file(dir_path, selected_file, draw_scr, 0);
         }
 		
 		
@@ -1704,38 +1706,38 @@ static const char *menu_select_file_internal(char *dir_path,
 	if(!strcmp(out_zip,"[..]")) 
 		{
 		free(out_zip);
-		return menu_select_file_internal (dir_path, x, y, x2, y2, selected_file, draw_scr, 0);
+		return menu_select_file_internal (dir_path, x, y, x2, y2, selected_file, draw_scr, 0, 0);
 		}
 	else return out_zip;
 	}
     else return out;
 }
 
-const char *menu_select_file(char *dir_path,const char *selected_file, int draw_scr)
+const char *menu_select_file(char *dir_path,const char *selected_file, int draw_scr, int sel_pos)
 {
 	if (dir_path == NULL)
 		dir_path = "";
 	return menu_select_file_internal(dir_path,
-			0, 18/RATIO, FULL_DISPLAY_X, FULL_DISPLAY_Y - 18/RATIO, selected_file, draw_scr, 0);
+			0, 18/RATIO, FULL_DISPLAY_X, FULL_DISPLAY_Y - 18/RATIO, selected_file, draw_scr, 0, sel_pos);
 }
 
 const char *menu_select_browser(unsigned int tape_pos)
 {
 	return menu_select_file_internal("browser",
-			0, 18/RATIO, FULL_DISPLAY_X, FULL_DISPLAY_Y - 18/RATIO, NULL, 0, tape_pos);
+			0, 18/RATIO, FULL_DISPLAY_X, FULL_DISPLAY_Y - 18/RATIO, NULL, 0, tape_pos, 0);
 }
 
 const char *menu_select_browser_rzx()
 {
 	return menu_select_file_internal("browser_rzx",
-			0, 18/RATIO, FULL_DISPLAY_X, FULL_DISPLAY_Y - 18/RATIO, NULL, 1, 0);
+			0, 18/RATIO, FULL_DISPLAY_X, FULL_DISPLAY_Y - 18/RATIO, NULL, 1, 0, 0);
 }
 
 const char *menu_select_tape_block()
 {
 	SDL_FillRect(screen, 0, SDL_MapRGB(screen->format, 0, 0, 0));
 	return menu_select_file_internal("select_block",
-			0, 18/RATIO, FULL_DISPLAY_X, FULL_DISPLAY_Y - 18/RATIO, NULL, 0, 0);
+			0, 18/RATIO, FULL_DISPLAY_X, FULL_DISPLAY_Y - 18/RATIO, NULL, 0, 0, 0);
 }
 
 /*

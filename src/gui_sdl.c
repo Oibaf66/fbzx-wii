@@ -56,6 +56,16 @@ extern FILE *fdebug;
 #define MAX_POKE 20
 #define MAX_TRAINER 50
 
+int last_sel_tap=0;
+int last_sel_snap=0;
+int last_sel_rzx=0;
+int last_sel_paste=0;
+int last_sel_del=0;
+int last_sel_poke=0;
+int last_sel_mdr=0;
+int last_sel_conf=0;
+int last_sel_scr=0;
+extern int last_sel_menu;
 extern int countdown_buffer;
 extern unsigned int beeper;
 
@@ -338,10 +348,12 @@ static void insert_tape()
 	unsigned char char_id[11];
 	int retorno, retval;
 	
-	const char *filename = menu_select_file(load_path_taps, ordenador.current_tap, 1);
+	const char *filename = menu_select_file(load_path_taps, ordenador.current_tap, 1, last_sel_tap);
 	
+	last_sel_tap=last_sel_menu;
+
 	if (filename==NULL) // Aborted
-		return; 
+		return;
 	
 	if (strstr(filename, "None") != NULL)
 	{
@@ -405,7 +417,7 @@ static void insert_tape()
 
 static void delete_tape()
 {
-	const char *filename = menu_select_file(load_path_taps, NULL, 1);
+	const char *filename = menu_select_file(load_path_taps, NULL, 1, 0);
 	
 	if (filename==NULL) // Aborted
 		return; 
@@ -944,8 +956,10 @@ static int select_mdr()
 	
 	retorno2=0; //stay in menu as default
 
-	const char *filename = menu_select_file(path_mdrs, ordenador.mdr_current_mdr, 0);
+	const char *filename = menu_select_file(path_mdrs, ordenador.mdr_current_mdr, 0, last_sel_mdr);
 	
+	last_sel_mdr=last_sel_menu;
+
 	if (filename==NULL) // Aborted
 		return 0; 
 		
@@ -988,7 +1002,7 @@ static int select_mdr()
 
 static void delete_mdr()
 {
-	const char *filename = menu_select_file(path_mdrs, NULL, 0);
+	const char *filename = menu_select_file(path_mdrs, NULL, 0, 0);
 	
 	if (filename==NULL) // Aborted
 		return; 
@@ -1234,7 +1248,7 @@ static int microdrive()
 	
 static void delete_scr()
 {
-	const char *filename = menu_select_file(load_path_scr1, NULL, 0); //Delete in the load dir
+	const char *filename = menu_select_file(load_path_scr1, NULL, 0, 0); //Delete in the load dir
 	
 	if (filename==NULL) // Aborted
 		return; 
@@ -1254,8 +1268,10 @@ static int load_scr()
 	retorno2=0; //stay in the menu as default
 
 
-	const char *filename = menu_select_file(load_path_scr1, NULL, 1); // Load from SCR1
+	const char *filename = menu_select_file(load_path_scr1, NULL, 1, last_sel_scr); // Load from SCR1
 	
+	last_sel_scr=last_sel_menu;
+
 	if (filename==NULL) // Aborted
 		return 0; 
 	
@@ -1710,8 +1726,10 @@ static int load_poke_file()
 	ritorno=0;
 	retorno2=0; //Stay in menu as default
 	
-	const char *filename = menu_select_file(dir, NULL,0);
-		
+	const char *filename = menu_select_file(dir, NULL,0, last_sel_poke);
+	
+	last_sel_poke=last_sel_menu;
+	
 	if (!filename) return 0;
 
 	if (ext_matches(filename, ".pok")|ext_matches(filename, ".POK"))
@@ -1777,8 +1795,10 @@ switch (which)
 
 static void delete_file()
 {
-	const char *filename = menu_select_file(path_delete, NULL, 0);
+	const char *filename = menu_select_file(path_delete, NULL, 0, last_sel_del);
 	
+	last_sel_del=last_sel_menu;
+
 	if (filename==NULL) // Aborted
 		return;
 
@@ -1789,7 +1809,9 @@ static void delete_file()
 
 static void paste_file()
 {
-	const char *filename = menu_select_file(path_paste, NULL, 0);
+	const char *filename = menu_select_file(path_paste, NULL, 0, last_sel_paste);
+	
+	last_sel_paste=last_sel_menu;
 	
 	if (filename==NULL) // Aborted
 		return; 
@@ -1814,8 +1836,8 @@ static void copy_file()
 	
 	msgInfo("Select \"None\" in the dir", 2000,NULL) ;
 	
-	const char *filename = menu_select_file(path_copy, pasted_file, 0);
-	
+	const char *filename = menu_select_file(path_copy, pasted_file, 0, 0);
+
 	if (filename==NULL) // Aborted
 		return; 
 		
@@ -1882,7 +1904,9 @@ static int load_rzx(int edit)
 {
 	int retorno;
 
-	const char *filename = menu_select_file(load_path_rzx, NULL, 1); // Load from rzx dir
+	const char *filename = menu_select_file(load_path_rzx, NULL, 1, last_sel_rzx); // Load from rzx dir
+	
+	last_sel_rzx=last_sel_menu;
 	
 	if (filename==NULL) // Aborted
 		return -1; 
@@ -2174,11 +2198,13 @@ static int save_load_snapshot(int which)
 	case 2:
 	case 0: // Load or delete file
 	{
-		const char *filename = menu_select_file(dir_load, NULL,1);
+		const char *filename = menu_select_file(dir_load, NULL,1, last_sel_snap);
 
+		last_sel_snap=last_sel_menu;
+		
 		if (!filename)
 			return 0;
-		
+			
 		//Load ROM Cartridge
 		if ((ext_matches(filename, ".rom")|ext_matches(filename, ".ROM"))&(which == 0)) 
 		{
@@ -2262,8 +2288,10 @@ static int save_load_game_configurations(int which)
 	case 2:
 	case 0: // Load or delete file
 	{
-		const char *filename = menu_select_file(dir, NULL,0);
+		const char *filename = menu_select_file(dir, NULL,0, last_sel_conf);
 		
+		last_sel_conf=last_sel_menu;
+
 		if (!filename)
 			return 0;
 

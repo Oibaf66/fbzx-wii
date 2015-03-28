@@ -207,7 +207,7 @@ struct computer {
 
 	unsigned char tape_write; // 0 can't write; 1 can write
 	
-	//Recording Variable
+	//RZX variables
 	unsigned char recording_rzx;
 	unsigned char playing_rzx;
 	unsigned short int maxicount;
