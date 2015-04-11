@@ -29,6 +29,7 @@ struct z80snapshot {
   byte type; // bit 0/1: 48K/128K/+3
   byte border; // border color
   byte pager; // content of pagination register in 128K mode
+  byte pager2; // content of the second pagination register in +2A/+3 mode
   unsigned char page[8][16384];
   //unsigned int found_pages; // bit=1: page exists. bit=0: page don't exists.
   unsigned char ay_regs[16];

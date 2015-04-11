@@ -246,7 +246,7 @@ int save_z80(char *filename, int overwrite) {
 int load_z80(char *filename) {
 
 	struct z80snapshot *snap;
-	unsigned char tempo[30],tempo2[56],type,compressed,page,byte_read[3];
+	unsigned char tempo[30],tempo2[57],type,compressed,page,byte_read[3];
 	unsigned char *memo;
 	FILE *fichero;
 	int longitud=0,longitud2,bucle,retval;
@@ -284,7 +284,7 @@ int load_z80(char *filename) {
 		retval=fread(tempo2,1,2,fichero); // read the length of the extension
  
 		longitud=((int)tempo2[0])+256*((int)tempo2[1]);
-		if(longitud>54) {
+		if(longitud>55) {
 			fclose(fichero);
 			printf("Not suported Z80 file\n");
 			free(memo);
@@ -304,9 +304,16 @@ int load_z80(char *filename) {
 			case 4:
 				snap->type=1; // 128K
 			break;
+			case 12: //+2
+				snap->type=2; // +2
+				break;
+			case 7: //3+
+			case 13: //+2a
+				snap->type=3; // +3
+				break;
 			default:
 				fclose(fichero);
-				printf("Again not suported Z80 file\n");
+				printf("z80: model not suported: %d\n", tempo2[4]);
 				free(memo);
 				free(snap);
 				return -3; // not a supported Z80 file
@@ -324,8 +331,16 @@ int load_z80(char *filename) {
 			case 6:
 				snap->type=1; // 128K
 				break;
+			case 12: //+2
+				snap->type=2; // +2
+				break;
+			case 7: //3+
+			case 13: //+2a
+				snap->type=3; // +3
+				break;	
 			default:
 				fclose(fichero);
+				printf("z80: model not suported: %d\n", tempo2[4]);
 				free(memo);
 				free(snap);
 				return -3; // not a supported Z80 file
@@ -419,14 +434,12 @@ int load_z80(char *filename) {
 	if(type)
 	{
 		snap->pager=tempo2[5];
+		if (longitud==55) snap->pager2=tempo2[56];
 		snap->emulation=tempo2[7];
 	}	
 		
 	if(type) { // extended z80
-		if(snap->type==1) { // 128K snapshot
-
-		/*       fclose(fichero);
-		return -3;*/  // z80 file not yet supported
+		if(snap->type!=0) { // 128K, +2, +2A or 3+ snapshot
 
 			while(!feof(fichero)) {
 				retval=fread(byte_read,3,1,fichero);
@@ -462,7 +475,7 @@ int load_z80(char *filename) {
 					page=255;
 					break;
 				}
-				printf("128k: Loading page %d of length %d\n",page,longitud);
+				printf("128k: Loading page %d of length %d\n",page,longitud2);
 				if (page==255) //Discard the page
 					{
 					if(longitud2==0xFFFF) // uncompressed raw data
@@ -703,6 +716,26 @@ void load_snap(struct z80snapshot *snap) {
     printf("Pager: %X\n",snap->pager);
     Z80free_Out_fake(0x7FFD,snap->pager);
     break;
+  case 2: // +2
+  	printf("Mode +2\n");
+    ordenador.mode128k=2; // +2 mode
+    ordenador.issue=3;
+	ordenador.videosystem=0;
+    ResetComputer();
+    printf("Pager: %X\n",snap->pager);
+    Z80free_Out_fake(0x7FFD,snap->pager);
+    break;	
+  case 3: // +2A +3
+  	printf("Mode +3\n");
+    ordenador.mode128k=3; // +2A and +3 mode
+    ordenador.issue=3;
+	ordenador.videosystem=0;
+    ResetComputer();
+    printf("Pager: %X\n",snap->pager);
+    Z80free_Out_fake(0x7FFD,snap->pager);
+	printf("Pager2: %X\n",snap->pager2);
+	Z80free_Out_fake (0x1FFD, snap->pager2);
+    break;	
   default:
     break;
   }
@@ -764,6 +797,8 @@ void load_snap(struct z80snapshot *snap) {
     ordenador.ay_emul=((snap->emulation)&0x04)>>2;
     break;
   case 1: // 128K
+  case 2: // +2
+  case 3: // +2A/+3
 
     for(bucle=0;bucle<16384;bucle++) {
       ordenador.memoria[bucle+65536]=snap->page[0][bucle];
@@ -837,7 +872,7 @@ int extract_screen_sna (char *screen_memory, FILE * fichero)  {
 
 int extract_screen_z80 (char *screen_memory, FILE * fichero)  {
 
-	unsigned char tempo[30],tempo2[56],type,compressed,pager, byte_read[3];
+	unsigned char tempo[30],tempo2[57],type,compressed,pager, byte_read[3];
 	unsigned char *memo;
 	int longitud=0,longitud2,model_type;
 
@@ -857,7 +892,7 @@ int extract_screen_z80 (char *screen_memory, FILE * fichero)  {
 		fread(tempo2,1,2,fichero); // read the length of the extension
  
 		longitud=((int)tempo2[0])+256*((int)tempo2[1]);
-		if(longitud>54) {
+		if(longitud>55) {
 			printf("Not suported Z80 file\n");
 			free(memo);
 			return -3; // not a supported Z80 file
@@ -875,8 +910,15 @@ int extract_screen_z80 (char *screen_memory, FILE * fichero)  {
 			case 4:
 				model_type=1; // 128K
 			break;
+			case 12:
+				model_type=2; // +2
+				break;
+			case 7: //+3
+			case 13: //+2A
+				model_type=3; // +2A and +3
+				break;
 			default:
-				printf("Again not suported Z80 file\n");
+				printf("z80: model not suported: %d\n", tempo2[4]);
 				free(memo);
 				return -3; // not a supported Z80 file
 			break;
@@ -893,7 +935,15 @@ int extract_screen_z80 (char *screen_memory, FILE * fichero)  {
 			case 6:
 				model_type=1; // 128K
 				break;
+			case 12:
+				model_type=2; // +2
+				break;
+			case 7: //+3
+			case 13: //+2A
+				model_type=3; // +2A and +3
+				break;
 			default:
+				printf("z80: model not suported: %d\n", tempo2[4]);
 				free(memo);
 				return -3; // not a supported Z80 file
 				break;
@@ -913,7 +963,7 @@ int extract_screen_z80 (char *screen_memory, FILE * fichero)  {
 		
 
 	if(type) { // extended z80
-		if(model_type==1) { // 128K snapshot
+		if(model_type!=0) { // 128K, +2, + 2A or +3 snapshot 
 
 			while(!feof(fichero)) {
 				fread(byte_read,3,1,fichero);
@@ -921,7 +971,7 @@ int extract_screen_z80 (char *screen_memory, FILE * fichero)  {
 					break;
 				longitud2=((int)byte_read[0])+256*((int)byte_read[1]);
 				
-				printf("128k model: Loading page %d of length %d\n",byte_read[2]-3,longitud);
+				printf("128k model: Loading page %d of length %d\n",byte_read[2]-3,longitud2);
 				
 				if (((byte_read[2] == 8) && ((pager&8)==0))|| //Page 5 and no shadow screen
 					((byte_read[2] == 10) && (pager&8))) //Page 7 and shadow screen
