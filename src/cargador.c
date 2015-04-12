@@ -22,6 +22,7 @@
 #include "computer.h"
 #include "emulator.h"
 #include "cargador.h"
+#include "menu_sdl.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -311,6 +312,11 @@ int load_z80(char *filename) {
 			case 13: //+2a
 				snap->type=3; // +3
 				break;
+			case 9:
+				printf("z80: warning Pentagon 128k, using ZX 128k model emulation\n");
+				msgInfo("RZX recorded with Pentagon 128k", 3000, NULL);
+				snap->type=1; // 128K
+				break;
 			default:
 				fclose(fichero);
 				printf("z80: model not suported: %d\n", tempo2[4]);
@@ -337,7 +343,12 @@ int load_z80(char *filename) {
 			case 7: //3+
 			case 13: //+2a
 				snap->type=3; // +3
-				break;	
+				break;
+			case 9:
+				printf("z80: warning Pentagon 128k, using ZX 128k model emulation\n");
+				msgInfo("RZX recorded with Pentagon 128k", 3000, NULL);
+				snap->type=1; // 128K
+				break;
 			default:
 				fclose(fichero);
 				printf("z80: model not suported: %d\n", tempo2[4]);
@@ -917,6 +928,10 @@ int extract_screen_z80 (char *screen_memory, FILE * fichero)  {
 			case 13: //+2A
 				model_type=3; // +2A and +3
 				break;
+			case 9:
+				printf("z80: warning Pentagon 128k, using ZX 128k model emulation\n");
+				model_type=1; // 128K
+				break;
 			default:
 				printf("z80: model not suported: %d\n", tempo2[4]);
 				free(memo);
@@ -941,6 +956,10 @@ int extract_screen_z80 (char *screen_memory, FILE * fichero)  {
 			case 7: //+3
 			case 13: //+2A
 				model_type=3; // +2A and +3
+				break;
+			case 9:
+				printf("z80: warning Pentagon 128k, using ZX 128k model emulation\n");
+				model_type=1; // 128K
 				break;
 			default:
 				printf("z80: model not suported: %d\n", tempo2[4]);
