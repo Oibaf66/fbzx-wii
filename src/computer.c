@@ -1177,6 +1177,66 @@ inline void paint_one_pixel(unsigned char *colour,unsigned char *address ) {
 }
 #endif
 
+inline void pause() {
+	unsigned int temporal_io;
+	SDL_Event evento,*pevento;
+	unsigned char minus_pressed=2;
+	
+	pevento=&evento;
+	printf("Pause\n");
+	
+	while (1)
+	{	
+	SDL_JoystickUpdate();
+	
+	#ifdef HW_DOL //Gamecube button "Z"
+	if (!SDL_JoystickGetButton(ordenador.joystick_sdl[0], 4 ) && minus_pressed==2 ) minus_pressed = 1; //Released
+	if (SDL_JoystickGetButton(ordenador.joystick_sdl[0], 4 ) && minus_pressed==1) minus_pressed = 0; //Pressed
+	if (!SDL_JoystickGetButton(ordenador.joystick_sdl[0], 4 ) && minus_pressed==0 ) return; //Released
+	#else //HW_RVL - WIN // Wii button "-"
+	if (!SDL_JoystickGetButton(ordenador.joystick_sdl[0], 4) && 
+	!SDL_JoystickGetButton(ordenador.joystick_sdl[0], 17) && minus_pressed==2 )  minus_pressed=1; //Released
+	if ((SDL_JoystickGetButton(ordenador.joystick_sdl[0], 4) || 
+	SDL_JoystickGetButton(ordenador.joystick_sdl[0], 17)) && minus_pressed==1) minus_pressed = 0; //Pressed
+	if (!SDL_JoystickGetButton(ordenador.joystick_sdl[0], 4) && 
+	!SDL_JoystickGetButton(ordenador.joystick_sdl[0], 17) && minus_pressed==0 ) return; //Released
+	#endif
+	
+	memset(&evento,0, sizeof(SDL_Event));
+		SDL_PollEvent (&evento);
+
+		if (pevento->type==SDL_QUIT) {
+			printf("SDL_QUIT event\n");
+				salir = 0;
+			return;
+		}
+	
+	temporal_io = (unsigned int) pevento->key.keysym.sym;
+
+	if (pevento->type == SDL_KEYDOWN)
+		switch (temporal_io) {
+		case SDLK_ESCAPE:	// to exit from the emulator
+			if (ordenador.esc_again==0) {
+				ordenador.esc_again=1;
+				strcpy(ordenador.osd_text,"ESC again to exit");
+				ordenador.osd_time=100;
+			} else
+				salir = 0;
+			return;
+			break;
+		
+		case SDLK_F10:	// Reset emulator
+			ResetComputer ();
+			return;
+		break;
+
+		case SDLK_DELETE: //unpause RZX playing
+			return;
+			break;		
+		}
+	SDL_Delay(50);
+	}	
+}
 
 // Read the keyboard and stores the flags
 
@@ -1215,10 +1275,15 @@ inline void read_keyboard () {
 	#ifdef HW_DOL
 	if (SDL_JoystickGetButton(ordenador.joystick_sdl[0], 7)) //Gamecube button "Start"
 	{if (ordenador.vk_is_active) virtkey_ir_deactivate();main_menu(); }
+	if (SDL_JoystickGetButton(ordenador.joystick_sdl[0], 4) //Gamecube button "Z"
+	pause();
 	#else //HW_RVL - WIN
 	if (SDL_JoystickGetButton(ordenador.joystick_sdl[0], 6) ||//Wii button "Home"
 	SDL_JoystickGetButton(ordenador.joystick_sdl[0], 19)) 
 	{if (ordenador.vk_is_active) virtkey_ir_deactivate();main_menu(); }
+	if (SDL_JoystickGetButton(ordenador.joystick_sdl[0], 4) ||//Wii button "-"
+	SDL_JoystickGetButton(ordenador.joystick_sdl[0], 17)) 
+	pause();
 	#endif
 	
 	#ifdef HW_DOL
@@ -1244,14 +1309,14 @@ inline void read_keyboard () {
 		else ordenador.joy_axis_y_state[joy_n] = JOY_CENTER_Y;
 		
 	if (!ordenador.vk_is_active) {
-	for(joybutton_n=0;joybutton_n<5;joybutton_n++)
+	for(joybutton_n=0;joybutton_n<4;joybutton_n++)
 		{
 		joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][joybutton_n])] = 
 		SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], joybutton_n);
 		}
 			
 	#ifdef HW_RVL
-	for(joybutton_n=7;joybutton_n<18;joybutton_n++)
+	for(joybutton_n=7;joybutton_n<17;joybutton_n++)
 		{
 		joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][joybutton_n])] = 
 		SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], joybutton_n);
@@ -1431,6 +1496,9 @@ inline void read_keyboard () {
 		case SDLK_RCTRL: //Activate virtual keyboard
 			if (!ordenador.vk_auto)
 			{if (!ordenador.vk_is_active)  virtkey_ir_activate(); else virtkey_ir_deactivate();}
+		break;
+		case SDLK_DELETE:	// Pause emulator
+			pause();
 		break;
 #ifndef GEKKO		
 		case SDLK_RALT: //Full_screen

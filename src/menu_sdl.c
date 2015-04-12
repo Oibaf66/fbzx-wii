@@ -560,6 +560,8 @@ int extract_screen(char* screen_memory, const char* name)
 	char char_id[10];
 	int retorno;
 	
+	printf("Extracting screen of %s\n", name);
+	
 	if ((ext_matches(name, ".tap")||ext_matches(name, ".TAP")))
 	{
 		sprintf(filename,"%s/%s",load_path_taps, name);

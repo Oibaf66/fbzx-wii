@@ -168,14 +168,14 @@ static const  char *input_messages[] = {
 		/*01*/		"^|Curs|Kemps|Sincl1|Sincl2|Fuller|QAOP",
 #ifdef HW_RVL		
 		/*02*/		"Bind key to Wiimote",
-		/*03*/		"^|A|B|1|2|-|+",
+		/*03*/		"^|A|B|1|2|+",
 		/*04*/		"Bind key to Nunchuk",
 		/*05*/		"^|Z|C",
 		/*06*/		"Bind key to Classic",
-		/*07*/		"^|a|b|x|y|L|R|Zl|Zr|-|+",
+		/*07*/		"^|a|b|x|y|L|R|Zl|Zr|+",
 #else //HW_DOL - WIN
 		/*02*/		"Bind key to Controller",
-		/*03*/		"^|A|B|X|Y|Z",
+		/*03*/		"^|A|B|X|Y",
 		/*04*/		"Unused",
 		/*05*/		"^|----",
 		/*06*/		"Unused",
@@ -883,9 +883,9 @@ static void setup_joystick(int joy, unsigned int sdl_key, int joy_key)
 
 static void input_options(int joy)
 {
-	const unsigned int wiimote_to_sdl[] = {0, 1, 2, 3, 4,5};
+	const unsigned int wiimote_to_sdl[] = {0, 1, 2, 3, 5};
 	const unsigned int nunchuk_to_sdl[] = {7, 8};
-	const unsigned int classic_to_sdl[] = {9, 10, 11, 12, 13, 14, 15, 16, 17,18};
+	const unsigned int classic_to_sdl[] = {9, 10, 11, 12, 13, 14, 15, 16, 18};
 	const unsigned int pad_to_sdl[] = {19, 20, 21, 22};
 	int joy_key = 1;
 	unsigned int sdl_key;
@@ -1913,6 +1913,7 @@ static int load_rzx(int edit)
 	
 	if (!(ext_matches(filename, ".rzx")|ext_matches(filename, ".RZX"))) {free((void *)filename); return -1;}
 	
+	printf("Loading %s\n", filename); 
 	
 	if (edit) retorno=rzx_edit(filename);
 	else retorno=rzx_playback(filename);
@@ -1984,7 +1985,11 @@ static void rzx_browser()
 	
 	ordenador.frames_count_rzx=rzx_browser_list[block_n_int].frames_count;
 	
-	if (ordenador.playing_rzx) rzx_set_file_position(rzx_position);
+	if (ordenador.playing_rzx) 
+	{	
+		rzx_set_file_position(rzx_position); 
+		ordenador.maxicount = 0; //Force rzx_update and interrupt
+	}
 	
 	if (ordenador.recording_rzx) 
 	{
@@ -2010,6 +2015,7 @@ static void rzx_browser()
 			rzx_snapshot_counter = block_n_int+1;
 		}
 	}
+	ordenador.icount = 0;
 }
 
 static int do_rzx(int which)
@@ -2065,12 +2071,9 @@ static int do_rzx(int which)
 			retorno = -2;
 			break;
 		case 4: //browser
-			if (!ordenador.playing_rzx&&!ordenador.recording_rzx) break;
-			if (ordenador.recording_rzx) rzx_update(&ordenador.icount); //Discard the records
-			ordenador.icount = 0;
-			rzx_reset(); //Reset internal library variables
+			if (!ordenador.playing_rzx&&!ordenador.recording_rzx) break; 
+			if (ordenador.recording_rzx) rzx_update(0); //Force rzx_close_irb
 			rzx_browser();
-			if (ordenador.playing_rzx) ordenador.maxicount = 0; //Force rzx_update and interrupt
 			retorno = -2;
 			break;
 		case 5: //edit

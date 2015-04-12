@@ -304,6 +304,7 @@ void rzx_set_file_position(unsigned int rzx_position)
     #endif
 	fseek(rzxfile,rzx_position,SEEK_SET);
 	INcount=0;
+	INmax=0;
     INold=0xFFFF;
 }
 
@@ -925,7 +926,7 @@ void rzx_store_input(rzx_u8 value)
 
 int rzx_get_input(rzx_u8 *input)
 {
- if(INcount>=INmax) {printf("Too many inputs read\n"); *input=0; return RZX_SYNCLOST;};
+ if(INcount>=INmax) {printf("Too many inputs read, expected %d\n", INmax); *input=0; return RZX_SYNCLOST;};
  *input = inputbuffer[INcount++];
  return RZX_OK;
 }
