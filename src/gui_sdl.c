@@ -2049,7 +2049,7 @@ static int do_rzx(int which)
 			ordenador.frames_count_rzx=1;
 			retorno2 = load_rzx(0);
 			if (retorno2) break; //Error or no file
-			ordenador.maxicount = 0; //Force rzx_update and interrupt
+			rzx_update(&ordenador.maxicount);
 			ordenador.playing_rzx = 1;
 			retorno = -2; //Come back to the menu
 			break;	
