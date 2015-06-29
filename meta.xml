@@ -2,8 +2,8 @@
   <app version="1">
     <name>FBZX Wii</name>
     <coder>Oibaf (Fabio Olimpieri)</coder>
-    <version>13.0</version>
-    <release_date>20141231</release_date>
+    <version>14.0</version>
+    <release_date>20150629</release_date>
     <short_description>ZX Spectrum Emulator</short_description>
     <long_description>A ZX Spectrum emulator. 
 The project is based on FBZX originally written by Sergio Costas (http://www.rastersoft.com/fbzx.html). 
@@ -33,7 +33,7 @@ The general preferences are saved (joystick type, machine, buttons bindings, etc
 
 You can also save the game preferences which can be automatically loaded with the tape/snapshot if the related option is set.
 
-If you save the screen shots they will appear on the screen during the menu navigation.
+If the selected file contains a screen it will appear on the screen during the menu navigation otherwise you have to save a screen shot to have this.
 
 You can also load a file from a usb disk, from your PC using a wi-fi connection and from Internet (e.g. WOS) via FTP . For the PC connection you should set the parameters in fbzx.net file.
 

@@ -1,3 +1,16 @@
+version 14:
+	* Added RZX support (play, record, add bookmark, edit, browsing) in tool menu
+	* Preview screen auto extracted from tap, tzx, sna, z80 and rzx files
+	* Left and right togle preview windows
+	* Horizontally scrolling menu 
+	* Last selected file remebered in the menu	
+ 	* Extended z80 file format to +2, +3, +2a models
+	* Added AY info emulation in z80 file format
+	* Z80 file compression (v2.0) for both 48k and 128k models
+	* Fixed bug in z80 decompression algorithm(case of ED as last byte of the block) 
+
+	-- Fabio Olimpieri <fabio.olimpieri@tin.it> Jun 29 2015
+
 version 13:
 	* New set of microspeech allophones (shorter)
 	* Added GUI volume setting
