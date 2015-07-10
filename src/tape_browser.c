@@ -642,7 +642,7 @@ int extract_screen_tap (char *screen_memory, FILE * fichero) {
 							{
 								retval=fread (value, 1, longitud-1, fichero);
 								if (retval!=(longitud-1)) {retorno=1;break;}
-								if ((longitud==6914) || (longitud==49154)) {memcpy(screen_memory, value+1, 6912);rewind_tape (fichero,1);return 0;}
+								if ((longitud==6914) || (longitud==49154)) {memcpy(screen_memory, value, 6912);rewind_tape (fichero,1);return 0;}
 							}
 						}
 						else
@@ -656,7 +656,7 @@ int extract_screen_tap (char *screen_memory, FILE * fichero) {
 						{
 							retval=fread (value, 1, longitud-1, fichero);
 							if (retval!=(longitud-1)) {retorno=1;break;}
-							if ((longitud==6914) || (longitud==49154)) {memcpy(screen_memory, value+1, 6912);rewind_tape (fichero,1);return 0;}
+							if ((longitud==6914) || (longitud==49154)) {memcpy(screen_memory, value, 6912);rewind_tape (fichero,1);return 0;}
 						}
 					break;
 					default: //Custom data
@@ -664,7 +664,7 @@ int extract_screen_tap (char *screen_memory, FILE * fichero) {
 						{
 							retval=fread (value, 1, longitud-1, fichero);
 							if (retval!=(longitud-1)) {retorno=1;break;}
-							if ((longitud==6914) || (longitud==49154)) {memcpy(screen_memory, value+1, 6912);rewind_tape (fichero,1);return 0;}
+							if ((longitud==6914) || (longitud==49154)) {memcpy(screen_memory, value, 6912);rewind_tape (fichero,1);return 0;}
 						}
 					break;
 					}
@@ -721,7 +721,7 @@ int extract_screen_tzx (char *screen_memory, FILE * fichero)
 							{
 								retval=fread (value, 1, longitud-1, fichero);
 								if (retval!=(longitud-1)) {retorno=1;break;}
-								if ((longitud==6914) || (longitud==49154)) {memcpy(screen_memory, value+1, 6912);rewind_tape (fichero,1);return 0;}
+								if ((longitud==6914) || (longitud==49154)) {memcpy(screen_memory, value, 6912);rewind_tape (fichero,1);return 0;}
 							}
 						}
 						else
@@ -735,7 +735,7 @@ int extract_screen_tzx (char *screen_memory, FILE * fichero)
 						{
 							retval=fread (value, 1, longitud-1, fichero);
 							if (retval!=(longitud-1)) {retorno=1;break;}
-							if ((longitud==6914) || (longitud==49154)) {memcpy(screen_memory, value+1, 6912);rewind_tape (fichero,1);return 0;}
+							if ((longitud==6914) || (longitud==49154)) {memcpy(screen_memory, value, 6912);rewind_tape (fichero,1);return 0;}
 						}
 						break;
 						default: //Custom data
@@ -743,7 +743,7 @@ int extract_screen_tzx (char *screen_memory, FILE * fichero)
 						{
 							retval=fread (value, 1, longitud-1, fichero);
 							if (retval!=(longitud-1)) {retorno=1;break;}
-							if ((longitud==6914) || (longitud==49154)) {memcpy(screen_memory, value+1, 6912);rewind_tape (fichero,1);return 0;}
+							if ((longitud==6914) || (longitud==49154)) {memcpy(screen_memory, value, 6912);rewind_tape (fichero,1);return 0;}
 						}
 						break;
 					}	
