@@ -9,11 +9,11 @@ smb_ip=192.168.0.1
 # FTP configuration
 # set to 1 to enable FTP
 ftp_enable=0
-# WOS
+# ftp://ftp.nvg.unit.no/pub/spectrum
 FTPUser=anonymous
 FTPPassword=anonymous
 FTPPath=/pub/spectrum
-FTPIp=194.109.216.226
+FTPIp=129.241.210.18
 FTPPassive=0
 FTPPort=21
 
