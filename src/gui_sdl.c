@@ -77,14 +77,9 @@ static const char *main_menu_messages[] = {
 		/*01*/		"^|Ins|Load|Play|Stop|Rew|Make|Del|Brows",
 		/*02*/		"Snapshot",
 		/*03*/		"^|Load|Save|Delete",
-		/*04*/		"#1---------------------",
-#ifdef HW_RVL
-		/*05*/		"Wiimote configuration",
-		/*06*/		"^|Wiimote1|Wiimote2",
-#else //HW_DOL - WIN
+		/*04*/		"#1------------------------",
 		/*05*/		"Controller configuration",
-		/*06*/		"^|Controller1|Controller2",
-#endif		
+		/*06*/		"^|Controller1|Controller2",	
 		/*07*/		"Tape settings",
 		/*08*/		"Emulation settings",
 		/*09*/		"Screen settings",
@@ -277,7 +272,7 @@ static const char *confs_messages[] = {
 		/*03*/		"Game configurations",
 		/*04*/		"^|Load|Save|Delete",
 		/*05*/		"  ",
-		/*06*/		"Load confs automatically",
+		/*06*/		"Auto load game confs",
 		/*07*/		"^|on|off",
 		/*08*/		"  ",
 		/*09*/		"Ignore .z80 joystick confs",
@@ -556,10 +551,9 @@ static int manage_tape(int which)
 		retorno=-1;
 		break;	
 	case 2: //Play
-		if (ordenador.tape_fast_load == 0)
-				ordenador.tape_stop = 0;
-				ordenador.tape_stop_fast = 0;
-				ordenador.stop_tape_start_countdown = 0;
+		if (ordenador.tape_fast_load == 0) ordenador.tape_stop = 0;
+		ordenador.tape_stop_fast = 0;
+		ordenador.stop_tape_start_countdown = 0;
 		retorno=-1;
 		break;
 	case 3: //Stop
@@ -901,11 +895,7 @@ static void input_options(int joy)
 	submenus[5] = !ordenador.joypad_as_joystick[joy];
 	submenus[6] = !ordenador.rumble[joy];
 
-#ifdef HW_RVL	
-	opt = menu_select_title("Wiimote configuration",
-#else //HW_DOL - Win
 	opt = menu_select_title("Controller configuration",
-#endif	
 			input_messages, submenus);
 	if (opt < 0)
 		return;
