@@ -247,7 +247,7 @@ unsigned char InitNetwork()
         memset(myIP, 0, sizeof(myIP));
 	printf("Getting IP address via DHCP...\n");
 
-	if (if_config(myIP, NULL, NULL, 1) < 0) {
+	if (if_config(myIP, NULL, NULL, 1, 10) < 0) {
 	        	printf("No DHCP reply\n");
 	        	return 0;
         }

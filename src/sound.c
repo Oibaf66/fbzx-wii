@@ -261,7 +261,7 @@ int sound_init_sdl() {
 
 #ifdef GEKKO
 int voice;
-void callback(int voice)
+void callback(long int voice)
 {}
 
 int sound_init_asnd() {

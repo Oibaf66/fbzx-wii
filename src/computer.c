@@ -1410,10 +1410,9 @@ inline void read_keyboard () {
 			break;
 
 		case SDLK_F6:	// PLAY tape
-			if (ordenador.tape_fast_load == 0)
-				ordenador.tape_stop = 0;
-				ordenador.tape_stop_fast = 0;
-				ordenador.stop_tape_start_countdown = 0;
+			if (ordenador.tape_fast_load == 0) ordenador.tape_stop = 0;
+			ordenador.tape_stop_fast = 0;
+			ordenador.stop_tape_start_countdown = 0;
 			break;		
 
 		case SDLK_F9:
@@ -2421,9 +2420,9 @@ void Z80free_Out_fake (register word Port, register byte Value) {
 
 inline byte Z80free_In_internal (register word Port) {
 
-	static unsigned int temporal_io;
-	static byte pines, pines_rzx;
-	static int error;
+	unsigned int temporal_io;
+	byte pines, pines_rzx;
+	int error;
 	
 	if (ordenador.playing_rzx) 
 	{

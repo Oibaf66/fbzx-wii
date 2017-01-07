@@ -664,9 +664,10 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 			if (ordenador.tape_block_level>tstados) ordenador.tape_counter0 = ordenador.tape_block_level - tstados;
 			else ordenador.tape_counter0 = 0;
 			ordenador.tape_counter1 = 0;			
-		} else
+		} else {
 			ordenador.tape_current_mode = TAP_TRASH;	// next ID
 			ordenador.next_block= NOBLOCK;
+		}	
 		break;
 		
 	case TZX_SEQ_PULSES:
@@ -678,9 +679,10 @@ inline void tape_read_tzx (FILE * fichero, int tstados) {
 			if (ordenador.tape_block_level>tstados) ordenador.tape_counter0 = ordenador.tape_block_level - tstados;
 			else ordenador.tape_counter0 = 0;
 			ordenador.tape_counter1 = 0;
-		} else
+		} else {
 			ordenador.tape_current_mode = TAP_TRASH;	// next ID		
-			ordenador.next_block= NOBLOCK;		
+			ordenador.next_block= NOBLOCK;
+		}
 		break;
 			
 	case TAP_STOP:
@@ -1301,11 +1303,13 @@ end_fast_load_routine:
 		{
 		retval=fread (value, 1, 5, fichero); //read till flag byte
 		if (retval==5)
+			{
 			if ((value[4]!=0x0)&&(value[4]!=0xFF)) blockid=0x1; //custom data
 			if ((value[4]==0x0)&&((value[2]+value[3]*256)!=0x13)) blockid=0x1; //custom data
 			if ((value[4]==0xFF)&&(ordenador.next_block==NOBLOCK)) blockid=0x2; //standard data
 			//printf("TZX: ID_fast2: %X en %d\n",blockid,byte_position+1);
 			//printf("TZX: next block: %X \n",ordenador.next_block);
+			}
 		}
 		if (blockid!=0x10)
 		{

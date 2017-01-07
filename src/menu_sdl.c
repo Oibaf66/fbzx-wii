@@ -305,7 +305,7 @@ static const char **get_file_list_zip(const char *path)
 	if (!uf) return NULL;
 
 	err = unzGetGlobalInfo (uf,&gi);
-    if (err!=UNZ_OK) printf("error %d with zipfile in unzGetGlobalInfo \n",err);
+    if (err!=UNZ_OK) {printf("error %d with zipfile in unzGetGlobalInfo \n",err);}
 	
 	file_list = (const char**)malloc((gi.number_entry +3) * sizeof(char*));
 	file_list[cur++] = strdup("None");

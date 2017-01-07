@@ -852,7 +852,7 @@ execute_open_actv_retry:
 
 		addr.sin_addr.s_addr = net_gethostip();
 
-		sprintf(buf, "PORT %u,%u,%u,%u,%u,%u",
+		sprintf(buf, "PORT %lu,%lu,%lu,%lu,%u,%u",
 			(ntohl(addr.sin_addr.s_addr) >> 24) & 0xff,
 			(ntohl(addr.sin_addr.s_addr) >> 16) & 0xff,
 			(ntohl(addr.sin_addr.s_addr) >> 8) & 0xff,
@@ -914,7 +914,7 @@ execute_open_actv_retry:
 
 			NET_PRINTF("offset=%u:%u\n", (u32)(offset >> 32), (u32)(offset & 0xffffFFFF));
 
-			sprintf(buf, "REST %u%u", high_part, low_part );
+			sprintf(buf, "REST %lu%lu", high_part, low_part );
 			NET_PRINTF("REST=%s\n",buf);
 			if((res = ftp_execute(env, buf, 350, 1)) < 0)
 			{
@@ -1130,7 +1130,7 @@ execute_open_retry:
 
 			NET_PRINTF("offset=%u:%u\n", (u32)(offset >> 32), (u32)(offset & 0xffffFFFF));
 
-			sprintf(buf, "REST %u%u", high_part, low_part );
+			sprintf(buf, "REST %lu%lu", high_part, low_part );
 			NET_PRINTF("REST=%s\n",buf);
 			if((res = ftp_execute(env, buf, 350, 1)) < 0)
 			{
@@ -1782,7 +1782,7 @@ read_retry:
 		return false;
 	}
 
-	if( SocketSend( data_sock, (char*)buf, len) < 0)
+	if( SocketSend( data_sock, (char*)buf, len) == false)
 	{
 		goto read_retry;
 	}
@@ -2827,7 +2827,7 @@ bool ftpInitDevice(const char* name, const char *user, const char *password, con
 	for(i=0;i<MAX_FTP_MOUNTED && FTPEnv[i].name!=NULL;i++);
 	if(i==MAX_FTP_MOUNTED) return false; //all allowed ftp connections reached
 
-	if (if_config(myIP, NULL, NULL, true) < 0)
+	if (if_config(myIP, NULL, NULL, true, 10) < 0)
 		return false;
 
 	_FTP_lock();

@@ -21,8 +21,8 @@
 #ifndef H_SPK_AY
 #define H_SPK_AY
 
-inline void play_ay (unsigned int);
-inline void play_sound (unsigned int);
+void play_ay (unsigned int);
+void play_sound (unsigned int);
 void reset_sound(void);
 
 #endif
