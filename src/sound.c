@@ -605,7 +605,7 @@ void sound_play() {
 		started_sound_asnd = 1;
 		}
 		//Double buffer
-		while (!ASND_TestVoiceBufferReady(1)){}; //Wait for one buffer to be free
+		while (!ASND_TestVoiceBufferReady(1)){usleep(1000);}; //Wait for one buffer to be free
 		if (!ASND_TestPointer (1, sound[0])) 
 			{ASND_AddVoice(1,sound[0],ordenador.buffer_len*ordenador.increment);
 			ordenador.current_buffer = sound[0]; }
