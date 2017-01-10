@@ -1,5 +1,6 @@
 FBZX Wii was written to run on WII, for testing purpose FBZX Wii was adapted
-to run also on Windows even if some WII features cannot be used.
+to run also on Windows. Even if some WII features cannot be used (i.e. rumble),
+the emulator is fully usable.
 
 These are the basic instructions:
 
@@ -11,39 +12,29 @@ You can try with higher values for turbo until you hear cracked sound.
 
 The wiimote pointer is emulated by the mouse pointer.
 
-FBZX Wii has two GUIs: one is derived from FBZX and the other one is Wii specific.
+FBZX Wii has two GUIs: one is derived from the original FBZX and the other one is Wii specific.
 
 
 *************
 FBZX WII Menu
 *************
 
-Menu key (it is the key near CTRL Rigth) or gamepad 7 key to access FBZX Wii menu. 
+Menu key (it is the key near CTRL Rigth) or gamepad button 7 to access FBZX Wii menu. 
 Left ALT key to toggle Full Screen.
 The virtual keyboard is accessed passing the mouse on the screen or through CTRL Rigth 
 or gamepad button 6 (it depends on the auto virtual ketboard option).
 
 * In menu
-Gamepad pad or keyboard keys for menu navigation.
+Gamepad joystick or keyboard keys for menu navigation.
 Gamepad button 1 or Enter key to select. 
-Gamepad button 1 button 2 or ESC key to step back.
+Gamepad button 2 or ESC key to step back.
  
 * In Game
-Gamepad pad for the yostick emulation.
+Gamepad joystick for the yostick emulation.
 Gamepad button 1 for fire.
+Gamepad button 5 for pause.
+Gamepad button 1-4 and 8-12 are configurable.
 
-These are the associations between gamepad and Wii controllers keys:
-
-Gamepad -------- WII 	
-1 		Wiimote A Button 			
-2 		Wiimote B Button 			
-3 		Wiimote 1 Button 			
-4 		Wiimote 2 Button 			
-5 		Wiimote - Button 			
-6 		Wiimote + Button 			
-7 		Wiimote HOME Button 			
-8 		Nunchuck Z Button 		
-9 		Nunchuck C Button
 
 ******************
 Original FBZX Menu

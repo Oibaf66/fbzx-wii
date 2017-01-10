@@ -168,13 +168,21 @@ static const  char *input_messages[] = {
 		/*05*/		"^|Z|C",
 		/*06*/		"Bind key to Classic",
 		/*07*/		"^|a|b|x|y|L|R|Zl|Zr|+",
-#else //HW_DOL - WIN
-		/*02*/		"Bind key to Controller",
+#elif defined(HW_DOL)
+		/*02*/		"Bind key to button",
 		/*03*/		"^|A|B|X|Y",
 		/*04*/		"Unused",
 		/*05*/		"^|----",
 		/*06*/		"Unused",
 		/*07*/		"^|----",
+#else // WIN
+		/*02*/		"Bind key to button",
+		/*03*/		"^|1|2|3|4",
+		/*04*/		"Bind key to button",
+		/*05*/		"^|8|9",
+		/*06*/		"Bind key to button",
+		/*07*/		"^|10|11|12",
+		
 #endif
 		/*08*/		"Bind key to D-pad",
 		/*09*/		"^|Up|Down|Left|Right",
@@ -205,7 +213,7 @@ static const char *tools_messages[] = {
 		/*04*/		"Files source",
 #ifdef HW_RVL		
 		/*05*/		"^|default|sd|usb|smb|wos",
-#else //HW_DOL - Wii
+#else //HW_DOL - WIN
 		/*05*/		"^|default",
 #endif		
 		/*06*/		"Manage files",
@@ -213,11 +221,11 @@ static const char *tools_messages[] = {
 #ifdef HW_DOL		
 		/*08*/		"Unused",
 		/*09*/		"^|----",
-#else //HW_RVL - Wii
+#else //HW_RVL - WIN
 		/*08*/		"Auto virtual keyboard",
 		/*09*/		"^|on|off",
 #endif		
-		/*10*/		"Keyboard rumble",
+		/*10*/		"Virtual keyboard rumble",
 		/*11*/		"^|on|off",
 		/*12*/		"Load poke file",
 		/*13*/		"Insert poke",

@@ -108,10 +108,14 @@ void computer_init () { //Called only on start-up
 	ordenador.joypad_as_joystick[1]= 1;
 #ifdef HW_RVL
 	ordenador.vk_auto = 1; //auto Vk
-#else //HW_DOL - WIN
-	ordenador.vk_auto = 0; //Vk called by +
-#endif	
 	ordenador.vk_rumble = 1; //enabled
+#elif defined(HW_DOL)
+	ordenador.vk_auto = 0; //Vk called by +
+	ordenador.vk_rumble = 0; //disabled
+#else //WIN
+	ordenador.vk_auto = 1; //auto Vk
+	ordenador.vk_rumble = 0; //disabled
+#endif	
 	ordenador.rumble[0] = 0;
 	ordenador.rumble[1] = 0;
 	ordenador.turbo = 1; //auto turbo 
@@ -1275,7 +1279,7 @@ inline void read_keyboard () {
 	#ifdef HW_DOL
 	if (SDL_JoystickGetButton(ordenador.joystick_sdl[0], 7)) //Gamecube button "Start"
 	{if (ordenador.vk_is_active) virtkey_ir_deactivate();main_menu(); }
-	if (SDL_JoystickGetButton(ordenador.joystick_sdl[0], 4) //Gamecube button "Z"
+	if (SDL_JoystickGetButton(ordenador.joystick_sdl[0], 4)) //Gamecube button "Z"
 	pause();
 	#else //HW_RVL - WIN
 	if (SDL_JoystickGetButton(ordenador.joystick_sdl[0], 6) ||//Wii button "Home"
@@ -1286,12 +1290,15 @@ inline void read_keyboard () {
 	pause();
 	#endif
 	
-	#ifdef HW_DOL
+	#if defined(HW_RVL) || defined(HW_DOL)
+	if (!ordenador.vk_auto)
+	{
 	int SDL_PrivateMouseMotion(Uint8 buttonstate, int relative, Sint16 x, Sint16 y);
 	if (SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 2) > 16384) SDL_PrivateMouseMotion(0,1,4/RATIO,0); //C-stick Horizontal axix
 	if (SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 2) < -16384) SDL_PrivateMouseMotion(0,1,-4/RATIO,0); //C-stick Horizontal axix
 	if (SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 3) > 16384) SDL_PrivateMouseMotion(0,1,0,4/RATIO); //C-stick vertical axix
 	if (SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 3) < -16384) SDL_PrivateMouseMotion(0,1,0,-4/RATIO); //C-stick vertical axix
+	}
 	#endif
 	
 	for(joy_n=0;joy_n<ordenador.joystick_number;joy_n++) 
@@ -1315,7 +1322,7 @@ inline void read_keyboard () {
 		SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], joybutton_n);
 		}
 			
-	#ifdef HW_RVL
+	#ifndef HW_DOL // HW_RVL - WIN
 	for(joybutton_n=7;joybutton_n<17;joybutton_n++)
 		{
 		joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][joybutton_n])] = 

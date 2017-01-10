@@ -1159,12 +1159,15 @@ uint32_t menu_wait_key_press()
 		static int joy_bottons_last[2][8];
 		SDL_JoystickUpdate();
 		
-		#ifdef HW_DOL
+		#if defined(HW_RVL) || defined(HW_DOL)
+		if (!ordenador.vk_auto)
+		{
 		int SDL_PrivateMouseMotion(Uint8 buttonstate, int relative, Sint16 x, Sint16 y);
 		if (SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 2) > 16384) SDL_PrivateMouseMotion(0,1,4/RATIO,0); //C-stick Horizontal axix
 		if (SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 2) < -16384) SDL_PrivateMouseMotion(0,1,-4/RATIO,0); //C-stick Horizontal axix
 		if (SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 3) > 16384) SDL_PrivateMouseMotion(0,1,0,4/RATIO); //C-stick vertical axix
 		if (SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 3) < -16384) SDL_PrivateMouseMotion(0,1,0,-4/RATIO); //C-stick vertical axix
+		}
 		#endif
 		
 		/* Wii-specific, sorry */

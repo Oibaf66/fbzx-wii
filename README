@@ -7,7 +7,7 @@ The code has been ported to Wii and largely improved with many new features by O
 
 FBZX Wii can be found on Github at github.com/Oibaf66/fbzx-wii.
  
-There is also a gamecube port.
+There are also a windows and a gamecube port.
 
 The program uses the SDL Wii library.
 
