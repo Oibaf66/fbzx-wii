@@ -38,7 +38,9 @@
 #define KEY_PAGEDOWN  64
 #define KEY_PAGEUP   128
 #define KEY_HELP     256
-#define KEY_DESELECT    512
+#define KEY_DESELECT  512
+#define KEY_UP_FAST   1024
+#define KEY_DOWN_FAST 2048
 
 enum font {FONT_NORM, FONT_ALT};
 

@@ -1238,6 +1238,17 @@ uint32_t menu_wait_key_press(int *joy_n_p)
 		joy_keys_last = keys;
 		if (!joy_keys_changed)
 			keys = 0;
+		
+		//Quick scrolling
+		for (nr = 0; nr < ordenador.joystick_number; nr++) {
+			joy = ordenador.joystick_sdl[nr];
+			
+			Sint16 axis3 = SDL_JoystickGetAxis(joy, 3);
+			
+			if (axis3 < -15000 )  keys |= KEY_UP_FAST;
+			else if( axis3 > 15000 )  keys |= KEY_DOWN_FAST;
+		}	
+			
 
 		if (SDL_PollEvent(&ev))
 		{
@@ -1347,7 +1358,11 @@ static int menu_select_internal(SDL_Surface *screen,
 		if (keys & KEY_UP)
 			{select_next(p_menu, 0, -1, 1);play_click(0);}
 		else if (keys & KEY_DOWN)
-			{select_next(p_menu, 0, 1, 1);play_click(0);}
+			{select_next(p_menu, 0, 1, 1);play_click(0);}	
+		else if (keys & KEY_UP_FAST)
+			{select_next(p_menu, 0, -1, 1);}
+		else if (keys & KEY_DOWN_FAST)
+			{select_next(p_menu, 0, 1, 1);}	
 		else if (keys & KEY_PAGEUP)
 			{select_next(p_menu, 0, -19, 0);play_click(0);}
 		else if (keys & KEY_PAGEDOWN)
