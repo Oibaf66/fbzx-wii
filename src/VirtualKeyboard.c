@@ -175,13 +175,14 @@ struct virtkey *get_key_internal()
 		int key_h = 64/RATIO;
 		int border_x = VirtualKeyboard.sel_x/RATIO;
 		int border_y = VirtualKeyboard.sel_y/RATIO;
+		int joy_n=0;
 
 		draw_vk();
 		SDL_Flip(VirtualKeyboard.screen);
 		
 		SDL_ShowCursor(SDL_ENABLE);
 
-		k = menu_wait_key_press();
+		k = menu_wait_key_press(&joy_n);
 		
 		SDL_ShowCursor(SDL_DISABLE);
 
@@ -198,15 +199,15 @@ struct virtkey *get_key_internal()
 			i = y/key_h*KEY_COLS + x/key_w;
 			
 			#ifdef HW_RVL
-			if (ordenador.vk_rumble) WPAD_Rumble(0, 1);
+			if (ordenador.vk_rumble) WPAD_Rumble(joy_n, 1);
 			SDL_Delay(90);
-			if (ordenador.vk_rumble) WPAD_Rumble(0, 0);
+			if (ordenador.vk_rumble) WPAD_Rumble(joy_n, 0);
 			#endif
 			
 			#ifdef HW_DOL
-			if (ordenador.vk_rumble) PAD_ControlMotor(0,PAD_MOTOR_RUMBLE);
+			if (ordenador.vk_rumble) PAD_ControlMotor(joy_n,PAD_MOTOR_RUMBLE);
 			SDL_Delay(90);
-			if (ordenador.vk_rumble) PAD_ControlMotor(0,PAD_MOTOR_STOP);
+			if (ordenador.vk_rumble) PAD_ControlMotor(joy_n,PAD_MOTOR_STOP);
 			#endif
 			
 			virtkey_t *key = &keys[i];
@@ -248,47 +249,52 @@ void virtkey_ir_run(void)
 	int border_x = VirtualKeyboard.sel_x/RATIO;
 	int border_y = VirtualKeyboard.sel_y/RATIO;
 	int key_sel = 0;
+	int joy_n;
 	SDL_Joystick *joy;
-	static int joy_bottons_last[5];
-	static char countdown_rumble=0;
+	static int joy_bottons_last[2][5];
+	static char countdown_rumble[2];
+	
+	for(joy_n=0;joy_n<ordenador.joystick_number;joy_n++) 
+	{
+	key_sel = 0;
 	
 	#ifdef HW_RVL
-	if (countdown_rumble > 0) {countdown_rumble--; if ((countdown_rumble==0)&&(ordenador.vk_rumble)) WPAD_Rumble(0, 0);}
+	if (countdown_rumble[joy_n] > 0) {countdown_rumble[joy_n]--; if ((countdown_rumble[joy_n]==0)&&(ordenador.vk_rumble)) WPAD_Rumble(joy_n, 0);}
 	#endif
 	
 	#ifdef HW_DOL
-	if (countdown_rumble > 0) {countdown_rumble--; if ((countdown_rumble==0)&&(ordenador.vk_rumble)) PAD_ControlMotor(0,PAD_MOTOR_STOP);}
+	if (countdown_rumble[joy_n] > 0) {countdown_rumble[joy_n]--; if ((countdown_rumble[joy_n]==0)&&(ordenador.vk_rumble)) PAD_ControlMotor(joy_n,PAD_MOTOR_STOP);}
 	#endif
 	
-	joy = ordenador.joystick_sdl[0];
+	joy = ordenador.joystick_sdl[joy_n];
 				
-	if ((SDL_JoystickGetButton(joy, 0) && !joy_bottons_last[0]) ||      /* A */
-		(SDL_JoystickGetButton(joy, 3) && !joy_bottons_last[1]) ||  /* 2 */
-		(SDL_JoystickGetButton(joy, 9) && !joy_bottons_last[2]) ||  /* CA */
-		(SDL_JoystickGetButton(joy, 10) && !joy_bottons_last[3])   /* CB */
+	if ((SDL_JoystickGetButton(joy, 0) && !joy_bottons_last[joy_n][0]) ||      /* A */
+		(SDL_JoystickGetButton(joy, 3) && !joy_bottons_last[joy_n][1]) ||  /* 2 */
+		(SDL_JoystickGetButton(joy, 9) && !joy_bottons_last[joy_n][2]) ||  /* CA */
+		(SDL_JoystickGetButton(joy, 10) && !joy_bottons_last[joy_n][3])   /* CB */
 	#ifndef GEKKO //Win	
-		||((SDL_GetMouseState(NULL, NULL)&SDL_BUTTON(1))&& !joy_bottons_last[4])//mouse left button
+		||(!joy_n && (SDL_GetMouseState(NULL, NULL)&SDL_BUTTON(1))&& !joy_bottons_last[0][4])//mouse left button
 	#endif	
 		) key_sel = KEY_SELECT;
 	
 	
-	if ((!SDL_JoystickGetButton(joy, 0) && joy_bottons_last[0]) ||      /* A */
-		(!SDL_JoystickGetButton(joy, 3) && joy_bottons_last[1]) ||  /* 2 */
-		(!SDL_JoystickGetButton(joy, 9) && joy_bottons_last[2]) ||  /* CA */
-		(!SDL_JoystickGetButton(joy, 10) && joy_bottons_last[3])   /* CB */
+	if ((!SDL_JoystickGetButton(joy, 0) && joy_bottons_last[joy_n][0]) ||      /* A */
+		(!SDL_JoystickGetButton(joy, 3) && joy_bottons_last[joy_n][1]) ||  /* 2 */
+		(!SDL_JoystickGetButton(joy, 9) && joy_bottons_last[joy_n][2]) ||  /* CA */
+		(!SDL_JoystickGetButton(joy, 10) && joy_bottons_last[joy_n][3])   /* CB */
 	#ifndef GEKKO //Win	
-		||(!(SDL_GetMouseState(NULL, NULL)&SDL_BUTTON(1)) && joy_bottons_last[4]) //mouse left button
+		||(!joy_n && !(SDL_GetMouseState(NULL, NULL)&SDL_BUTTON(1)) && joy_bottons_last[0][4]) //mouse left button
 	#endif	
 		) key_sel = KEY_DESELECT;
 	
 	
 				
-	joy_bottons_last[0]=SDL_JoystickGetButton(joy, 0) ;   /* A */
-	joy_bottons_last[1]	=SDL_JoystickGetButton(joy, 3) ;  /* 2 */
-	joy_bottons_last[2]	=SDL_JoystickGetButton(joy, 9) ;  /* CA */
-	joy_bottons_last[3]	=SDL_JoystickGetButton(joy, 10) ; /* CB */
+	joy_bottons_last[joy_n][0]	=SDL_JoystickGetButton(joy, 0) ;   /* A */
+	joy_bottons_last[joy_n][1]	=SDL_JoystickGetButton(joy, 3) ;  /* 2 */
+	joy_bottons_last[joy_n][2]	=SDL_JoystickGetButton(joy, 9) ;  /* CA */
+	joy_bottons_last[joy_n][3]	=SDL_JoystickGetButton(joy, 10) ; /* CB */
 	#ifndef GEKKO //Win
-	joy_bottons_last[4] =SDL_GetMouseState(NULL, NULL)&SDL_BUTTON(1); //mouse left button
+	if (!joy_n) joy_bottons_last[0][4] =SDL_GetMouseState(NULL, NULL)&SDL_BUTTON(1); //mouse left button
 	#endif
 	
 	if (key_sel==KEY_SELECT)
@@ -299,14 +305,14 @@ void virtkey_ir_run(void)
 		if ((x>0)&&(x< KEY_COLS*key_w)&&(y>0)&&(y< KEY_ROWS*key_h)) 
 		{
 			#ifdef HW_RVL
-			if (ordenador.vk_rumble) WPAD_Rumble(0, 1);
+			if (ordenador.vk_rumble) WPAD_Rumble(joy_n, 1);
 			#endif
 			
 			#ifdef HW_DOL
-			if (ordenador.vk_rumble) PAD_ControlMotor(0,PAD_MOTOR_RUMBLE);
+			if (ordenador.vk_rumble) PAD_ControlMotor(joy_n,PAD_MOTOR_RUMBLE);
 			#endif
 			
-			countdown_rumble=5;
+			countdown_rumble[joy_n]=5;
 			
 			i = y/key_h*KEY_COLS + x/key_w;
 			
@@ -355,6 +361,7 @@ void virtkey_ir_run(void)
 		SDL_ShowCursor(SDL_ENABLE);
 		
 	key_code=0;
+	}
 	}
 }
 

@@ -1184,7 +1184,8 @@ inline void paint_one_pixel(unsigned char *colour,unsigned char *address ) {
 inline void pause() {
 	unsigned int temporal_io;
 	SDL_Event evento,*pevento;
-	unsigned char minus_pressed=2;
+	unsigned char minus_pressed[2]={2,2};
+	int joy_n;
 	
 	pevento=&evento;
 	printf("Pause\n");
@@ -1193,19 +1194,21 @@ inline void pause() {
 	{	
 	SDL_JoystickUpdate();
 	
+	for(joy_n=0;joy_n<ordenador.joystick_number;joy_n++) 
+	{
 	#ifdef HW_DOL //Gamecube button "Z"
-	if (!SDL_JoystickGetButton(ordenador.joystick_sdl[0], 4 ) && minus_pressed==2 ) minus_pressed = 1; //Released
-	if (SDL_JoystickGetButton(ordenador.joystick_sdl[0], 4 ) && minus_pressed==1) minus_pressed = 0; //Pressed
-	if (!SDL_JoystickGetButton(ordenador.joystick_sdl[0], 4 ) && minus_pressed==0 ) return; //Released
+	if (!SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 4 ) && minus_pressed[joy_n]==2) minus_pressed[joy_n] = 1; //Released
+	if (SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 4 ) && minus_pressed[joy_n]==1) minus_pressed[joy_n] = 0; //Pressed
+	if (!SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 4 ) && minus_pressed[joy_n]==0) return; //Released
 	#else //HW_RVL - WIN // Wii button "-"
-	if (!SDL_JoystickGetButton(ordenador.joystick_sdl[0], 4) && 
-	!SDL_JoystickGetButton(ordenador.joystick_sdl[0], 17) && minus_pressed==2 )  minus_pressed=1; //Released
-	if ((SDL_JoystickGetButton(ordenador.joystick_sdl[0], 4) || 
-	SDL_JoystickGetButton(ordenador.joystick_sdl[0], 17)) && minus_pressed==1) minus_pressed = 0; //Pressed
-	if (!SDL_JoystickGetButton(ordenador.joystick_sdl[0], 4) && 
-	!SDL_JoystickGetButton(ordenador.joystick_sdl[0], 17) && minus_pressed==0 ) return; //Released
+	if (!SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 4) && 
+	!SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 17) && minus_pressed[joy_n]==2)  minus_pressed[joy_n]=1; //Released
+	if ((SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 4) || 
+	SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 17)) && minus_pressed[joy_n]==1) minus_pressed[joy_n] = 0; //Pressed
+	if (!SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 4) && 
+	!SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 17) && minus_pressed[joy_n]==0) return; //Released
 	#endif
-	
+	}
 	memset(&evento,0, sizeof(SDL_Event));
 		SDL_PollEvent (&evento);
 
@@ -1276,17 +1279,19 @@ inline void read_keyboard () {
 	
 	SDL_JoystickUpdate();
 	
+	for(joy_n=0;joy_n<ordenador.joystick_number;joy_n++) 
+	{
 	#ifdef HW_DOL
-	if (SDL_JoystickGetButton(ordenador.joystick_sdl[0], 7)) //Gamecube button "Start"
+	if (SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 7)) //Gamecube button "Start"
 	{if (ordenador.vk_is_active) virtkey_ir_deactivate();main_menu(); }
-	if (SDL_JoystickGetButton(ordenador.joystick_sdl[0], 4)) //Gamecube button "Z"
+	if (SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 4)) //Gamecube button "Z"
 	pause();
 	#else //HW_RVL - WIN
-	if (SDL_JoystickGetButton(ordenador.joystick_sdl[0], 6) ||//Wii button "Home"
-	SDL_JoystickGetButton(ordenador.joystick_sdl[0], 19)) 
+	if (SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 6) ||//Wii button "Home"
+	SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 19)) 
 	{if (ordenador.vk_is_active) virtkey_ir_deactivate();main_menu(); }
-	if (SDL_JoystickGetButton(ordenador.joystick_sdl[0], 4) ||//Wii button "-"
-	SDL_JoystickGetButton(ordenador.joystick_sdl[0], 17)) 
+	if (SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 4) ||//Wii button "-"
+	SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 17)) 
 	pause();
 	#endif
 	
@@ -1294,15 +1299,13 @@ inline void read_keyboard () {
 	if (!ordenador.vk_auto)
 	{
 	int SDL_PrivateMouseMotion(Uint8 buttonstate, int relative, Sint16 x, Sint16 y);
-	if (SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 2) > 16384) SDL_PrivateMouseMotion(0,1,4/RATIO,0); //C-stick Horizontal axix
-	if (SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 2) < -16384) SDL_PrivateMouseMotion(0,1,-4/RATIO,0); //C-stick Horizontal axix
-	if (SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 3) > 16384) SDL_PrivateMouseMotion(0,1,0,4/RATIO); //C-stick vertical axix
-	if (SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 3) < -16384) SDL_PrivateMouseMotion(0,1,0,-4/RATIO); //C-stick vertical axix
+	if (SDL_JoystickGetAxis(ordenador.joystick_sdl[joy_n], 2) > 16384) SDL_PrivateMouseMotion(0,1,4/RATIO,0); //C-stick Horizontal axix
+	if (SDL_JoystickGetAxis(ordenador.joystick_sdl[joy_n], 2) < -16384) SDL_PrivateMouseMotion(0,1,-4/RATIO,0); //C-stick Horizontal axix
+	if (SDL_JoystickGetAxis(ordenador.joystick_sdl[joy_n], 3) > 16384) SDL_PrivateMouseMotion(0,1,0,4/RATIO); //C-stick vertical axix
+	if (SDL_JoystickGetAxis(ordenador.joystick_sdl[joy_n], 3) < -16384) SDL_PrivateMouseMotion(0,1,0,-4/RATIO); //C-stick vertical axix
 	}
 	#endif
 	
-	for(joy_n=0;joy_n<ordenador.joystick_number;joy_n++) 
-	{
 	joy_axis_x[joy_n] = SDL_JoystickGetAxis(ordenador.joystick_sdl[joy_n], 0);
 	joy_axis_y[joy_n] = SDL_JoystickGetAxis(ordenador.joystick_sdl[joy_n], 1);
 	
@@ -1777,24 +1780,31 @@ inline void read_keyboard () {
 	
 	//VK activation/deactivation
 	
-	static char old_plus_button;
-	char plus_button;
-	
-	plus_button= SDL_JoystickGetButton(ordenador.joystick_sdl[0], 5) || //Wii  button "+" - Gamecube "R"
-	SDL_JoystickGetButton(ordenador.joystick_sdl[0], 18);
+	static char old_plus_button[2];
+	char plus_button[2];
 	
 	
-	if (!ordenador.vk_auto && plus_button && !old_plus_button)
+	if (!ordenador.vk_auto)
+	for(joy_n=0;joy_n<ordenador.joystick_number;joy_n++) 
+	{
+	plus_button[joy_n] = SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 5) || //Wii  button "+" - Gamecube "R"
+	SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 18);
+	
+	if (plus_button[joy_n] && !old_plus_button[joy_n])
 	{if (!ordenador.vk_is_active)  virtkey_ir_activate(); else virtkey_ir_deactivate();}
-		
-	if (ordenador.vk_auto)
+	
+	old_plus_button[joy_n] = plus_button[joy_n];
+	}
+	
+	else //Auto VK
 	{
 	#ifdef HW_RVL
-	WPADData *wd;
-	wd = WPAD_Data(0); //only wiimote 0
-	if ((wd->ir.valid)&&(!ordenador.vk_is_active)) virtkey_ir_activate();	
-	if ((!wd->ir.valid)&&(ordenador.vk_is_active)) virtkey_ir_deactivate();	
-	#else //WH_DOL - Win
+	WPADData *wd0, *wd1;
+	wd0 = WPAD_Data(0); //wiimote 0
+	wd1 = WPAD_Data(1); //wiimote 1
+	if (((wd0->ir.valid)||(wd1->ir.valid))&&(!ordenador.vk_is_active)) virtkey_ir_activate();	
+	if ((!wd0->ir.valid)&&(!wd1->ir.valid)&&(ordenador.vk_is_active)) virtkey_ir_deactivate();	
+	#else //Win
 	int x=0,y=0 ;
 	SDL_GetMouseState(&x,&y);
 	if ((x>64/RATIO)&&(x<576/RATIO)&&(y>90/RATIO)&&(y<390/RATIO)) 
@@ -1807,7 +1817,6 @@ inline void read_keyboard () {
 		}
 	#endif
     }
-	old_plus_button = plus_button;
 	
 	if (ordenador.vk_is_active) virtkey_ir_run();
 		

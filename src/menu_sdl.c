@@ -156,7 +156,7 @@ int msgInfo(char *text, int duration, SDL_Rect *irc)
 		SDL_FillRect(real_screen, &brc, SDL_MapRGB(real_screen->format, 0x00, 0x80, 0x00));
 		menu_print_font(real_screen, 0,0,0, FULL_DISPLAY_X/2-w, Y+h*2, "OK",FONT_NORM,64);
 		SDL_UpdateRect(real_screen, brc.x, brc.y, brc.w, brc.h);
-		while (!(KEY_SELECT & menu_wait_key_press())) {}
+		while (!(KEY_SELECT & menu_wait_key_press(NULL))) {}
 
 	}
 
@@ -232,7 +232,7 @@ int msgYesNo(char *text, int default_opt, int x, int y)
 		SDL_UpdateRect(real_screen, brc.x, brc.y, brc.w,brc.h);
 
 		//SDL_Flip(real_screen);
-		key = menu_wait_key_press();
+		key = menu_wait_key_press(NULL);
 		if (key & KEY_SELECT)
 		{
 			play_click(1);
@@ -1145,7 +1145,7 @@ static void menu_fini(menu_t *p_menu)
 	free(p_menu->p_submenus);
 }
 
-uint32_t menu_wait_key_press()
+uint32_t menu_wait_key_press(int *joy_n_p)
 {
 	SDL_Event ev;
 	uint32_t keys = 0;
@@ -1157,18 +1157,8 @@ uint32_t menu_wait_key_press()
 		static int joy_keys_changed;
 		static int joy_keys_last;
 		static int joy_bottons_last[2][8];
-		SDL_JoystickUpdate();
 		
-		#if defined(HW_RVL) || defined(HW_DOL)
-		if (!ordenador.vk_auto)
-		{
-		int SDL_PrivateMouseMotion(Uint8 buttonstate, int relative, Sint16 x, Sint16 y);
-		if (SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 2) > 16384) SDL_PrivateMouseMotion(0,1,4/RATIO,0); //C-stick Horizontal axix
-		if (SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 2) < -16384) SDL_PrivateMouseMotion(0,1,-4/RATIO,0); //C-stick Horizontal axix
-		if (SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 3) > 16384) SDL_PrivateMouseMotion(0,1,0,4/RATIO); //C-stick vertical axix
-		if (SDL_JoystickGetAxis(ordenador.joystick_sdl[0], 3) < -16384) SDL_PrivateMouseMotion(0,1,0,-4/RATIO); //C-stick vertical axix
-		}
-		#endif
+		SDL_JoystickUpdate();
 		
 		/* Wii-specific, sorry */
 		for (nr = 0; nr < ordenador.joystick_number; nr++) {
@@ -1176,6 +1166,16 @@ uint32_t menu_wait_key_press()
 			if (!joy)
 				continue;
 	
+		#if defined(HW_RVL) || defined(HW_DOL)
+		if (!ordenador.vk_auto)
+		{
+		int SDL_PrivateMouseMotion(Uint8 buttonstate, int relative, Sint16 x, Sint16 y);
+		if (SDL_JoystickGetAxis(ordenador.joystick_sdl[nr], 2) > 16384) SDL_PrivateMouseMotion(0,1,4/RATIO,0); //C-stick Horizontal axix
+		if (SDL_JoystickGetAxis(ordenador.joystick_sdl[nr], 2) < -16384) SDL_PrivateMouseMotion(0,1,-4/RATIO,0); //C-stick Horizontal axix
+		if (SDL_JoystickGetAxis(ordenador.joystick_sdl[nr], 3) > 16384) SDL_PrivateMouseMotion(0,1,0,4/RATIO); //C-stick vertical axix
+		if (SDL_JoystickGetAxis(ordenador.joystick_sdl[nr], 3) < -16384) SDL_PrivateMouseMotion(0,1,0,-4/RATIO); //C-stick vertical axix
+		}
+		#endif
 			hats = SDL_JoystickNumHats (joy); 
 			for (i = 0; i < hats; i++) {
 				Uint8 v = SDL_JoystickGetHat (joy, i);
@@ -1225,9 +1225,16 @@ uint32_t menu_wait_key_press()
 		joy_bottons_last[nr][5]	=SDL_JoystickGetButton(joy, 11) ; /* CX */
 		joy_bottons_last[nr][6]	=SDL_JoystickGetButton(joy, 12) ; /* CY */
 		joy_bottons_last[nr][7]	=SDL_JoystickGetButton(joy, 1) ; /* B */
-		}
 		
 		joy_keys_changed = keys != joy_keys_last;
+
+		if (joy_keys_changed&&keys)
+			{
+			if (joy_n_p) *joy_n_p = nr;
+			break;
+			}	
+		}
+		
 		joy_keys_last = keys;
 		if (!joy_keys_changed)
 			keys = 0;
@@ -1333,7 +1340,7 @@ static int menu_select_internal(SDL_Surface *screen,
 		menu_draw(screen, p_menu, 0, font_type, draw_scr);
 		SDL_Flip(screen);
 
-		keys = menu_wait_key_press();
+		keys = menu_wait_key_press(NULL);
 		
 		quit_thread = 1;
 

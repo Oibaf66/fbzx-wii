@@ -1638,7 +1638,7 @@ int parse_poke (const char *filename)
 		k=0;
 
 		while (!((k & KEY_ESCAPE)||(k & KEY_SELECT)))
-		{k = menu_wait_key_press();}
+		{k = menu_wait_key_press(NULL);}
 	
 		SDL_FillRect(screen, &banner, SDL_MapRGB(screen->format, 0, 0, 0));
 	
@@ -1709,7 +1709,7 @@ int parse_poke (const char *filename)
 	k=0;
 
 	while (!(k & KEY_ESCAPE)&&(ritorno==0))
-	{k = menu_wait_key_press();}
+	{k = menu_wait_key_press(NULL);}
 	play_click(2);
 
 	fclose(fpoke);

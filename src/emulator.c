@@ -559,6 +559,7 @@ if (sound_type==SOUND_SDL)
 		if(SDL_NumJoysticks()>0){
 			// Open joystick
 			ordenador.joystick_number = SDL_NumJoysticks();
+			printf("Found %d joysticks \n", ordenador.joystick_number);
 			if (ordenador.joystick_number>2) ordenador.joystick_number = 2; //Open max 2 joysticks
 			printf("Try to open %d joysticks \n", ordenador.joystick_number);
 			for (bucle=0;bucle<ordenador.joystick_number;bucle++) {

@@ -58,7 +58,7 @@ const char *menu_select_file(char *dir_path,const char *selected_file, int draw_
 const char *menu_select_browser(unsigned int tape_pos);
 const char *menu_select_browser_rzx();
 
-uint32_t menu_wait_key_press();
+uint32_t menu_wait_key_press(int *joy_n_p);
 
 void msgKill(SDL_Rect *rc);
 int msgInfo(char *text, int duration, SDL_Rect *rc);
