@@ -1296,7 +1296,7 @@ inline void read_keyboard () {
 	#endif
 	
 	#if defined(HW_RVL) || defined(HW_DOL)
-	if (!ordenador.vk_auto)
+	if (ordenador.vk_is_active)
 	{
 	int SDL_PrivateMouseMotion(Uint8 buttonstate, int relative, Sint16 x, Sint16 y);
 	if (SDL_JoystickGetAxis(ordenador.joystick_sdl[joy_n], 2) > 16384) SDL_PrivateMouseMotion(0,1,4/RATIO,0); //C-stick Horizontal axix
@@ -1799,11 +1799,10 @@ inline void read_keyboard () {
 	else //Auto VK
 	{
 	#ifdef HW_RVL
-	WPADData *wd0, *wd1;
+	WPADData *wd0;
 	wd0 = WPAD_Data(0); //wiimote 0
-	wd1 = WPAD_Data(1); //wiimote 1
-	if (((wd0->ir.valid)||(wd1->ir.valid))&&(!ordenador.vk_is_active)) virtkey_ir_activate();	
-	if ((!wd0->ir.valid)&&(!wd1->ir.valid)&&(ordenador.vk_is_active)) virtkey_ir_deactivate();	
+	if ((wd0->ir.valid)&&(!ordenador.vk_is_active)) virtkey_ir_activate();	
+	if ((!wd0->ir.valid)&&(ordenador.vk_is_active)) virtkey_ir_deactivate();	
 	#else //Win
 	int x=0,y=0 ;
 	SDL_GetMouseState(&x,&y);

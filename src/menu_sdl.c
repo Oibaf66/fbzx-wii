@@ -1167,14 +1167,11 @@ uint32_t menu_wait_key_press(int *joy_n_p)
 				continue;
 	
 		#if defined(HW_RVL) || defined(HW_DOL)
-		if (!ordenador.vk_auto)
-		{
 		int SDL_PrivateMouseMotion(Uint8 buttonstate, int relative, Sint16 x, Sint16 y);
 		if (SDL_JoystickGetAxis(ordenador.joystick_sdl[nr], 2) > 16384) SDL_PrivateMouseMotion(0,1,4/RATIO,0); //C-stick Horizontal axix
 		if (SDL_JoystickGetAxis(ordenador.joystick_sdl[nr], 2) < -16384) SDL_PrivateMouseMotion(0,1,-4/RATIO,0); //C-stick Horizontal axix
 		if (SDL_JoystickGetAxis(ordenador.joystick_sdl[nr], 3) > 16384) SDL_PrivateMouseMotion(0,1,0,4/RATIO); //C-stick vertical axix
 		if (SDL_JoystickGetAxis(ordenador.joystick_sdl[nr], 3) < -16384) SDL_PrivateMouseMotion(0,1,0,-4/RATIO); //C-stick vertical axix
-		}
 		#endif
 			hats = SDL_JoystickNumHats (joy); 
 			for (i = 0; i < hats; i++) {
@@ -1240,6 +1237,7 @@ uint32_t menu_wait_key_press(int *joy_n_p)
 			keys = 0;
 		
 		//Quick scrolling
+		if (!joy_n_p) //We do not want fast scrolling with the vk
 		for (nr = 0; nr < ordenador.joystick_number; nr++) {
 			joy = ordenador.joystick_sdl[nr];
 			
@@ -1360,9 +1358,9 @@ static int menu_select_internal(SDL_Surface *screen,
 		else if (keys & KEY_DOWN)
 			{select_next(p_menu, 0, 1, 1);play_click(0);}	
 		else if (keys & KEY_UP_FAST)
-			{select_next(p_menu, 0, -1, 1);}
+			{select_next(p_menu, 0, -1, 1);usleep(20000);}
 		else if (keys & KEY_DOWN_FAST)
-			{select_next(p_menu, 0, 1, 1);}	
+			{select_next(p_menu, 0, 1, 1);;usleep(20000);}	
 		else if (keys & KEY_PAGEUP)
 			{select_next(p_menu, 0, -19, 0);play_click(0);}
 		else if (keys & KEY_PAGEDOWN)
