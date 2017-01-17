@@ -813,7 +813,7 @@ int save_config(struct computer *object, char *filename) {
 	fprintf(fconfig,"vk_rumble=%c%c",48+object->vk_rumble,10);
 	
 	for (joy_n=0; joy_n<2; joy_n++)
-		for (key=0; key<22; key++)
+		for (key=0; key<23; key++)
 		fprintf(fconfig,"joybutton_%c_%c=%.3d%c",joy_n+48,key+97, object->joybuttonkey[joy_n][key],10);
 	
 	fclose(fconfig);
@@ -845,7 +845,7 @@ int save_config_game(struct computer *object, char *filename, int overwrite) {
 	fprintf(fconfig,"rumble2=%c%c",48+object->rumble[1],10);
 	
 	for (joy_n=0; joy_n<2; joy_n++)
-		for (key=0; key<22; key++)
+		for (key=0; key<23; key++)
 		fprintf(fconfig,"joybutton_%c_%c=%.3d%c",joy_n+48,key+97, object->joybuttonkey[joy_n][key],10);
 	
 	fclose(fconfig);
@@ -1146,7 +1146,7 @@ int load_config(struct computer *object, char *filename) {
 		}
 		if (!strncmp(line,"joybutton_",10)) {
 			sscanf(line, "joybutton_%c_%c=%3d",&joy_n ,&key_n, &key_sdl);
-			if ((joy_n<50) && (joy_n>47) && (key_n<119) && (key_n>96))
+			if ((joy_n<50) && (joy_n>47) && (key_n<120) && (key_n>96))
 			object->joybuttonkey[joy_n-48][key_n-97]=key_sdl;
 			continue;
 		}
