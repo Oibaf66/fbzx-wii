@@ -1296,7 +1296,6 @@ uint32_t menu_wait_key_press(int *joy_n_p)
 				case SDLK_PAGEUP:
 					keys |= KEY_PAGEUP;
 					break;
-				case SDLK_HOME:
 				case SDLK_ESCAPE:
 					keys |= KEY_ESCAPE;
 					break;

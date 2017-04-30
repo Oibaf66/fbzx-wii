@@ -1540,7 +1540,7 @@ inline void read_keyboard () {
 			sprintf (ordenador.osd_text, " Volume: %d ",ordenador.volume);
 			ordenador.osd_time = 50;
 			break;
-		case SDLK_MENU: //Call FBZX wii menu
+		case SDLK_HOME: //Call FBZX wii menu
 			if (ordenador.vk_is_active) virtkey_ir_deactivate();
 			main_menu();
 			break;	
