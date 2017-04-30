@@ -1156,12 +1156,14 @@ uint32_t menu_wait_key_press(int *joy_n_p)
 		SDL_Joystick *joy;
 		static int joy_keys_changed;
 		static int joy_keys_last;
-		static int joy_bottons_last[2][8];
-		
+		static int joy_bottons_last[6][8];
 		SDL_JoystickUpdate();
 		
 		/* Wii-specific, sorry */
 		for (nr = 0; nr < ordenador.joystick_number; nr++) {
+			#ifdef HW_RVL
+			if ((nr == 2) || (nr == 3)) continue; // No wimote 3 and 4
+			#endif
 			joy = ordenador.joystick_sdl[nr];
 			if (!joy)
 				continue;
@@ -1196,7 +1198,8 @@ uint32_t menu_wait_key_press(int *joy_n_p)
 			if (axis1 < -15000 )  keys |= KEY_UP;
 			else if( axis1 > 15000 )  keys |= KEY_DOWN;	
 				
-			
+		if (nr<2)
+		{
 			if ((!SDL_JoystickGetButton(joy, 0) && joy_bottons_last[nr][0]) ||      /* A */
 					(!SDL_JoystickGetButton(joy, 3) && joy_bottons_last[nr][1]) ||  /* 2 */
 					(!SDL_JoystickGetButton(joy, 9) && joy_bottons_last[nr][2]) ||  /* CA */
@@ -1222,6 +1225,21 @@ uint32_t menu_wait_key_press(int *joy_n_p)
 		joy_bottons_last[nr][5]	=SDL_JoystickGetButton(joy, 11) ; /* CX */
 		joy_bottons_last[nr][6]	=SDL_JoystickGetButton(joy, 12) ; /* CY */
 		joy_bottons_last[nr][7]	=SDL_JoystickGetButton(joy, 1) ; /* B */
+		}
+		else
+		{
+			if ((!SDL_JoystickGetButton(joy, 0) && joy_bottons_last[nr][0]))    /* Gamecube button A */	  
+				keys |= KEY_SELECT;
+			if ((!SDL_JoystickGetButton(joy, 1) && joy_bottons_last[nr][1]))     /* Gamecube button B */		
+				keys |= KEY_ESCAPE;
+			if (SDL_JoystickGetButton(joy, 2) != 0)     /* Gamecube button X */
+				keys |= KEY_PAGEUP;
+			if (SDL_JoystickGetButton(joy, 3) != 0)      /* Gamecube button Y */
+				keys |= KEY_PAGEDOWN;
+		
+		joy_bottons_last[nr][0]=SDL_JoystickGetButton(joy, 0) ;   /* Gamecube button A */	
+		joy_bottons_last[nr][1]	=SDL_JoystickGetButton(joy, 1) ;  /* Gamecube button B */
+		}
 		
 		joy_keys_changed = keys != joy_keys_last;
 
@@ -1239,6 +1257,11 @@ uint32_t menu_wait_key_press(int *joy_n_p)
 		//Quick scrolling
 		if (!joy_n_p) //We do not want fast scrolling with the vk
 		for (nr = 0; nr < ordenador.joystick_number; nr++) {
+		
+			#ifdef HW_RVL
+			if ((nr == 2) || (nr == 3)) continue; // No wimote 3 and 4
+			#endif
+			
 			joy = ordenador.joystick_sdl[nr];
 			
 			Sint16 axis3 = SDL_JoystickGetAxis(joy, 3);

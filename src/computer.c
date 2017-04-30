@@ -54,7 +54,7 @@ extern FILE *fdebug;
 #endif
 
 int countdown_buffer;
-unsigned char joybutton_matrix[2][322];
+unsigned char joybutton_matrix[6][322];
 
 void update_npixels()
 {
@@ -106,6 +106,8 @@ void computer_init () { //Called only on start-up
 	ordenador.joystick[1] = 0; // Cursor
 	ordenador.joypad_as_joystick[0]= 1;
 	ordenador.joypad_as_joystick[1]= 1;
+	ordenador.joypad_as_joystick[4]= 1; //Gamecube controller 1
+	ordenador.joypad_as_joystick[5]= 1; //Gamecube controller 2
 #ifdef HW_RVL
 	ordenador.vk_auto = 1; //auto Vk
 	ordenador.vk_rumble = 1; //enabled
@@ -188,6 +190,8 @@ void computer_init () { //Called only on start-up
 	#ifdef HW_RVL
 	ordenador.joybuttonkey[0][3]=SDLK_LALT; //Fire button to wiimote1 button 2
 	ordenador.joybuttonkey[1][3]=SDLK_LALT; //Fire button to wiimote1 button 2
+	ordenador.joybuttonkey[4][0]=SDLK_LALT; //Fire button to gamecube controller button A
+	ordenador.joybuttonkey[5][0]=SDLK_LALT; //Fire button to gamecube controller button A
 	#else // HW_DOL - Win
 	ordenador.joybuttonkey[0][0]=SDLK_LALT; //Fire button to gamepad button A
 	ordenador.joybuttonkey[1][0]=SDLK_LALT; //Fire button to gamepad button A
@@ -1184,7 +1188,7 @@ inline void paint_one_pixel(unsigned char *colour,unsigned char *address ) {
 inline void pause() {
 	unsigned int temporal_io;
 	SDL_Event evento,*pevento;
-	unsigned char minus_pressed[2]={2,2};
+	unsigned char minus_pressed[6]={2,2,2,2,2,2};
 	int joy_n;
 	
 	pevento=&evento;
@@ -1196,17 +1200,32 @@ inline void pause() {
 	
 	for(joy_n=0;joy_n<ordenador.joystick_number;joy_n++) 
 	{
+	#ifdef HW_RVL
+	if ((joy_n == 2) || (joy_n == 3)) continue; // No wimote 3 and 4
+	#endif
 	#ifdef HW_DOL //Gamecube button "Z"
 	if (!SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 4 ) && minus_pressed[joy_n]==2) minus_pressed[joy_n] = 1; //Released
 	if (SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 4 ) && minus_pressed[joy_n]==1) minus_pressed[joy_n] = 0; //Pressed
 	if (!SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 4 ) && minus_pressed[joy_n]==0) return; //Released
 	#else //HW_RVL - WIN // Wii button "-"
+	if (joy_n<2)
+	{
 	if (!SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 4) && 
-	!SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 17) && minus_pressed[joy_n]==2)  minus_pressed[joy_n]=1; //Released
+	!SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 17) && minus_pressed[joy_n]==2)  minus_pressed[joy_n]= 1; //Released
 	if ((SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 4) || 
 	SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 17)) && minus_pressed[joy_n]==1) minus_pressed[joy_n] = 0; //Pressed
 	if (!SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 4) && 
 	!SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 17) && minus_pressed[joy_n]==0) return; //Released
+	}
+	else //Gamecube pad button "L"
+	{
+	if (!SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 6)
+	&& minus_pressed[joy_n]==2)  minus_pressed[joy_n]= 1; //Released
+	if (SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 6)  
+	&& minus_pressed[joy_n]==1) minus_pressed[joy_n] = 0; //Pressed
+	if (!SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 6) 
+	&& minus_pressed[joy_n]==0) return; //Released
+	}
 	#endif
 	}
 	memset(&evento,0, sizeof(SDL_Event));
@@ -1254,11 +1273,13 @@ inline void read_keyboard () {
 	SDL_Event evento,*pevento;
 	enum joystate_x {JOY_CENTER_X, JOY_LEFT, JOY_RIGHT};
 	enum joystate_y {JOY_CENTER_Y, JOY_UP, JOY_DOWN};
-	int joy_axis_x[2],joy_axis_y[2], joy_n, joybutton_n; 
-	unsigned char status_hat[2];
-	int fire_on[2];
+	int joy_axis_x[6],joy_axis_y[6], joy_n, joybutton_n; 
+	unsigned char status_hat[6];
+	int fire_on[6];
 	fire_on[0]=0;
 	fire_on[1]=0;
+	fire_on[4]=0;
+	fire_on[5]=0;
 	
 	
 	ordenador.k8 = ordenador.k9 = ordenador.k10 = ordenador.k11 =
@@ -1281,18 +1302,34 @@ inline void read_keyboard () {
 	
 	for(joy_n=0;joy_n<ordenador.joystick_number;joy_n++) 
 	{
+	#ifdef HW_RVL
+	if ((joy_n == 2) || (joy_n == 3)) continue; // No wimote 3 and 4
+	#endif
 	#ifdef HW_DOL
 	if (SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 7)) //Gamecube button "Start"
 	{if (ordenador.vk_is_active) virtkey_ir_deactivate();main_menu(); }
+	
 	if (SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 4)) //Gamecube button "Z"
 	pause();
 	#else //HW_RVL - WIN
+	if (joy_n<2)
+	{
 	if (SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 6) ||//Wii button "Home"
 	SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 19)) 
 	{if (ordenador.vk_is_active) virtkey_ir_deactivate();main_menu(); }
+	
 	if (SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 4) ||//Wii button "-"
 	SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 17)) 
 	pause();
+	}
+	else //Gamecube pad
+	{
+	if (SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 7))//gamecube button "Start" 
+	{if (ordenador.vk_is_active) virtkey_ir_deactivate();main_menu(); }
+	
+	if (SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 6))//gamecube button "L"
+	pause();
+	}
 	#endif
 	
 	#if defined(HW_RVL) || defined(HW_DOL)
@@ -1326,6 +1363,8 @@ inline void read_keyboard () {
 		}
 			
 	#ifndef HW_DOL // HW_RVL - WIN
+	if (joy_n<2)
+	{
 	for(joybutton_n=7;joybutton_n<17;joybutton_n++)
 		{
 		joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][joybutton_n])] = 
@@ -1338,6 +1377,9 @@ inline void read_keyboard () {
 		joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][18])] = 
 		SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 18);
 		}
+	}
+	else joybutton_matrix[joy_n][(ordenador.joybuttonkey[joy_n][4])] = //"Z" gamepad button
+		SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 4);
 	#endif	
 	}	
 		//JOY HAT
@@ -1535,6 +1577,10 @@ inline void read_keyboard () {
 		}
 	}
 	for(joy_n=0;joy_n<ordenador.joystick_number;joy_n++)
+	{
+	#ifdef HW_RVL
+	if ((joy_n == 2) || (joy_n == 3)) continue; // No wimote 3 and 4
+	#endif
 	
 	if (!ordenador.joypad_as_joystick[joy_n])
 	{ //No Joypad
@@ -1640,16 +1686,21 @@ inline void read_keyboard () {
 		break;
 		}
 	}
+	}
 	
 		#ifdef GEKKO
 		//Wiimote Rumble
-		static Uint32 last_ticks[2];
+		static Uint32 last_ticks[6];
 		Uint32 cur_ticks;
-		static int rumble_on[2];
-		static int fire_pressed[2];
+		static int rumble_on[6];
+		static int fire_pressed[6];
 
 		
 		for(joy_n=0;joy_n<ordenador.joystick_number;joy_n++)
+		{
+		#ifdef HW_RVL
+		if ((joy_n == 2) || (joy_n == 3)) continue; // No wimote 3 and 4
+		#endif
 		
 		if (ordenador.rumble[joy_n])
 		{
@@ -1658,7 +1709,10 @@ inline void read_keyboard () {
 			if (fire_on[joy_n] && !rumble_on[joy_n] && !fire_pressed[joy_n])  
 			{			
 				#ifdef HW_RVL
+				if (joy_n <2)
 				WPAD_Rumble(joy_n, 1);
+				else if (joy_n>3)
+				PAD_ControlMotor(joy_n-4,PAD_MOTOR_RUMBLE);
 				#else //HW_DOL
 				PAD_ControlMotor(joy_n,PAD_MOTOR_RUMBLE);
 				#endif
@@ -1676,7 +1730,10 @@ inline void read_keyboard () {
 			if (((cur_ticks - last_ticks[joy_n] > 90) && rumble_on[joy_n] && !fire_pressed[joy_n]) ||(!fire_on[joy_n] && !rumble_on[joy_n] && fire_pressed[joy_n]))
 			{
 				#ifdef HW_RVL
+				if (joy_n <2)
 				WPAD_Rumble(joy_n, 0);
+				else if (joy_n>3)
+				PAD_ControlMotor(joy_n-4,PAD_MOTOR_STOP);
 				#else //HW_DOL
 				PAD_ControlMotor(joy_n,PAD_MOTOR_STOP);
 				#endif
@@ -1687,7 +1744,10 @@ inline void read_keyboard () {
 			if ((cur_ticks - last_ticks[joy_n] > 90) && rumble_on[joy_n] && fire_pressed[joy_n])
 			{
 				#ifdef HW_RVL
+				if (joy_n <2)
 				WPAD_Rumble(joy_n, 0);
+				else if (joy_n>3)
+				PAD_ControlMotor(joy_n-4,PAD_MOTOR_STOP);
 				#else //HW_DOL
 				PAD_ControlMotor(joy_n,PAD_MOTOR_STOP);
 				#endif
@@ -1696,68 +1756,69 @@ inline void read_keyboard () {
 			}
 					
 		}
-		#endif
+		}
+		#endif //GEKKO
 		
-	if (ordenador.key[SDLK_SPACE]|| joybutton_matrix[0][SDLK_SPACE] || joybutton_matrix[1][SDLK_SPACE]) ordenador.k15|=1;
-	if (ordenador.key[SDLK_LCTRL]|| joybutton_matrix[0][SDLK_LCTRL] || joybutton_matrix[1][SDLK_LCTRL]) ordenador.k15|=2; //Symbol shift
-	if (ordenador.key[SDLK_m] || joybutton_matrix[0][SDLK_m] || joybutton_matrix[1][SDLK_m]) ordenador.k15|=4;
-	if (ordenador.key[SDLK_n] || joybutton_matrix[0][SDLK_n] || joybutton_matrix[1][SDLK_n]) ordenador.k15|=8;
-	if (ordenador.key[SDLK_b] || joybutton_matrix[0][SDLK_b] || joybutton_matrix[1][SDLK_b]) ordenador.k15|=16;
+	if (ordenador.key[SDLK_SPACE]|| joybutton_matrix[0][SDLK_SPACE] || joybutton_matrix[1][SDLK_SPACE] || joybutton_matrix[4][SDLK_SPACE] || joybutton_matrix[5][SDLK_SPACE])ordenador.k15|=1;
+	if (ordenador.key[SDLK_LCTRL]|| joybutton_matrix[0][SDLK_LCTRL] || joybutton_matrix[1][SDLK_LCTRL] || joybutton_matrix[4][SDLK_LCTRL] || joybutton_matrix[5][SDLK_LCTRL]) ordenador.k15|=2; //Symbol shift
+	if (ordenador.key[SDLK_m] || joybutton_matrix[0][SDLK_m] || joybutton_matrix[1][SDLK_m] || joybutton_matrix[4][SDLK_m] || joybutton_matrix[5][SDLK_m]) ordenador.k15|=4;
+	if (ordenador.key[SDLK_n] || joybutton_matrix[0][SDLK_n] || joybutton_matrix[1][SDLK_n] || joybutton_matrix[4][SDLK_n] || joybutton_matrix[5][SDLK_n]) ordenador.k15|=8;
+	if (ordenador.key[SDLK_b] || joybutton_matrix[0][SDLK_b] || joybutton_matrix[1][SDLK_b] || joybutton_matrix[4][SDLK_b] || joybutton_matrix[5][SDLK_b]) ordenador.k15|=16;
 	if (ordenador.key[SDLK_PERIOD])  ordenador.k15|=6;
 	if (ordenador.key[SDLK_COMMA]) ordenador.k15|=10;
 	//if (ordenador.key[SDLK_SEMICOLON]|| joybutton_matrix[0][SDLK_SEMICOLON] || joybutton_matrix[1][SDLK_SEMICOLON]) {ordenador.k13|=2; ordenador.k15|=2;}
 	//if (ordenador.key[SDLK_QUOTEDBL]|| joybutton_matrix[0][SDLK_QUOTEDBL] || joybutton_matrix[1][SDLK_QUOTEDBL]) {ordenador.k13|=1; ordenador.k15|=2;}		
 					
 	if (ordenador.key[SDLK_RETURN] || joybutton_matrix[0][SDLK_RETURN] || joybutton_matrix[1][SDLK_RETURN]) ordenador.k14|=1;
-	if (ordenador.key[SDLK_l] || joybutton_matrix[0][SDLK_l] || joybutton_matrix[1][SDLK_l]) ordenador.k14|=2;
-	if (ordenador.key[SDLK_k] || joybutton_matrix[0][SDLK_k] || joybutton_matrix[1][SDLK_k]) ordenador.k14|=4;
-	if (ordenador.key[SDLK_j] || joybutton_matrix[0][SDLK_j] || joybutton_matrix[1][SDLK_j]) ordenador.k14|=8;
-	if (ordenador.key[SDLK_h] || joybutton_matrix[0][SDLK_h] || joybutton_matrix[1][SDLK_h]) ordenador.k14|=16;					
+	if (ordenador.key[SDLK_l] || joybutton_matrix[0][SDLK_l] || joybutton_matrix[1][SDLK_l] || joybutton_matrix[4][SDLK_l] || joybutton_matrix[5][SDLK_l]) ordenador.k14|=2;
+	if (ordenador.key[SDLK_k] || joybutton_matrix[0][SDLK_k] || joybutton_matrix[1][SDLK_k] || joybutton_matrix[4][SDLK_k] || joybutton_matrix[5][SDLK_k]) ordenador.k14|=4;
+	if (ordenador.key[SDLK_j] || joybutton_matrix[0][SDLK_j] || joybutton_matrix[1][SDLK_j] || joybutton_matrix[4][SDLK_j] || joybutton_matrix[5][SDLK_j]) ordenador.k14|=8;
+	if (ordenador.key[SDLK_h] || joybutton_matrix[0][SDLK_h] || joybutton_matrix[1][SDLK_h] || joybutton_matrix[4][SDLK_h] || joybutton_matrix[5][SDLK_h]) ordenador.k14|=16;					
 					
-	if (ordenador.key[SDLK_p] || joybutton_matrix[0][SDLK_p] || joybutton_matrix[1][SDLK_p]) ordenador.k13|=1;
-	if (ordenador.key[SDLK_o] || joybutton_matrix[0][SDLK_o] || joybutton_matrix[1][SDLK_o]) ordenador.k13|=2;
-	if (ordenador.key[SDLK_i] || joybutton_matrix[0][SDLK_i] || joybutton_matrix[1][SDLK_i]) ordenador.k13|=4;
-	if (ordenador.key[SDLK_u] || joybutton_matrix[0][SDLK_u] || joybutton_matrix[1][SDLK_u]) ordenador.k13|=8;
-	if (ordenador.key[SDLK_y] || joybutton_matrix[0][SDLK_y] || joybutton_matrix[1][SDLK_y]) ordenador.k13|=16;					
+	if (ordenador.key[SDLK_p] || joybutton_matrix[0][SDLK_p] || joybutton_matrix[1][SDLK_p] || joybutton_matrix[4][SDLK_p] || joybutton_matrix[5][SDLK_p]) ordenador.k13|=1;
+	if (ordenador.key[SDLK_o] || joybutton_matrix[0][SDLK_o] || joybutton_matrix[1][SDLK_o] || joybutton_matrix[4][SDLK_o] || joybutton_matrix[5][SDLK_o]) ordenador.k13|=2;
+	if (ordenador.key[SDLK_i] || joybutton_matrix[0][SDLK_i] || joybutton_matrix[1][SDLK_i] || joybutton_matrix[4][SDLK_i] || joybutton_matrix[5][SDLK_i]) ordenador.k13|=4;
+	if (ordenador.key[SDLK_u] || joybutton_matrix[0][SDLK_u] || joybutton_matrix[1][SDLK_u] || joybutton_matrix[4][SDLK_u] || joybutton_matrix[5][SDLK_u]) ordenador.k13|=8;
+	if (ordenador.key[SDLK_y] || joybutton_matrix[0][SDLK_y] || joybutton_matrix[1][SDLK_y] || joybutton_matrix[4][SDLK_y] || joybutton_matrix[5][SDLK_y]) ordenador.k13|=16;					
 
-	if (ordenador.key[SDLK_0] || joybutton_matrix[0][SDLK_0] || joybutton_matrix[1][SDLK_0]) ordenador.k12|=1;
-	if (ordenador.key[SDLK_9] || joybutton_matrix[0][SDLK_9] || joybutton_matrix[1][SDLK_9]) ordenador.k12|=2;
-	if (ordenador.key[SDLK_8] || joybutton_matrix[0][SDLK_8] || joybutton_matrix[1][SDLK_8]) ordenador.k12|=4;
-	if (ordenador.key[SDLK_7] || joybutton_matrix[0][SDLK_7] || joybutton_matrix[1][SDLK_7]) ordenador.k12|=8;
-	if (ordenador.key[SDLK_6] || joybutton_matrix[0][SDLK_6] || joybutton_matrix[1][SDLK_6]) ordenador.k12|=16;
-	if (ordenador.key[SDLK_BACKSPACE] || joybutton_matrix[0][SDLK_BACKSPACE] || joybutton_matrix[1][SDLK_BACKSPACE]) {ordenador.k12|=1; ordenador.k8 |=1;}	
+	if (ordenador.key[SDLK_0] || joybutton_matrix[0][SDLK_0] || joybutton_matrix[1][SDLK_0] || joybutton_matrix[4][SDLK_0] || joybutton_matrix[5][SDLK_0]) ordenador.k12|=1;
+	if (ordenador.key[SDLK_9] || joybutton_matrix[0][SDLK_9] || joybutton_matrix[1][SDLK_9] || joybutton_matrix[4][SDLK_9] || joybutton_matrix[5][SDLK_9]) ordenador.k12|=2;
+	if (ordenador.key[SDLK_8] || joybutton_matrix[0][SDLK_8] || joybutton_matrix[1][SDLK_8] || joybutton_matrix[4][SDLK_8] || joybutton_matrix[5][SDLK_8]) ordenador.k12|=4;
+	if (ordenador.key[SDLK_7] || joybutton_matrix[0][SDLK_7] || joybutton_matrix[1][SDLK_7] || joybutton_matrix[4][SDLK_7] || joybutton_matrix[5][SDLK_7]) ordenador.k12|=8;
+	if (ordenador.key[SDLK_6] || joybutton_matrix[0][SDLK_6] || joybutton_matrix[1][SDLK_6] || joybutton_matrix[4][SDLK_6] || joybutton_matrix[5][SDLK_6]) ordenador.k12|=16;
+	if (ordenador.key[SDLK_BACKSPACE] || joybutton_matrix[0][SDLK_BACKSPACE] || joybutton_matrix[1][SDLK_BACKSPACE] || joybutton_matrix[4][SDLK_BACKSPACE] || joybutton_matrix[5][SDLK_BACKSPACE]) {ordenador.k12|=1; ordenador.k8 |=1;}	
 					
-	if (ordenador.key[SDLK_1] || joybutton_matrix[0][SDLK_1] || joybutton_matrix[1][SDLK_1]) ordenador.k11|=1;
-	if (ordenador.key[SDLK_2] || joybutton_matrix[0][SDLK_2] || joybutton_matrix[1][SDLK_2]) ordenador.k11|=2;
-	if (ordenador.key[SDLK_3] || joybutton_matrix[0][SDLK_3] || joybutton_matrix[1][SDLK_3]) ordenador.k11|=4;
-	if (ordenador.key[SDLK_4] || joybutton_matrix[0][SDLK_4] || joybutton_matrix[1][SDLK_4]) ordenador.k11|=8;
-	if (ordenador.key[SDLK_5] || joybutton_matrix[0][SDLK_5] || joybutton_matrix[1][SDLK_5]) ordenador.k11|=16;					
+	if (ordenador.key[SDLK_1] || joybutton_matrix[0][SDLK_1] || joybutton_matrix[1][SDLK_1] || joybutton_matrix[4][SDLK_1] || joybutton_matrix[5][SDLK_1]) ordenador.k11|=1;
+	if (ordenador.key[SDLK_2] || joybutton_matrix[0][SDLK_2] || joybutton_matrix[1][SDLK_2] || joybutton_matrix[4][SDLK_2] || joybutton_matrix[5][SDLK_2]) ordenador.k11|=2;
+	if (ordenador.key[SDLK_3] || joybutton_matrix[0][SDLK_3] || joybutton_matrix[1][SDLK_3] || joybutton_matrix[4][SDLK_3] || joybutton_matrix[5][SDLK_3]) ordenador.k11|=4;
+	if (ordenador.key[SDLK_4] || joybutton_matrix[0][SDLK_4] || joybutton_matrix[1][SDLK_4] || joybutton_matrix[4][SDLK_4] || joybutton_matrix[5][SDLK_4]) ordenador.k11|=8;
+	if (ordenador.key[SDLK_5] || joybutton_matrix[0][SDLK_5] || joybutton_matrix[1][SDLK_5] || joybutton_matrix[4][SDLK_5] || joybutton_matrix[5][SDLK_5]) ordenador.k11|=16;					
 
-	if (ordenador.key[SDLK_q] || joybutton_matrix[0][SDLK_q] || joybutton_matrix[1][SDLK_q]) ordenador.k10|=1;
-	if (ordenador.key[SDLK_w] || joybutton_matrix[0][SDLK_w] || joybutton_matrix[1][SDLK_w]) ordenador.k10|=2;
-	if (ordenador.key[SDLK_e] || joybutton_matrix[0][SDLK_e] || joybutton_matrix[1][SDLK_e]) ordenador.k10|=4;
-	if (ordenador.key[SDLK_r] || joybutton_matrix[0][SDLK_r] || joybutton_matrix[1][SDLK_r]) ordenador.k10|=8;
+	if (ordenador.key[SDLK_q] || joybutton_matrix[0][SDLK_q] || joybutton_matrix[1][SDLK_q] || joybutton_matrix[4][SDLK_q] || joybutton_matrix[5][SDLK_q]) ordenador.k10|=1;
+	if (ordenador.key[SDLK_w] || joybutton_matrix[0][SDLK_w] || joybutton_matrix[1][SDLK_w] || joybutton_matrix[4][SDLK_w] || joybutton_matrix[5][SDLK_w]) ordenador.k10|=2;
+	if (ordenador.key[SDLK_e] || joybutton_matrix[0][SDLK_e] || joybutton_matrix[1][SDLK_e] || joybutton_matrix[4][SDLK_e] || joybutton_matrix[5][SDLK_e]) ordenador.k10|=4;
+	if (ordenador.key[SDLK_r] || joybutton_matrix[0][SDLK_r] || joybutton_matrix[1][SDLK_r] || joybutton_matrix[4][SDLK_r] || joybutton_matrix[5][SDLK_r]) ordenador.k10|=8;
 	if (ordenador.key[SDLK_t] || joybutton_matrix[0][SDLK_t] || joybutton_matrix[1][SDLK_t]) ordenador.k10|=16;
 					
-	if (ordenador.key[SDLK_a] || joybutton_matrix[0][SDLK_a] || joybutton_matrix[1][SDLK_a]) ordenador.k9 |=1;
-	if (ordenador.key[SDLK_s] || joybutton_matrix[0][SDLK_s] || joybutton_matrix[1][SDLK_s]) ordenador.k9 |=2;
-	if (ordenador.key[SDLK_d] || joybutton_matrix[0][SDLK_d] || joybutton_matrix[1][SDLK_d]) ordenador.k9 |=4;
-	if (ordenador.key[SDLK_f] || joybutton_matrix[0][SDLK_f] || joybutton_matrix[1][SDLK_f]) ordenador.k9 |=8;
-	if (ordenador.key[SDLK_g] || joybutton_matrix[0][SDLK_g] || joybutton_matrix[1][SDLK_g]) ordenador.k9 |=16;					
+	if (ordenador.key[SDLK_a] || joybutton_matrix[0][SDLK_a] || joybutton_matrix[1][SDLK_a] || joybutton_matrix[4][SDLK_a] || joybutton_matrix[5][SDLK_a]) ordenador.k9 |=1;
+	if (ordenador.key[SDLK_s] || joybutton_matrix[0][SDLK_s] || joybutton_matrix[1][SDLK_s] || joybutton_matrix[4][SDLK_s] || joybutton_matrix[5][SDLK_s]) ordenador.k9 |=2;
+	if (ordenador.key[SDLK_d] || joybutton_matrix[0][SDLK_d] || joybutton_matrix[1][SDLK_d] || joybutton_matrix[4][SDLK_d] || joybutton_matrix[5][SDLK_d]) ordenador.k9 |=4;
+	if (ordenador.key[SDLK_f] || joybutton_matrix[0][SDLK_f] || joybutton_matrix[1][SDLK_f] || joybutton_matrix[4][SDLK_f] || joybutton_matrix[5][SDLK_f]) ordenador.k9 |=8;
+	if (ordenador.key[SDLK_g] || joybutton_matrix[0][SDLK_g] || joybutton_matrix[1][SDLK_g] || joybutton_matrix[4][SDLK_g] || joybutton_matrix[5][SDLK_g]) ordenador.k9 |=16;					
 					
-	if (ordenador.key[SDLK_RSHIFT]||ordenador.key[SDLK_LSHIFT]|| joybutton_matrix[0][SDLK_LSHIFT] || joybutton_matrix[1][SDLK_LSHIFT]) ordenador.k8 |=1; //Caps shift
-	if (ordenador.key[SDLK_z] || joybutton_matrix[0][SDLK_z] || joybutton_matrix[1][SDLK_z]) ordenador.k8 |=2;
-	if (ordenador.key[SDLK_x] || joybutton_matrix[0][SDLK_x] || joybutton_matrix[1][SDLK_x]) ordenador.k8 |=4;
-	if (ordenador.key[SDLK_c] || joybutton_matrix[0][SDLK_c] || joybutton_matrix[1][SDLK_c]) ordenador.k8 |=8;
-	if (ordenador.key[SDLK_v] || joybutton_matrix[0][SDLK_v] || joybutton_matrix[1][SDLK_v]) ordenador.k8 |=16;
+	if (ordenador.key[SDLK_RSHIFT]||ordenador.key[SDLK_LSHIFT]|| joybutton_matrix[0][SDLK_LSHIFT] || joybutton_matrix[1][SDLK_LSHIFT] || joybutton_matrix[4][SDLK_LSHIFT] || joybutton_matrix[5][SDLK_LSHIFT]) ordenador.k8 |=1; //Caps shift
+	if (ordenador.key[SDLK_z] || joybutton_matrix[0][SDLK_z] || joybutton_matrix[1][SDLK_z] || joybutton_matrix[4][SDLK_z] || joybutton_matrix[5][SDLK_z]) ordenador.k8 |=2;
+	if (ordenador.key[SDLK_x] || joybutton_matrix[0][SDLK_x] || joybutton_matrix[1][SDLK_x] || joybutton_matrix[4][SDLK_x] || joybutton_matrix[5][SDLK_x]) ordenador.k8 |=4;
+	if (ordenador.key[SDLK_c] || joybutton_matrix[0][SDLK_c] || joybutton_matrix[1][SDLK_c] || joybutton_matrix[4][SDLK_c] || joybutton_matrix[5][SDLK_c]) ordenador.k8 |=8;
+	if (ordenador.key[SDLK_v] || joybutton_matrix[0][SDLK_v] || joybutton_matrix[1][SDLK_v] || joybutton_matrix[4][SDLK_v] || joybutton_matrix[5][SDLK_v]) ordenador.k8 |=16;
 
 	if (ordenador.key[SDLK_UP]) {ordenador.k12 |=8;ordenador.k8|=1;}
 	if (ordenador.key[SDLK_DOWN]) {ordenador.k12 |=16;ordenador.k8|=1;}
 	if (ordenador.key[SDLK_LEFT]) {ordenador.k11 |=16;ordenador.k8|=1;}
 	if (ordenador.key[SDLK_RIGHT]) {ordenador.k12 |=4;ordenador.k8|=1;}
 	
-	if (ordenador.key[SDLK_TAB]|| joybutton_matrix[0][SDLK_TAB] || joybutton_matrix[1][SDLK_TAB]) {ordenador.k15|=2;ordenador.k8|=1;} //Extended mode
-	if (ordenador.key[SDLK_INSERT]|| joybutton_matrix[0][SDLK_INSERT] || joybutton_matrix[1][SDLK_INSERT]) {ordenador.k11|=1;ordenador.k8|=1;} //Edit
+	if (ordenador.key[SDLK_TAB]|| joybutton_matrix[0][SDLK_TAB] || joybutton_matrix[1][SDLK_TAB] || joybutton_matrix[4][SDLK_TAB] || joybutton_matrix[5][SDLK_TAB]) {ordenador.k15|=2;ordenador.k8|=1;} //Extended mode
+	if (ordenador.key[SDLK_INSERT]|| joybutton_matrix[0][SDLK_INSERT] || joybutton_matrix[1][SDLK_INSERT] || joybutton_matrix[4][SDLK_INSERT] || joybutton_matrix[5][SDLK_INSERT]) {ordenador.k11|=1;ordenador.k8|=1;} //Edit
 
 		ordenador.s8 = (ordenador.s8 & 0xE0) | (ordenador.k8 ^ 0x1F);
 		ordenador.s9 = (ordenador.s9 & 0xE0) | (ordenador.k9 ^ 0x1F);
@@ -1780,13 +1841,17 @@ inline void read_keyboard () {
 	
 	//VK activation/deactivation
 	
-	static char old_plus_button[2];
-	char plus_button[2];
+	static char old_plus_button[6];
+	char plus_button[6];
 	
 	
 	if (!ordenador.vk_auto)
 	for(joy_n=0;joy_n<ordenador.joystick_number;joy_n++) 
 	{
+	#ifdef HW_RVL
+	if ((joy_n == 2) || (joy_n == 3)) continue; // No wimote 3 and 4
+	#endif
+	
 	plus_button[joy_n] = SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 5) || //Wii  button "+" - Gamecube "R"
 	SDL_JoystickGetButton(ordenador.joystick_sdl[joy_n], 18);
 	

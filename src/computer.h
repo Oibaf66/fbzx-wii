@@ -38,7 +38,7 @@ enum taptypes {TAP_TAP, TAP_TZX};
 enum  block_type {NOBLOCK, PROG, VAR, DATA};
 
 extern int countdown_buffer;
-extern unsigned char joybutton_matrix[2][322];
+extern unsigned char joybutton_matrix[6][322];
 
 struct computer {
 
@@ -164,7 +164,7 @@ struct computer {
 	unsigned char mode128k; // 0=48K, 1=128K, 2=+2, 3=+3 4=sp
 	unsigned char videosystem; //0=PAL, 1=NTSC
 	unsigned char se_basic; //0=0ff; 1=0n
-	unsigned char joystick[2]; // 0=cursor, 1=kempston, 2=sinclair1, 3=sinclair2, 4=Fuller, 5=QAOP
+	unsigned char joystick[6]; // 0=cursor, 1=kempston, 2=sinclair1, 3=sinclair2, 4=Fuller, 5=QAOP
 	unsigned char port254;
 
 
@@ -268,12 +268,12 @@ struct computer {
 	unsigned int kbd_buffer_pointer;
 	unsigned char *key;
 	unsigned char joystick_number;
-	SDL_Joystick *joystick_sdl[2];
-	unsigned char joy_axis_x_state[2];
-	unsigned char joy_axis_y_state[2];
-	unsigned int joybuttonkey[2][23];
-	unsigned char joypad_as_joystick[2];
-	unsigned char rumble[2];
+	SDL_Joystick *joystick_sdl[6];
+	unsigned char joy_axis_x_state[6];
+	unsigned char joy_axis_y_state[6];
+	unsigned int joybuttonkey[6][23];
+	unsigned char joypad_as_joystick[6];
+	unsigned char rumble[6];
 	unsigned char vk_auto;
 	unsigned char vk_rumble;
 	unsigned char vk_is_active;

@@ -560,7 +560,11 @@ if (sound_type==SOUND_SDL)
 			// Open joystick
 			ordenador.joystick_number = SDL_NumJoysticks();
 			printf("Found %d joysticks \n", ordenador.joystick_number);
+			#ifdef HW_RVL
+			if (ordenador.joystick_number>6) ordenador.joystick_number = 6; //Open max 6 joysticks (4 wimotes + 2 gamecube controllers)
+			#else
 			if (ordenador.joystick_number>2) ordenador.joystick_number = 2; //Open max 2 joysticks
+			#endif
 			printf("Try to open %d joysticks \n", ordenador.joystick_number);
 			for (bucle=0;bucle<ordenador.joystick_number;bucle++) {
 			ordenador.joystick_sdl [bucle] = SDL_JoystickOpen(bucle);
@@ -784,6 +788,10 @@ int save_config(struct computer *object, char *filename) {
 	fprintf(fconfig,"se_basic=%c%c",48+object->se_basic,10);
 	fprintf(fconfig,"joystick1=%c%c",48+object->joystick[0],10);
 	fprintf(fconfig,"joystick2=%c%c",48+object->joystick[1],10);
+#ifdef HW_RVL 
+	fprintf(fconfig,"joystick5=%c%c",48+object->joystick[4],10); //Gamecube controller 1
+	fprintf(fconfig,"joystick6=%c%c",48+object->joystick[5],10); //Gamecube controller 2
+#endif
 	fprintf(fconfig,"ay_sound=%c%c",48+object->ay_emul,10);
 	fprintf(fconfig,"fuller_box_sound=%c%c",48+object->fuller_box_sound,10);
 	fprintf(fconfig,"currah_microspeech=%c%c",48+object->currah_active,10);
@@ -803,8 +811,16 @@ int save_config(struct computer *object, char *filename) {
 	fprintf(fconfig,"rewind_on_reset=%c%c",48+object->rewind_on_reset,10);
 	fprintf(fconfig,"joypad1=%c%c",48+object->joypad_as_joystick[0],10);
 	fprintf(fconfig,"joypad2=%c%c",48+object->joypad_as_joystick[1],10);
+#ifdef HW_RVL
+	fprintf(fconfig,"joypad5=%c%c",48+object->joypad_as_joystick[4],10); //Gamecube controller 1
+	fprintf(fconfig,"joypad6=%c%c",48+object->joypad_as_joystick[5],10); //Gamecube controller 1
+#endif
 	fprintf(fconfig,"rumble1=%c%c",48+object->rumble[0],10);
 	fprintf(fconfig,"rumble2=%c%c",48+object->rumble[1],10);
+#ifdef HW_RVL
+	fprintf(fconfig,"rumble5=%c%c",48+object->rumble[4],10); //Gamecube controller 1
+	fprintf(fconfig,"rumble6=%c%c",48+object->rumble[5],10); //Gamecube controller 1
+#endif
 	fprintf(fconfig,"port=%c%c",48+object->port,10);
 	fprintf(fconfig,"autoconf=%c%c",48+object->autoconf,10);
 	fprintf(fconfig,"ignore_z80_joy_conf=%c%c",48+object->ignore_z80_joy_conf,10);
@@ -812,9 +828,14 @@ int save_config(struct computer *object, char *filename) {
 	fprintf(fconfig,"vk_auto=%c%c",48+object->vk_auto,10);
 	fprintf(fconfig,"vk_rumble=%c%c",48+object->vk_rumble,10);
 	
-	for (joy_n=0; joy_n<2; joy_n++)
+	for (joy_n=0; joy_n<ordenador.joystick_number; joy_n++)
+	{
+	#ifdef HW_RVL
+	if ((joy_n == 2) || (joy_n == 3)) continue; // No wimote 3 and 4
+	#endif
 		for (key=0; key<23; key++)
 		fprintf(fconfig,"joybutton_%c_%c=%.3d%c",joy_n+48,key+97, object->joybuttonkey[joy_n][key],10);
+	}
 	
 	fclose(fconfig);
 	return 0;
@@ -839,18 +860,34 @@ int save_config_game(struct computer *object, char *filename, int overwrite) {
 	
 	fprintf(fconfig,"joystick1=%c%c",48+object->joystick[0],10);
 	fprintf(fconfig,"joystick2=%c%c",48+object->joystick[1],10);
+#ifdef HW_RVL 
+	fprintf(fconfig,"joystick5=%c%c",48+object->joystick[4],10); //Gamecube controller 1
+	fprintf(fconfig,"joystick6=%c%c",48+object->joystick[5],10); //Gamecube controller 2
+#endif	
 	fprintf(fconfig,"joypad1=%c%c",48+object->joypad_as_joystick[0],10);
 	fprintf(fconfig,"joypad2=%c%c",48+object->joypad_as_joystick[1],10);
+#ifdef HW_RVL
+	fprintf(fconfig,"joypad5=%c%c",48+object->joypad_as_joystick[4],10); //Gamecube controller 1
+	fprintf(fconfig,"joypad6=%c%c",48+object->joypad_as_joystick[5],10); //Gamecube controller 1
+#endif	
 	fprintf(fconfig,"rumble1=%c%c",48+object->rumble[0],10);
 	fprintf(fconfig,"rumble2=%c%c",48+object->rumble[1],10);
+#ifdef HW_RVL
+	fprintf(fconfig,"rumble5=%c%c",48+object->rumble[4],10); //Gamecube controller 1
+	fprintf(fconfig,"rumble6=%c%c",48+object->rumble[5],10); //Gamecube controller 1
+#endif	
 	
-	for (joy_n=0; joy_n<2; joy_n++)
+	for (joy_n=0; joy_n<ordenador.joystick_number; joy_n++)
+	{
+	#ifdef HW_RVL
+	if ((joy_n == 2) || (joy_n == 3)) continue; // No wimote 3 and 4
+	#endif
 		for (key=0; key<23; key++)
 		fprintf(fconfig,"joybutton_%c_%c=%.3d%c",joy_n+48,key+97, object->joybuttonkey[joy_n][key],10);
+	}
 	
 	fclose(fconfig);
 	return 0;
-	
 }
 
 void load_config_network(struct computer *object) {
@@ -975,9 +1012,9 @@ int load_config(struct computer *object, char *filename) {
 	char line[256],carac,done;
 	int pos, key_sdl=0;
 	FILE *fconfig;
-	unsigned char volume=255,mode128k=255,issue=255,ntsc=255, joystick1=255,joystick2=255,ay_emul=255,mdr_active=255,
+	unsigned char volume=255,mode128k=255,issue=255,ntsc=255, joystick1=255,joystick2=255,joystick5=255,joystick6=255,ay_emul=255,mdr_active=255,
 	dblscan=255,framerate =255, screen =255, text=255, precision=255, bw=255, tap_fast=255, audio_mode=255,
-	joypad1=255, joypad2=255, rumble1=255, rumble2=255, joy_n=255, key_n=255, port=255, autoconf=255, turbo=225, vk_auto=255, vk_rumble=255,
+	joypad1=255, joypad2=255, joypad5=255, joypad6=255,rumble1=255, rumble2=255, rumble5=255, rumble6=255,joy_n=255, key_n=255, port=255, autoconf=255, turbo=225, vk_auto=255, vk_rumble=255,
 	rewind_on_reset=255, pause_instant_load =255, ignore_z80_joy_conf=255, gui_volume=255, fuller_box_sound=255, currah_active = 255, se_basic =255, currah_volume = 255;
 	
 	if (filename) strcpy(config_path,filename); 
@@ -1034,6 +1071,14 @@ int load_config(struct computer *object, char *filename) {
 		}
 		if (!strncmp(line,"joystick2=",10)) {
 			joystick2=line[10]-'0';
+			continue;
+		}
+		if (!strncmp(line,"joystick5=",10)) {
+			joystick5=line[10]-'0';
+			continue;
+		}
+		if (!strncmp(line,"joystick6=",10)) {
+			joystick6=line[10]-'0';
 			continue;
 		}
 		if (!strncmp(line,"ay_sound=",9)) {
@@ -1112,12 +1157,28 @@ int load_config(struct computer *object, char *filename) {
 			joypad2=line[8]-'0';
 			continue;
 		}
+		if (!strncmp(line,"joypad5=",8)) {
+			joypad5=line[8]-'0';
+			continue;
+		}
+		if (!strncmp(line,"joypad6=",8)) {
+			joypad6=line[8]-'0';
+			continue;
+		}
 		if (!strncmp(line,"rumble1=",8)) {
 			rumble1=line[8]-'0';
 			continue;
 		}
 		if (!strncmp(line,"rumble2=",8)) {
 			rumble2=line[8]-'0';
+			continue;
+		}
+		if (!strncmp(line,"rumble5=",8)) {
+			rumble5=line[8]-'0';
+			continue;
+		}
+		if (!strncmp(line,"rumble6=",8)) {
+			rumble6=line[8]-'0';
 			continue;
 		}
 		if (!strncmp(line,"port=",5)) {
@@ -1146,7 +1207,7 @@ int load_config(struct computer *object, char *filename) {
 		}
 		if (!strncmp(line,"joybutton_",10)) {
 			sscanf(line, "joybutton_%c_%c=%3d",&joy_n ,&key_n, &key_sdl);
-			if ((joy_n<50) && (joy_n>47) && (key_n<120) && (key_n>96))
+			if ((joy_n<54) && (joy_n>47) && (key_n<120) && (key_n>96))
 			object->joybuttonkey[joy_n-48][key_n-97]=key_sdl;
 			continue;
 		}
@@ -1169,6 +1230,12 @@ int load_config(struct computer *object, char *filename) {
 	}
 	if (joystick2<6) {
 		object->joystick[1]=joystick2;
+	}
+	if (joystick5<6) {
+		object->joystick[4]=joystick5;
+	}
+	if (joystick6<6) {
+		object->joystick[5]=joystick6;
 	}
 	if (ay_emul<2) {
 		object->ay_emul=ay_emul;
@@ -1229,11 +1296,23 @@ int load_config(struct computer *object, char *filename) {
 	if (joypad2<2) {
 		object->joypad_as_joystick[1]=joypad2;
 	}
+	if (joypad5<2) {
+		object->joypad_as_joystick[4]=joypad5;
+	}
+	if (joypad6<2) {
+		object->joypad_as_joystick[5]=joypad6;
+	}
 	if (rumble1<2) {
 		object->rumble[0]=rumble1;
 	}
 	if (rumble2<2) {
 		object->rumble[1]=rumble2;
+	}
+	if (rumble5<2) {
+		object->rumble[4]=rumble5;
+	}
+	if (rumble6<2) {
+		object->rumble[5]=rumble6;
 	}
 	if (port<5) {
 		object->port=port;

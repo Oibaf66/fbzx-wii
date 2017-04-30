@@ -79,7 +79,11 @@ static const char *main_menu_messages[] = {
 		/*03*/		"^|Load|Save|Delete",
 		/*04*/		"#1------------------------",
 		/*05*/		"Controller configuration",
-		/*06*/		"^|Controller1|Controller2",	
+#ifdef HW_RVL
+		/*06*/		"^|Wiimote1|Wiimote2|GCube1|GCube2",
+#else
+		/*06*/		"^|Controller1|Controller2",
+#endif
 		/*07*/		"Tape settings",
 		/*08*/		"Emulation settings",
 		/*09*/		"Screen settings",
@@ -190,6 +194,20 @@ static const  char *input_messages[] = {
 		/*11*/		"^|On|Off",
 		/*12*/		"Rumble",
 		/*13*/		"^|On|Off",
+		NULL
+};
+
+static const  char *input_messages_gamecube_controller[] = {
+		/*00*/		"Joystick type",
+		/*01*/		"^|Curs|Kemps|Sincl1|Sincl2|Fuller|QAOP",		
+		/*02*/		"Bind key to button",
+		/*03*/		"^|A|B|X|Y|Z",
+		/*04*/		"Bind key to D-pad",
+		/*05*/		"^|Up|Down|Left|Right",
+		/*06*/		"Use D-pad as Joystick",
+		/*07*/		"^|On|Off",
+		/*08*/		"Rumble",
+		/*09*/		"^|On|Off",
 		NULL
 };
 
@@ -880,7 +898,7 @@ static void setup_joystick(int joy, unsigned int sdl_key, int joy_key)
 	 if (ordenador.joybuttonkey[joy][loop] == sdl_key) ordenador.joybuttonkey[joy][loop] =0;
 	
 	ordenador.joybuttonkey[joy][joy_key] = sdl_key;
-	
+	printf("Configurated button %d of controller %d as SDL_KEY %d\n", joy_key, joy, sdl_key); 
 }
 
 static void input_options(int joy)
@@ -896,6 +914,8 @@ static void input_options(int joy)
 	
 	struct virtkey *virtualkey;
 
+	if ((joy != 0) && (joy != 1)) return; //only wiimote
+	
 	do {
 	memset(submenus, 0, sizeof(submenus));
 	
@@ -944,8 +964,65 @@ static void input_options(int joy)
 		
 	setup_joystick(joy, sdl_key, joy_key);
 	} while (opt == 2 || opt == 4 || opt == 6 || opt == 8);
+}
+
+static void input_options_gamecube_controller(int joy)
+{
+	const unsigned int gamecube_controller_to_sdl[] = {0, 1, 2, 3, 4};
+	const unsigned int pad_to_sdl[] = {19, 20, 21, 22};
+	int joy_key = 1;
+	unsigned int sdl_key;
+	unsigned int submenus[5];
+	int opt;
 	
+	struct virtkey *virtualkey;
 	
+	if ((joy != 4) && (joy != 5)) return; //only gamecube controllers
+
+	do {
+	memset(submenus, 0, sizeof(submenus));
+	
+	submenus[0] = ordenador.joystick[joy];
+	submenus[3] = !ordenador.joypad_as_joystick[joy];
+	submenus[4] = !ordenador.rumble[joy];
+
+	opt = menu_select_title("Gamecube controller configuration",
+			input_messages_gamecube_controller, submenus);
+	if (opt < 0)
+		return;
+	
+	ordenador.joystick[joy] = submenus[0];
+	ordenador.joypad_as_joystick[joy] = !submenus[3];
+	ordenador.rumble[joy] = !submenus[4];
+	
+	if (opt == 0 || opt == 6|| opt == 8)
+		return;
+	
+	VirtualKeyboard.sel_x = 64;
+	VirtualKeyboard.sel_y = 90;
+	
+	virtualkey = get_key();
+	if (virtualkey == NULL)
+		return;
+	sdl_key = virtualkey->sdl_code;
+	
+	if (virtualkey->sdl_code==1) //"Done" selected
+		{if (virtualkey->caps_on)  sdl_key = 304; //Caps Shit
+			else if (virtualkey->sym_on)  sdl_key = 306; //Sym Shit
+			else return; } 
+	
+	switch(opt)
+		{
+		case 2: // buttons 
+			joy_key = gamecube_controller_to_sdl[submenus[1]]; break;
+		case 4: // D-pad
+			joy_key = pad_to_sdl[submenus[2]]; break;
+		default:
+			break;
+		}
+		
+	setup_joystick(joy, sdl_key, joy_key);
+	} while (opt == 2 || opt == 4);
 }
 
 static int select_mdr()
@@ -2476,7 +2553,8 @@ void main_menu()
 			retorno = save_load_snapshot(submenus[1]);
 			break;
 		case 5:
-			input_options(submenus[2]);
+			if (submenus[2]<2) input_options(submenus[2]);
+			else input_options_gamecube_controller(submenus[2]+2);
 			break;
 		case 7:
 			tape_settings();

@@ -199,15 +199,30 @@ struct virtkey *get_key_internal()
 			i = y/key_h*KEY_COLS + x/key_w;
 			
 			#ifdef HW_RVL
-			if (ordenador.vk_rumble) WPAD_Rumble(joy_n, 1);
-			SDL_Delay(90);
-			if (ordenador.vk_rumble) WPAD_Rumble(joy_n, 0);
+			if (ordenador.vk_rumble)
+			{
+			if (joy_n < 2)
+				{
+					WPAD_Rumble(joy_n, 1);
+					SDL_Delay(90);
+					WPAD_Rumble(joy_n, 0);
+				}
+				else if (joy_n > 3)//gamepad
+				{
+					PAD_ControlMotor(joy_n-4,PAD_MOTOR_RUMBLE);
+					SDL_Delay(90);
+					PAD_ControlMotor(joy_n-4,PAD_MOTOR_STOP);
+				}
+			}
 			#endif
 			
 			#ifdef HW_DOL
-			if (ordenador.vk_rumble) PAD_ControlMotor(joy_n,PAD_MOTOR_RUMBLE);
-			SDL_Delay(90);
-			if (ordenador.vk_rumble) PAD_ControlMotor(joy_n,PAD_MOTOR_STOP);
+			if (ordenador.vk_rumble)
+			{
+				PAD_ControlMotor(joy_n,PAD_MOTOR_RUMBLE);
+				SDL_Delay(90);
+				PAD_ControlMotor(joy_n,PAD_MOTOR_STOP);
+			}	
 			#endif
 			
 			virtkey_t *key = &keys[i];
@@ -251,11 +266,14 @@ void virtkey_ir_run(void)
 	int key_sel = 0;
 	int joy_n;
 	SDL_Joystick *joy;
-	static int joy_bottons_last[2][5];
-	static char countdown_rumble[2];
+	static int joy_bottons_last[6][5];
+	static char countdown_rumble[6];
 	
 	for(joy_n=0;joy_n<ordenador.joystick_number;joy_n++) 
 	{
+	#ifdef HW_RVL
+	if ((joy_n == 2) || (joy_n == 3)) continue; // No wimote 3 and 4
+	#endif
 	key_sel = 0;
 	
 	#ifdef HW_RVL
