@@ -19,7 +19,7 @@ FBZX Wii has two GUIs: one is derived from the original FBZX and the other one i
 FBZX WII Menu
 *************
 
-Menu key (it is the key near CTRL Rigth) or gamepad button 7 to access FBZX Wii menu. 
+Home key or gamepad button 7 to access FBZX Wii menu. 
 Left ALT key to toggle Full Screen.
 The virtual keyboard is accessed passing the mouse on the screen or through CTRL Rigth 
 or gamepad button 6 (it depends on the auto virtual ketboard option).

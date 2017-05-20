@@ -43,7 +43,8 @@ FEATURES
 - Support for SE Basic 
 - FTP client for loading games from internet repositories (e.g. WOS). 
 - Emulates up to 2 joysticks of types: Kempston, Cursor, Fuller , Sinclair1, Sinclair2 and QAOP. 
-- All the wiimote, nunchuck and classic controller buttons and joypads are fully configurable. 
+- Support for gamecube and WIIU PRO controllers
+- All the wiimote, nunchuck, classic controller and gamcucube controller buttons and joypads are fully configurable. 
 - IR Virtual keyboard support. 
 - Emulates Interface I, Interface II and Microdrive. 
 - Emulates ULAPlus. 

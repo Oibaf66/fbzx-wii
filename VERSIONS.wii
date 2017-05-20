@@ -1,3 +1,11 @@
+version 15:
+	* Added WIIU PRO controller support
+	* Added Gamecube controller support
+	* Fast up and down menu scrolling with the second joystick
+	* Fixed bug in D-Right conf
+
+	-- Fabio Olimpieri <fabio.olimpieri@tin.it> May 12 2017
+
 version 14:
 	* Added RZX support (play, record, add bookmark, edit, browsing) in tool menu
 	* Preview screen auto extracted from tap, tzx, sna, z80 and rzx files

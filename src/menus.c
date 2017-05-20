@@ -336,7 +336,7 @@ void help_menu() {
 
 	clean_screen();
 
-	print_string(fbuffer,"FBZX Wii (14.0)",-1,20,15,0,ancho);
+	print_string(fbuffer,"FBZX Wii (15.0)",-1,20,15,0,ancho);
 	print_string(fbuffer,"Available keys",-1,50,14,0,ancho);
 	print_string(fbuffer,"Shift:Caps Shift    Ctrl:Symbol Shift",-1,95,11,0,ancho);
 
