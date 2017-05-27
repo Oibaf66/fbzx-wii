@@ -122,7 +122,7 @@ dist: $(BUILD)
 	mkdir -p $@/fbzx-gc/scr2
 	mkdir -p $@/fbzx-gc/configurations
 	mkdir -p $@/fbzx-gc/poke
-	mkdir -p $@/fbzx-wii/rzx
+	mkdir -p $@/fbzx-gc/rzx
 	mkdir -p $@/fbzx-gc/doc
 	mkdir -p $@/fbzx-gc/fbzx/allophones
 	cp fbzx_gc.dol $@/fbzx-gc/fbzx_gc.dol
@@ -142,7 +142,7 @@ dist: $(BUILD)
 	cp sound/menu_navigation_BE.raw $@/fbzx-gc/fbzx
 	cp sound/select_BE.raw $@/fbzx-gc/fbzx
 	cp sound/unselect_BE.raw $@/fbzx-gc/fbzx
-	cp AMSTRAD CAPABILITIES COPYING FAQ README README.TZX README_GC.txt VERSIONS VERSIONS.wii $@/fbzx-gc/doc
+	cp AMSTRAD CAPABILITIES COPYING FAQ README README_GC.txt VERSIONS.wii $@/fbzx-gc/doc
 	cp allophones/*.* $@/fbzx-gc/fbzx/allophones
 	touch $@/fbzx-gc/tapes/dummy
 	touch $@/fbzx-gc/snapshots/dummy
@@ -152,7 +152,7 @@ dist: $(BUILD)
 	touch $@/fbzx-gc/scr2/dummy
 	touch $@/fbzx-gc/configurations/dummy
 	touch $@/fbzx-gc/poke/dummy
-	touch $@/fbzx-wii/rzx/dummy
+	touch $@/fbzx-gc/rzx/dummy
 	cd $@ && tar -czf ../fbzx-gc-vx-bin.tar.gz *
 
 distsource:
