@@ -1365,7 +1365,7 @@ int main(int argc,char *argv[])
 	hwsurface=0;
 	
 	argumento=0;
-	jump_frames=0;
+	jump_frames=JUMP_FRAMES_DEFAULT;
 	curr_frames=0;
 	ordenador.dblscan=1;
 	ordenador.bw=0;
@@ -1832,7 +1832,7 @@ int main(int argc,char *argv[])
 						if ((ordenador.turbo_state != 1)&&(ordenador.turbo==1))
 							{
 								update_frequency(0); //set machine frequency
-								jump_frames=0;
+								jump_frames=JUMP_FRAMES_DEFAULT;
 							}
 						if (ordenador.tape_stop ==1) fastload_block_tzx(ordenador.tap_file);
 						}

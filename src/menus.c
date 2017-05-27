@@ -306,7 +306,7 @@ void settings_menu() {
 		case SDLK_t:
 			curr_frames=0;
 			update_frequency(0); //set deafult machine frequency
-			jump_frames=0;
+			jump_frames=JUMP_FRAMES_DEFAULT;
 			ordenador.turbo_state = 0;
 			if(ordenador.turbo){
 				ordenador.turbo = 0;	

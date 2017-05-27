@@ -27,6 +27,12 @@
 #define NUM_SNDBUF 2
 #define MAX_PATH_LENGTH 256
 
+#ifdef HW_DOL
+ #define JUMP_FRAMES_DEFAULT 1
+#else
+ #define JUMP_FRAMES_DEFAULT 0
+#endif
+
 extern char debug_var;
 
 extern SDL_Surface *screen;

@@ -716,7 +716,7 @@ static int emulation_settings(void)
 	 if (ordenador.precision)
 		{ 
 		update_frequency(0);
-		jump_frames=0;
+		jump_frames=JUMP_FRAMES_DEFAULT;
 			if (ordenador.turbo!=1)
 			{
 			ordenador.turbo =0;
@@ -762,7 +762,7 @@ static void tape_settings(void)
 		//ordenador.precision =0;
 	case 0: //off
 		update_frequency(0); //set machine frequency
-		jump_frames=0;
+		jump_frames=JUMP_FRAMES_DEFAULT;
 		ordenador.turbo_state=0;
 		ordenador.precision = ordenador.precision_old;
 		break;
